@@ -1,0 +1,1 @@
+ C:\\XPARQ\\xparq_mobile\\.dart_tool\\flutter_build\\b84f210570e52f24feef5e8cb5dfbb98\\native_assets.json: 

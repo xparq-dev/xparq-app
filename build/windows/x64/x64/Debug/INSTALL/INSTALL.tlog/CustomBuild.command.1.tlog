@@ -1,0 +1,10 @@
+^C:\XPARQ\XPARQ_MOBILE\BUILD\WINDOWS\X64\CMAKEFILES\63C0DEB83021C07F4F69F2648E6E7C9B\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

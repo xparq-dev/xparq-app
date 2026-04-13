@@ -7,8 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
-import 'package:xparq_app/core/config/supabase_config.dart';
-import 'package:xparq_app/core/utils/isolate_logger.dart';
+import 'package:xparq_app/shared/config/supabase_config.dart';
+import 'package:xparq_app/shared/utils/isolate_logger.dart';
 import 'package:xparq_app/features/chat/data/services/message_encryption_service.dart';
 import 'package:xparq_app/features/chat/data/services/notification_service.dart';
 import 'package:xparq_app/features/chat/data/services/notification_action_handler.dart';
@@ -24,7 +24,7 @@ class BackgroundSignalService {
 
     // Initialize notifications for the main app
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
     await _notifications.initialize(
@@ -105,7 +105,7 @@ class BackgroundSignalService {
 
           // Initialize notifications for the background isolate
           const AndroidInitializationSettings initializationSettingsAndroid =
-              AndroidInitializationSettings('@mipmap/launcher_icon');
+              AndroidInitializationSettings('@mipmap/ic_launcher');
           const InitializationSettings initializationSettings =
               InitializationSettings(android: initializationSettingsAndroid);
           await _notifications.initialize(

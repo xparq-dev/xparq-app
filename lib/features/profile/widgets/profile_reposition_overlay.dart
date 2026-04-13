@@ -1,7 +1,7 @@
 // lib/features/profile/widgets/profile_reposition_overlay.dart
 
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
@@ -29,7 +29,7 @@ class ProfileRepositionOverlay extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         // 1. Dark Backdrop
-        Container(color: Colors.black.withOpacity(0.95)),
+        Container(color: Colors.black.withValues(alpha: 0.95)),
 
         // 2. Focused Content
         Center(
@@ -79,7 +79,7 @@ class ProfileRepositionOverlay extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     blurRadius: 30,
                   ),
                 ],
@@ -102,12 +102,12 @@ class ProfileRepositionOverlay extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     blurRadius: 30,
                   ),
                 ],
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   width: 3,
                 ),
                 image: DecorationImage(
@@ -123,7 +123,7 @@ class ProfileRepositionOverlay extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.open_with, color: Colors.white, size: 40),

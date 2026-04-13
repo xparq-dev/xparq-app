@@ -9,8 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/providers/pulse_providers.dart';
 import 'package:xparq_app/features/social/widgets/pulse_card.dart';
@@ -20,7 +20,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:xparq_app/features/profile/providers/image_upload_provider.dart';
 import 'package:xparq_app/features/profile/widgets/profile_photo_gallery.dart';
 import 'package:xparq_app/features/profile/repositories/profile_repository.dart';
-import 'package:xparq_app/core/widgets/expandable_text.dart';
+import 'package:xparq_app/shared/widgets/common/expandable_text.dart';
 import 'package:xparq_app/features/profile/widgets/profile_actions.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
@@ -145,7 +145,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.1),
+                        ).colorScheme.onSurface.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -301,7 +301,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       fontWeight: FontWeight.bold,
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.7),
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -384,8 +384,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFF4FC3F7).withOpacity(0.2)
-                  : theme.colorScheme.onSurface.withOpacity(0.05),
+                  ? const Color(0xFF4FC3F7).withValues(alpha: 0.2)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
               shape: BoxShape.circle,
               border: Border.all(
                 color: isSelected
@@ -398,7 +398,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               icon,
               color: isSelected
                   ? const Color(0xFF4FC3F7)
-                  : theme.colorScheme.onSurface.withOpacity(0.5),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 8),
@@ -409,7 +409,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected
                   ? const Color(0xFF4FC3F7)
-                  : theme.colorScheme.onSurface.withOpacity(0.5),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -438,18 +438,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       ref.invalidate(planetProfileByUidProvider(uid));
     } catch (e) {
       debugPrint('UPDATE_ERROR: $e');
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.profileErrorUpdateAlignment(e.toString()),
-            ),
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.profileErrorUpdateAlignment(e.toString()),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -459,18 +457,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       await ProfileRepository().updateProfile(uid: uid, photoUrl: '');
       ref.invalidate(planetProfileProvider);
     } catch (e) {
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.profileErrorRemovePhoto(e.toString()),
-            ),
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.profileErrorRemovePhoto(e.toString()),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -506,7 +502,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.1),
+                        ).colorScheme.onSurface.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -599,18 +595,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       await ProfileRepository().updateProfile(uid: uid, coverPhotoUrl: '');
       ref.invalidate(planetProfileProvider);
     } catch (e) {
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.profileErrorRemoveCover(e.toString()),
-            ),
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.profileErrorRemoveCover(e.toString()),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -641,18 +635,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         _isRepositioningAvatar = false;
       });
     } catch (e) {
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.profileErrorSavingPosition(e.toString()),
-            ),
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.profileErrorSavingPosition(e.toString()),
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -749,30 +741,26 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         // Explicitly refresh profile to show new image immediately
         ref.invalidate(planetProfileProvider);
 
-        if (mounted) {
-          final messenger = ScaffoldMessenger.of(context);
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.profilePictureUpdateSuccess,
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.showSnackBar(
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(
-                context,
-              )!.profileErrorUpdatingPicture(e.toString()),
+              AppLocalizations.of(context)!.profilePictureUpdateSuccess,
             ),
           ),
         );
       }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.profileErrorUpdatingPicture(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
@@ -843,7 +831,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       : (isOwnProfile ? 360 : 500), // Adjusted Own profile to 360 and Public to 500.
                   pinned: true,
                   stretch: true,
-                  // [FIX] เปลี่ยนเป็นทึบที่ 0.9 แทน 1.0 เพื่อความแน่นอน (Rock-Solid for status bar icons)
+                  // [FIX] à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¹€à¸›à¹‡à¸™à¸—à¸¶à¸šà¸—à¸µà¹ˆ 0.9 à¹à¸—à¸™ 1.0 à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¹à¸™à¹ˆà¸™à¸­à¸™ (Rock-Solid for status bar icons)
                   backgroundColor: opacity >= 0.9 ? headerBaseColor : Colors.transparent,
                   surfaceTintColor: Colors.transparent,
                   scrolledUnderElevation: 0,
@@ -895,12 +883,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     fit: StackFit.expand,
                     children: [
                       child!, // The FlexibleSpaceBar
-                      // [FIX] Independent Solid Shield: แผ่นบังทึบอิสระที่อยู่บนเนื้อหา FlexibleSpaceBar 
-                      // แต่ยังอยู่ข้างหลัง Toolbar (ปุ่ม Settings/Back) เพื่อกันข้อความ Bio รั่ว
+                      // [FIX] Independent Solid Shield: à¹à¸œà¹ˆà¸™à¸šà¸±à¸‡à¸—à¸¶à¸šà¸­à¸´à¸ªà¸£à¸°à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸šà¸™à¹€à¸™à¸·à¹‰à¸­à¸«à¸² FlexibleSpaceBar 
+                      // à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸­à¸¢à¸¹à¹ˆà¸‚à¹‰à¸²à¸‡à¸«à¸¥à¸±à¸‡ Toolbar (à¸›à¸¸à¹ˆà¸¡ Settings/Back) à¹€à¸žà¸·à¹ˆà¸­à¸à¸±à¸™à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡ Bio à¸£à¸±à¹ˆà¸§
                       Positioned.fill(
                         child: IgnorePointer(
                           child: Container(
-                            // บังทึบสนิทที่ 0.9 เพื่อกันรั่ว 100% ตลอดทั้งแถว Status Bar และ Tab Bar
+                            // à¸šà¸±à¸‡à¸—à¸¶à¸šà¸ªà¸™à¸´à¸—à¸—à¸µà¹ˆ 0.9 à¹€à¸žà¸·à¹ˆà¸­à¸à¸±à¸™à¸£à¸±à¹ˆà¸§ 100% à¸•à¸¥à¸­à¸”à¸—à¸±à¹‰à¸‡à¹à¸–à¸§ Status Bar à¹à¸¥à¸° Tab Bar
                             color: (opacity >= 0.9) ? headerBaseColor : Colors.transparent,
                           ),
                         ),
@@ -923,8 +911,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         final tabBar = _buildTabBar(context);
 
                         return Container(
-                          // [FIX] Tab Bar ก็ต้องทึบ 100% พร้อมกับ Shield ข้างบนเพื่อไม่ให้มองทะลุเห็นเนื้อหา
-                          color: opacity >= 0.9 ? headerBaseColor : headerBaseColor.withOpacity(opacity),
+                          // [FIX] Tab Bar à¸à¹‡à¸•à¹‰à¸­à¸‡à¸—à¸¶à¸š 100% à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸š Shield à¸‚à¹‰à¸²à¸‡à¸šà¸™à¹€à¸žà¸·à¹ˆà¸­à¹„à¸¡à¹ˆà¹ƒà¸«à¹‰à¸¡à¸­à¸‡à¸—à¸°à¸¥à¸¸à¹€à¸«à¹‡à¸™à¹€à¸™à¸·à¹‰à¸­à¸«à¸²
+                          color: opacity >= 0.9 ? headerBaseColor : headerBaseColor.withValues(alpha: opacity),
                           child: tabBar,
                         );
                       },
@@ -1020,7 +1008,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: theme.dividerColor.withOpacity(0.1),
+                  color: theme.dividerColor.withValues(alpha: 0.1),
                 ),
               ),
             ),
@@ -1142,12 +1130,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         padding: EdgeInsets.all(isDark ? 4 : 2.5),
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.12)
-              : Colors.white.withOpacity(0.6),
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.6),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.45 : 0.08),
+              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
               blurRadius: isDark ? 25 : 20,
               spreadRadius: 1,
               offset: Offset(0, isDark ? 6 : 2),
@@ -1243,7 +1231,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       ? '@${profile.handle}'
                       : '@${profile.xparqName.toLowerCase().replaceAll(' ', '')}',
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1251,9 +1239,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
-                    '•',
+                    '\u00B7',
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.3),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1299,12 +1287,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           decoration: BoxDecoration(
             // Dynamic transparency for the glass effect
             color: profile.isExpandedHeader
-                ? (isDark ? Colors.black.withOpacity(0.4) : Colors.white)
+                ? (isDark ? Colors.black.withValues(alpha: 0.4) : Colors.white)
                 : (isDark
-                      ? Colors.black.withOpacity(
+                      ? Colors.black.withValues(alpha: 
                           0.4,
                         ) // Slightly darker for contrast
-                      : Colors.white.withOpacity(
+                      : Colors.white.withValues(alpha: 
                           0.5,
                         )), // Soft white for light mode
             borderRadius: profile.isExpandedHeader
@@ -1315,8 +1303,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 ? null
                 : Border.all(
                     color: isDark
-                        ? Colors.white.withOpacity(0.12)
-                        : Colors.black.withOpacity(0.06),
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.black.withValues(alpha: 0.06),
                   ),
           ),
           child: Column(
@@ -1364,7 +1352,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         ? '@${profile.handle}'
                         : '@${profile.xparqName.toLowerCase().replaceAll(' ', '')}',
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 12, // Smaller handle
                       fontWeight: FontWeight.w600,
                     ),
@@ -1372,9 +1360,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Text(
-                      '•',
+                      '\u00B7',
                       style: TextStyle(
-                        color: theme.colorScheme.onSurface.withOpacity(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 
                           0.3,
                         ),
                         fontSize: 14,
@@ -1418,11 +1406,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ? null
             : Border(
                 top: BorderSide(
-                  color: theme.colorScheme.onSurface.withOpacity(0.04),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
                   width: 0.5,
                 ),
                 bottom: BorderSide(
-                  color: theme.colorScheme.onSurface.withOpacity(0.04),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
                   width: 0.5,
                 ),
               ),
@@ -1460,12 +1448,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     return TabBar(
       dividerColor: Theme.of(
         context,
-      ).colorScheme.onSurface.withOpacity(0.05),
+      ).colorScheme.onSurface.withValues(alpha: 0.05),
       indicatorColor: const Color(0xFF4FC3F7),
       labelColor: const Color(0xFF4FC3F7),
       unselectedLabelColor: Theme.of(
         context,
-      ).colorScheme.onSurface.withOpacity(0.54),
+      ).colorScheme.onSurface.withValues(alpha: 0.54),
       tabs: [
         Tab(text: AppLocalizations.of(context)!.about),
         Tab(text: AppLocalizations.of(context)!.pulses),
@@ -1552,7 +1540,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+                  color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
                   blurRadius: 12,
                   offset: const Offset(0, -5),
                 ),
@@ -1658,12 +1646,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            headerBaseColor.withOpacity(0.0),
-                            headerBaseColor.withOpacity(0.0),
-                            headerBaseColor.withOpacity(0.0),
-                            headerBaseColor.withOpacity(0.0),
-                            headerBaseColor.withOpacity(0.0),
-                            headerBaseColor.withOpacity(0.0),
+                            headerBaseColor.withValues(alpha: 0.0),
+                            headerBaseColor.withValues(alpha: 0.0),
+                            headerBaseColor.withValues(alpha: 0.0),
+                            headerBaseColor.withValues(alpha: 0.0),
+                            headerBaseColor.withValues(alpha: 0.0),
+                            headerBaseColor.withValues(alpha: 0.0),
                           ],
                           stops: const [0.0, 0.76, 0.88, 0.95, 0.98, 1.0],
                         ),
@@ -1768,8 +1756,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                       child: Container(
                         color: isDark 
-                            ? Colors.black.withOpacity(0.3)
-                            : Colors.white.withOpacity(0.45),
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.45),
                       ),
                     ),
                   ),
@@ -1802,8 +1790,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: isDark 
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.black.withOpacity(0.03),
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.03),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
@@ -1894,9 +1882,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.white.withOpacity(0.0),
-                        Colors.white.withOpacity(0.4),
-                        Colors.white.withOpacity(0.8),
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white.withValues(alpha: 0.4),
+                        Colors.white.withValues(alpha: 0.8),
                         Colors.white,
                       ],
                       stops: const [0.0, 0.4, 0.8, 1.0],
@@ -1942,8 +1930,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   end: Alignment.bottomRight,
                   colors: [
                     Colors.blueGrey.shade900,
-                    const Color(0xFF1A237E).withOpacity(0.4),
-                    const Color(0xFF311B92).withOpacity(0.4),
+                    const Color(0xFF1A237E).withValues(alpha: 0.4),
+                    const Color(0xFF311B92).withValues(alpha: 0.4),
                     Colors.blueGrey.shade900,
                   ],
                   stops: const [0.0, 0.4, 0.6, 1.0],
@@ -1966,13 +1954,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 
                       0.15,
                     ),
                     width: 1.2,
                     style: BorderStyle.solid, // Solid border
                   ),
-                  color: (isDark ? Colors.black : Colors.white).withOpacity(
+                  color: (isDark ? Colors.black : Colors.white).withValues(alpha: 
                     0.1,
                   ),
                 ),
@@ -1982,7 +1970,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     Icon(
                       Icons.add_photo_alternate_outlined,
                       size: 18,
-                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -1990,7 +1978,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface.withOpacity(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 
                           0.4,
                         ),
                       ),
@@ -2004,7 +1992,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               child: Icon(
                 Icons.landscape_outlined,
                 size: 60,
-                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
               ),
             ),
         ],
@@ -2019,7 +2007,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       fit: StackFit.expand,
       children: [
         // 1. Dark Backdrop
-        Container(color: Colors.black.withOpacity(0.95)),
+        Container(color: Colors.black.withValues(alpha: 0.95)),
 
         // 2. Focused Content
         Center(
@@ -2069,7 +2057,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               blurRadius: 30,
                             ),
                           ],
@@ -2092,12 +2080,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               blurRadius: 30,
                             ),
                           ],
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             width: 3,
                           ),
                           image: DecorationImage(
@@ -2115,7 +2103,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -2320,7 +2308,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
               child: ExpandableText(
                 text: profile.extendedBio!,
                 style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   fontSize: 14,
                   height: 1.6,
                 ),
@@ -2348,7 +2336,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
                     AppLocalizations.of(context)!.location,
                     profile.locationName!,
                   ),
-                // ── Contact Info Rows ────────────────────────────────────────
+                // â”€â”€ Contact Info Rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 if (profile.contactEmail != null &&
                     profile.contactEmail!.isNotEmpty)
                   _buildInfoRow(
@@ -2428,14 +2416,14 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
                                 size: 18,
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.5),
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 AppLocalizations.of(context)!.experience,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface
-                                      .withOpacity(0.5),
+                                      .withValues(alpha: 0.5),
                                   fontSize: 13,
                                 ),
                               ),
@@ -2480,10 +2468,10 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
                     decoration: BoxDecoration(
                       color: const Color(
                         0xFF81C784,
-                      ).withOpacity(0.1), // Gentle green
+                      ).withValues(alpha: 0.1), // Gentle green
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: const Color(0xFF81C784).withOpacity(0.3),
+                        color: const Color(0xFF81C784).withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
@@ -2573,7 +2561,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.onSurface.withOpacity(0.04),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
             width: 0.5,
           ),
         ),
@@ -2584,7 +2572,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
           Text(
             title,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.0, // Removed 1.2 spacing to prevent Thai character disconnection
@@ -2613,7 +2601,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
             size: 18,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.5),
+            ).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 12),
           Text(
@@ -2621,7 +2609,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.5),
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
               fontSize: 13,
             ),
           ),
@@ -2636,7 +2624,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          ?trailing,
+          if (trailing != null) trailing,
         ],
       ),
     );
@@ -2702,7 +2690,7 @@ class _AboutTabState extends ConsumerState<_AboutTab> {
           size: 18,
           color: isVisible
               ? const Color(0xFF4FC3F7)
-              : theme.colorScheme.onSurface.withOpacity(0.3),
+              : theme.colorScheme.onSurface.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -2746,10 +2734,10 @@ class _PhotoAlbumFolder extends StatelessWidget {
         width: 120,
         height: 140,
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withOpacity(0.03),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.onSurface.withOpacity(0.05),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
           ),
         ),
         child: Stack(
@@ -2763,7 +2751,7 @@ class _PhotoAlbumFolder extends StatelessWidget {
                 height: 10,
                 decoration: BoxDecoration(
                   color: (isDark ? const Color(0xFF4FC3F7) : Colors.blueGrey)
-                      .withOpacity(0.2),
+                      .withValues(alpha: 0.2),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(6),
                     topRight: Radius.circular(6),
@@ -2777,11 +2765,11 @@ class _PhotoAlbumFolder extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.cardColor.withOpacity(0.8),
+                  color: theme.cardColor.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -2803,7 +2791,7 @@ class _PhotoAlbumFolder extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: theme.colorScheme.onSurface.withOpacity(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 
                           0.6,
                         ),
                       ),
@@ -2844,16 +2832,16 @@ class _InterestTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
         ),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
@@ -2872,7 +2860,7 @@ class _LinkTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF4FC3F7).withOpacity(0.1),
+        color: const Color(0xFF4FC3F7).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -2913,9 +2901,9 @@ class _IdentityChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2), width: 0.8),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2953,7 +2941,7 @@ class _PulseListTab extends ConsumerWidget {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           );
@@ -2971,7 +2959,7 @@ class _PulseListTab extends ConsumerWidget {
         child: CircularProgressIndicator(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.24),
+          ).colorScheme.onSurface.withValues(alpha: 0.24),
         ),
       ),
       error: (e, _) => Center(
@@ -2980,7 +2968,7 @@ class _PulseListTab extends ConsumerWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.38),
+            ).colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ),
       ),
@@ -3005,7 +2993,7 @@ class _WarpListTab extends ConsumerWidget {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           );
@@ -3023,7 +3011,7 @@ class _WarpListTab extends ConsumerWidget {
         child: CircularProgressIndicator(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.24),
+          ).colorScheme.onSurface.withValues(alpha: 0.24),
         ),
       ),
       error: (e, _) => Center(
@@ -3032,7 +3020,7 @@ class _WarpListTab extends ConsumerWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.38),
+            ).colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ),
       ),
@@ -3084,7 +3072,7 @@ class _ProfileStat extends ConsumerWidget {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.54),
+              ).colorScheme.onSurface.withValues(alpha: 0.54),
               fontSize: 12,
             ),
           ),
@@ -3117,7 +3105,7 @@ class _StatColumn extends StatelessWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.54),
+            ).colorScheme.onSurface.withValues(alpha: 0.54),
             fontSize: 12,
           ),
         ),
@@ -3125,5 +3113,6 @@ class _StatColumn extends StatelessWidget {
     );
   }
 }
+
 
 

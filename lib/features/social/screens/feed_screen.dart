@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 import 'package:xparq_app/features/social/providers/social_provider.dart';
 import 'package:xparq_app/features/social/widgets/post_card_widget.dart';
 
@@ -34,9 +34,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Future<void> _createPost() async {
+    final content = _contentController.text.trim();
+    if (content.isEmpty) return;
+
     FocusScope.of(context).unfocus();
 
-    final content = _contentController.text;
     await ref
         .read(socialProvider.notifier)
         .createPost(content: content, userId: widget.currentUserId);
@@ -105,10 +107,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      GalaxyButton(
-                        label: 'Post',
-                        isLoading: state.isCreating,
-                        onTap: state.isCreating ? null : _createPost,
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _contentController,
+                        builder: (context, value, _) {
+                          final hasText = value.text.trim().isNotEmpty;
+                          return GalaxyButton(
+                            label: 'Post',
+                            isLoading: state.isCreating,
+                            onTap: (state.isCreating || !hasText)
+                                ? null
+                                : _createPost,
+                          );
+                        },
                       ),
                     ],
                   ),

@@ -11,7 +11,7 @@ class FamilyCenterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -38,10 +38,10 @@ class FamilyCenterScreen extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1D9BF0).withOpacity(0.1),
+              color: const Color(0xFF1D9BF0).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF1D9BF0).withOpacity(0.3),
+                color: const Color(0xFF1D9BF0).withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -56,7 +56,7 @@ class FamilyCenterScreen extends StatelessWidget {
                   child: Text(
                     'Family Center ช่วยให้ผู้ปกครองดูแลการใช้งานของเยาวชนใน iXPARQ ได้อย่างปลอดภัย',
                     style: TextStyle(
-                      color: textColor.withOpacity(0.8),
+                      color: textColor.withValues(alpha: 0.8),
                       fontSize: 13,
                       height: 1.4,
                     ),

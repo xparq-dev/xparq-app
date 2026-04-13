@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 
 class AccountsCenterScreen extends ConsumerWidget {
@@ -14,7 +14,7 @@ class AccountsCenterScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
     final profile = ref.watch(planetProfileProvider).valueOrNull;
     final currentUser = ref.watch(supabaseAuthStateProvider).valueOrNull;
 
@@ -46,7 +46,7 @@ class AccountsCenterScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -270,3 +270,4 @@ class _ComingSoonTile extends StatelessWidget {
     );
   }
 }
+

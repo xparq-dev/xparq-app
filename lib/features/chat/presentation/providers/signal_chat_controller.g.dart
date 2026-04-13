@@ -34,7 +34,9 @@ abstract class _$SignalChatController
     extends BuildlessAutoDisposeNotifier<SignalChatState> {
   late final String chatId;
 
-  SignalChatState build(String chatId);
+  SignalChatState build(
+    String chatId,
+  );
 }
 
 /// See also [SignalChatController].
@@ -47,15 +49,21 @@ class SignalChatControllerFamily extends Family<SignalChatState> {
   const SignalChatControllerFamily();
 
   /// See also [SignalChatController].
-  SignalChatControllerProvider call(String chatId) {
-    return SignalChatControllerProvider(chatId);
+  SignalChatControllerProvider call(
+    String chatId,
+  ) {
+    return SignalChatControllerProvider(
+      chatId,
+    );
   }
 
   @override
   SignalChatControllerProvider getProviderOverride(
     covariant SignalChatControllerProvider provider,
   ) {
-    return call(provider.chatId);
+    return call(
+      provider.chatId,
+    );
   }
 
   static const Iterable<ProviderOrFamily>? _dependencies = null;
@@ -74,23 +82,24 @@ class SignalChatControllerFamily extends Family<SignalChatState> {
 }
 
 /// See also [SignalChatController].
-class SignalChatControllerProvider
-    extends
-        AutoDisposeNotifierProviderImpl<SignalChatController, SignalChatState> {
+class SignalChatControllerProvider extends AutoDisposeNotifierProviderImpl<
+    SignalChatController, SignalChatState> {
   /// See also [SignalChatController].
-  SignalChatControllerProvider(String chatId)
-    : this._internal(
-        () => SignalChatController()..chatId = chatId,
-        from: signalChatControllerProvider,
-        name: r'signalChatControllerProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$signalChatControllerHash,
-        dependencies: SignalChatControllerFamily._dependencies,
-        allTransitiveDependencies:
-            SignalChatControllerFamily._allTransitiveDependencies,
-        chatId: chatId,
-      );
+  SignalChatControllerProvider(
+    String chatId,
+  ) : this._internal(
+          () => SignalChatController()..chatId = chatId,
+          from: signalChatControllerProvider,
+          name: r'signalChatControllerProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$signalChatControllerHash,
+          dependencies: SignalChatControllerFamily._dependencies,
+          allTransitiveDependencies:
+              SignalChatControllerFamily._allTransitiveDependencies,
+          chatId: chatId,
+        );
 
   SignalChatControllerProvider._internal(
     super._createNotifier, {
@@ -105,8 +114,12 @@ class SignalChatControllerProvider
   final String chatId;
 
   @override
-  SignalChatState runNotifierBuild(covariant SignalChatController notifier) {
-    return notifier.build(chatId);
+  SignalChatState runNotifierBuild(
+    covariant SignalChatController notifier,
+  ) {
+    return notifier.build(
+      chatId,
+    );
   }
 
   @override
@@ -127,7 +140,7 @@ class SignalChatControllerProvider
 
   @override
   AutoDisposeNotifierProviderElement<SignalChatController, SignalChatState>
-  createElement() {
+      createElement() {
     return _SignalChatControllerProviderElement(this);
   }
 
@@ -154,17 +167,12 @@ mixin SignalChatControllerRef
 }
 
 class _SignalChatControllerProviderElement
-    extends
-        AutoDisposeNotifierProviderElement<
-          SignalChatController,
-          SignalChatState
-        >
-    with SignalChatControllerRef {
+    extends AutoDisposeNotifierProviderElement<SignalChatController,
+        SignalChatState> with SignalChatControllerRef {
   _SignalChatControllerProviderElement(super.provider);
 
   @override
   String get chatId => (origin as SignalChatControllerProvider).chatId;
 }
-
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

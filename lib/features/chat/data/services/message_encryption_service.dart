@@ -5,8 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/constants/app_constants.dart';
-import 'package:xparq_app/core/services/device_service.dart';
+import 'package:xparq_app/shared/constants/app_constants.dart';
+import 'package:xparq_app/shared/services/device_service.dart';
 import 'package:xparq_app/features/auth/repositories/devices_repository.dart';
 import 'package:xparq_app/features/chat/data/services/signal/signal_session_manager.dart';
 

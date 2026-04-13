@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/radar/models/nearby_user_model.dart';
 import 'package:xparq_app/features/radar/models/radar_xparq_model.dart';

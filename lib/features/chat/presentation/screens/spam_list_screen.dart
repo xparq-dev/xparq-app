@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 
 class SpamListScreen extends ConsumerWidget {
   const SpamListScreen({super.key});
@@ -23,7 +23,7 @@ class SpamListScreen extends ConsumerWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -32,7 +32,7 @@ class SpamListScreen extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.red.withOpacity(0.05),
+            color: Colors.red.withValues(alpha: 0.05),
             child: Row(
               children: [
                 const Icon(
@@ -47,7 +47,7 @@ class SpamListScreen extends ConsumerWidget {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.54),
+                      ).colorScheme.onSurface.withValues(alpha: 0.54),
                       fontSize: 13,
                     ),
                   ),
@@ -69,7 +69,7 @@ class SpamListScreen extends ConsumerWidget {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.38),
+                        ).colorScheme.onSurface.withValues(alpha: 0.38),
                       ),
                     ),
                   );
@@ -96,7 +96,7 @@ class SpamListScreen extends ConsumerWidget {
                             radius: 24,
                             backgroundColor: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.1),
+                            ).colorScheme.onSurface.withValues(alpha: 0.1),
                             backgroundImage: hasAvatar
                                 ? XparqImage.getImageProvider(profile!.photoUrl)
                                 : null,
@@ -106,7 +106,7 @@ class SpamListScreen extends ConsumerWidget {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.38),
+                                        .withValues(alpha: 0.38),
                                   )
                                 : null,
                           ),
@@ -116,7 +116,7 @@ class SpamListScreen extends ConsumerWidget {
                             style: TextStyle(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.error.withOpacity(0.7),
+                              ).colorScheme.error.withValues(alpha: 0.7),
                               fontSize: 12,
                             ),
                           ),
@@ -124,7 +124,7 @@ class SpamListScreen extends ConsumerWidget {
                             Icons.chevron_right,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.24),
+                            ).colorScheme.onSurface.withValues(alpha: 0.24),
                           ),
                           onTap: () {
                             context.push(
@@ -145,3 +145,4 @@ class SpamListScreen extends ConsumerWidget {
     );
   }
 }
+

@@ -7,13 +7,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
 import 'package:xparq_app/features/radar/models/radar_xparq_model.dart';
 import 'package:xparq_app/features/radar/providers/radar_providers.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class RadarScreen extends ConsumerStatefulWidget {
@@ -190,8 +190,8 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: state.mode == RadarMode.online
-                      ? primaryColor.withOpacity(0.5)
-                      : secondaryColor.withOpacity(0.5),
+                      ? primaryColor.withValues(alpha: 0.5)
+                      : secondaryColor.withValues(alpha: 0.5),
                 ),
               ),
               child: IconButton(
@@ -238,12 +238,12 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                           ? Colors.transparent
                           : Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.1),
+                            ).colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: _isFilterExpanded
                             ? primaryColor
-                            : primaryColor.withOpacity(0.3),
+                            : primaryColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -321,7 +321,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                                 side: BorderSide(
                                   color: isSelected
                                       ? primaryColor
-                                      : textSecondary.withOpacity(0.2),
+                                      : textSecondary.withValues(alpha: 0.2),
                                 ),
                               ),
                             ),
@@ -370,7 +370,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
-                color: Colors.red.withOpacity(0.15),
+                color: Colors.red.withValues(alpha: 0.15),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -491,7 +491,7 @@ class _RadarPulseHeader extends StatelessWidget {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.54),
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
                   fontSize: 12,
                 ),
               ),
@@ -532,7 +532,7 @@ class _PulsePainter extends CustomPainter {
         center,
         r,
         Paint()
-          ..color = color.withOpacity(opacity * 0.4)
+          ..color = color.withValues(alpha: opacity * 0.4)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5,
       );
@@ -560,7 +560,7 @@ class _PulsePainter extends CustomPainter {
           offset,
           4,
           Paint()
-            ..color = color.withOpacity(0.3)
+            ..color = color.withValues(alpha: 0.3)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
         );
 
@@ -610,7 +610,7 @@ class _OnlineXparqSliverList extends StatelessWidget {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.6),
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               SizedBox(height: 16),
@@ -702,7 +702,7 @@ class _OnlineXparqCardState extends ConsumerState<_OnlineXparqCard> {
     final cardBg = Theme.of(context).colorScheme.surface;
     final borderColor = Theme.of(
       context,
-    ).colorScheme.onSurface.withOpacity(0.12);
+    ).colorScheme.onSurface.withValues(alpha: 0.12);
     final textSecondary = isDark
         ? const Color(0xFF71767B)
         : const Color(0xFF536471);
@@ -795,7 +795,7 @@ class _OnlineXparqCardState extends ConsumerState<_OnlineXparqCard> {
                       color: const Color(0xFF4CAF50),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF4CAF50).withOpacity(0.5),
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.5),
                           blurRadius: 6,
                         ),
                       ],
@@ -859,7 +859,7 @@ class _OnlineXparqCardState extends ConsumerState<_OnlineXparqCard> {
                       color: const Color(0xFF4CAF50),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF4CAF50).withOpacity(0.5),
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.5),
                           blurRadius: 6,
                         ),
                       ],
@@ -924,3 +924,4 @@ class _OfflineXparqList extends StatelessWidget {
     );
   }
 }
+

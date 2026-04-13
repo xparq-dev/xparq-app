@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 
 class ProfileStats extends ConsumerWidget {
   final PlanetModel profile;
@@ -22,11 +22,11 @@ class ProfileStats extends ConsumerWidget {
         color: Colors.transparent,
         border: Border(
           top: BorderSide(
-            color: theme.colorScheme.onSurface.withOpacity(0.04),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
             width: 0.5,
           ),
           bottom: BorderSide(
-            color: theme.colorScheme.onSurface.withOpacity(0.04),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
             width: 0.5,
           ),
         ),
@@ -99,7 +99,7 @@ class _ProfileStatItem extends ConsumerWidget {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.54),
+              ).colorScheme.onSurface.withValues(alpha: 0.54),
               fontSize: 12,
             ),
           ),
@@ -132,7 +132,7 @@ class _StatColumnItem extends StatelessWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.54),
+            ).colorScheme.onSurface.withValues(alpha: 0.54),
             fontSize: 12,
           ),
         ),
@@ -140,3 +140,4 @@ class _StatColumnItem extends StatelessWidget {
     );
   }
 }
+

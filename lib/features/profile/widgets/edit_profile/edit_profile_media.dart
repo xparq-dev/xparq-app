@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class EditProfileMedia extends StatelessWidget {
@@ -41,7 +41,7 @@ class EditProfileMedia extends StatelessWidget {
                 height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.blueGrey.withOpacity(0.1),
+                  color: Colors.blueGrey.withValues(alpha: 0.1),
                   image: newCoverFile != null
                       ? DecorationImage(
                           image: XparqImage.getImageProvider(
@@ -140,7 +140,7 @@ class EditProfileMedia extends StatelessWidget {
         icon: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.more_vert, size: 18, color: Colors.white),

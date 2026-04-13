@@ -27,7 +27,7 @@ class XparqImage extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget image = _buildImage(context);
 
-    // ✅ เพิ่ม borderRadius (สำคัญมาก)
+    // âœ… à¹€à¸žà¸´à¹ˆà¸¡ borderRadius (à¸ªà¸³à¸„à¸±à¸à¸¡à¸²à¸)
     if (borderRadius != null) {
       image = ClipRRect(
         borderRadius: borderRadius!,
@@ -39,7 +39,7 @@ class XparqImage extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context) {
-    // 🔹 local file (ไม่ใช้ existsSync แล้ว)
+    // ðŸ”¹ local file (à¹„à¸¡à¹ˆà¹ƒà¸Šà¹‰ existsSync à¹à¸¥à¹‰à¸§)
     if (_isLocalFile(imageUrl)) {
       final path = imageUrl.replaceFirst('file://', '');
       return Image.file(
@@ -47,35 +47,35 @@ class XparqImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (_, __, ___) => _error(),
+        errorBuilder: (a, b, c) => _error(),
       );
     }
 
-    // 🔹 web blob / data
+    // ðŸ”¹ web blob / data
     if (_isWebMemoryImage(imageUrl)) {
       return Image.network(
         imageUrl,
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (_, __, ___) => _error(),
+        errorBuilder: (a, b, c) => _error(),
       );
     }
 
-    // 🔹 empty
+    // ðŸ”¹ empty
     if (imageUrl.isEmpty) {
       return _placeholder();
     }
 
-    // 🔹 network (cached)
+    // ðŸ”¹ network (cached)
     return CachedNetworkImage(
       imageUrl: imageUrl,
       width: width,
       height: height,
       fit: fit,
       fadeInDuration: const Duration(milliseconds: 200),
-      placeholder: (_, __) => _placeholder(),
-      errorWidget: (_, __, ___) => _error(),
+      placeholder: (__, _) => _placeholder(),
+      errorWidget: (a, b, c) => _error(),
     );
   }
 
@@ -112,7 +112,7 @@ class XparqImage extends StatelessWidget {
         );
   }
 
-  /// 🔥 ใช้กับ DecorationImage / Avatar
+  /// ðŸ”¥ à¹ƒà¸Šà¹‰à¸à¸±à¸š DecorationImage / Avatar
   static ImageProvider getImageProvider(String imageUrl) {
     if (!kIsWeb && imageUrl.startsWith('file://')) {
       final path = imageUrl.replaceFirst('file://', '');

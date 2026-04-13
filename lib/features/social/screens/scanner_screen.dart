@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
@@ -275,7 +275,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                             style: TextStyle(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.7),
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
                               fontSize: 12,
                             ),
                           ),
@@ -308,7 +308,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.7),
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -319,3 +319,4 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     );
   }
 }
+

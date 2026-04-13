@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
@@ -64,7 +64,7 @@ class _OrbitListScreenState extends ConsumerState<OrbitListScreen>
           labelColor: const Color(0xFF4FC3F7),
           unselectedLabelColor: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.54),
+          ).colorScheme.onSurface.withValues(alpha: 0.54),
           tabs: [
             Tab(text: AppLocalizations.of(context)!.orbiters),
             Tab(text: AppLocalizations.of(context)!.orbiting),
@@ -140,7 +140,7 @@ class _RequestsList extends ConsumerWidget {
                   size: 64,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.24),
+                  ).colorScheme.onSurface.withValues(alpha: 0.24),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -148,7 +148,7 @@ class _RequestsList extends ConsumerWidget {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                   ),
                 ),
               ],
@@ -281,7 +281,7 @@ class _RequestTileWrapperState extends ConsumerState<_RequestTileWrapper> {
       },
       loading: () =>
           ListTile(title: Text(AppLocalizations.of(context)!.loadingProfile)),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (__, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -312,7 +312,7 @@ class _OrbitList extends ConsumerWidget {
                   size: 64,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.24),
+                  ).colorScheme.onSurface.withValues(alpha: 0.24),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -322,7 +322,7 @@ class _OrbitList extends ConsumerWidget {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                   ),
                 ),
               ],
@@ -340,13 +340,13 @@ class _OrbitList extends ConsumerWidget {
                     : null,
                 backgroundColor: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.10),
+                ).colorScheme.onSurface.withValues(alpha: 0.10),
                 child: user.photoUrl.isEmpty
                     ? Icon(
                         Icons.person,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.54),
+                        ).colorScheme.onSurface.withValues(alpha: 0.54),
                       )
                     : null,
               ),
@@ -364,7 +364,7 @@ class _OrbitList extends ConsumerWidget {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.54),
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
                 ),
               ),
               trailing: IconButton(
@@ -398,7 +398,7 @@ class _OrbitList extends ConsumerWidget {
         child: CircularProgressIndicator(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.24),
+          ).colorScheme.onSurface.withValues(alpha: 0.24),
         ),
       ),
       error: (err, stack) => Center(
@@ -407,7 +407,7 @@ class _OrbitList extends ConsumerWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.38),
+            ).colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ),
       ),
@@ -469,3 +469,4 @@ class _OrbitList extends ConsumerWidget {
     );
   }
 }
+

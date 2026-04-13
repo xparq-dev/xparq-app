@@ -67,6 +67,10 @@ class QuickAuthService extends ChangeNotifier {
     await _secureStorage.write(key: '$_sessionPrefix$uid', value: data);
   }
 
+  Future<void> clearSession(String uid) async {
+    await _secureStorage.delete(key: '$_sessionPrefix$uid');
+  }
+
   /// Returns a record of (accessToken, refreshToken) or null if not found.
   Future<({String accessToken, String refreshToken})?> getSession(
     String uid,

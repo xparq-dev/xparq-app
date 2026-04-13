@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/offline/providers/offline_user_provider.dart';
 import 'package:xparq_app/features/offline/services/nearby_service.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
@@ -116,7 +116,7 @@ class _OfflineRadarScreenState extends ConsumerState<OfflineRadarScreen> {
                       size: 120,
                       color: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.5),
+                      ).colorScheme.primary.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 32),
                     Text(
@@ -133,7 +133,7 @@ class _OfflineRadarScreenState extends ConsumerState<OfflineRadarScreen> {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.5),
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 12,
                       ),
                     ),
@@ -158,7 +158,7 @@ class _OfflineRadarScreenState extends ConsumerState<OfflineRadarScreen> {
                   leading: CircleAvatar(
                     backgroundColor: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.1),
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     child: const Icon(Icons.person, size: 20),
                   ),
                   title: Text(
@@ -188,3 +188,4 @@ class _OfflineRadarScreenState extends ConsumerState<OfflineRadarScreen> {
     );
   }
 }
+

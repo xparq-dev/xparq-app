@@ -1,10 +1,10 @@
-// lib/features/profile/widgets/about_tab.dart
+﻿// lib/features/profile/widgets/about_tab.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/widgets/expandable_text.dart';
+import 'package:xparq_app/shared/widgets/common/expandable_text.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 
@@ -53,7 +53,7 @@ class _AboutTabState extends ConsumerState<AboutTab> {
               child: ExpandableText(
                 text: profile.extendedBio!,
                 style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   fontSize: 14,
                   height: 1.6,
                 ),
@@ -155,7 +155,7 @@ class _AboutTabState extends ConsumerState<AboutTab> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.onSurface.withOpacity(0.04),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
             width: 0.5,
           ),
         ),
@@ -166,7 +166,7 @@ class _AboutTabState extends ConsumerState<AboutTab> {
           Text(
             title,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -193,13 +193,13 @@ class _AboutTabState extends ConsumerState<AboutTab> {
           Icon(
             icon,
             size: 18,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 12),
           Text(
             '$label: ',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               fontSize: 13,
             ),
           ),
@@ -214,7 +214,7 @@ class _AboutTabState extends ConsumerState<AboutTab> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          ?trailing,
+          if (trailing != null) trailing,
         ],
       ),
     );
@@ -264,7 +264,7 @@ class _AboutTabState extends ConsumerState<AboutTab> {
         size: 18,
         color: isVisible
             ? const Color(0xFF4FC3F7)
-            : theme.colorScheme.onSurface.withOpacity(0.3),
+            : theme.colorScheme.onSurface.withValues(alpha: 0.3),
       ),
     );
   }
@@ -338,9 +338,9 @@ class _IdentityChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2), width: 0.8),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

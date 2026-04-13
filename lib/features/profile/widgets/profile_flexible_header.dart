@@ -120,17 +120,17 @@ class ProfileFlexibleHeader extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                theme.colorScheme.onSurface.withOpacity(
+                theme.colorScheme.onSurface.withValues(alpha: 
                   isDark ? 0.08 : 0.02,
                 ),
                 Colors.transparent,
                 Colors.transparent,
-                headerBaseColor.withOpacity(isDark ? 0.08 : 0.03),
-                headerBaseColor.withOpacity(isDark ? 0.22 : 0.10),
-                headerBaseColor.withOpacity(isDark ? 0.42 : 0.24),
-                headerBaseColor.withOpacity(isDark ? 0.64 : 0.46),
-                headerBaseColor.withOpacity(isDark ? 0.84 : 0.70),
-                headerBaseColor.withOpacity(isDark ? 0.96 : 0.90),
+                headerBaseColor.withValues(alpha: isDark ? 0.08 : 0.03),
+                headerBaseColor.withValues(alpha: isDark ? 0.22 : 0.10),
+                headerBaseColor.withValues(alpha: isDark ? 0.42 : 0.24),
+                headerBaseColor.withValues(alpha: isDark ? 0.64 : 0.46),
+                headerBaseColor.withValues(alpha: isDark ? 0.84 : 0.70),
+                headerBaseColor.withValues(alpha: isDark ? 0.96 : 0.90),
                 headerBaseColor,
               ],
               stops: const [

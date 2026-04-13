@@ -13,7 +13,7 @@ class PasswordAndSecurityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
     final currentUser = ref.watch(supabaseAuthStateProvider).valueOrNull;
 
     return Scaffold(

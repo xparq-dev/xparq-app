@@ -1,4 +1,4 @@
-// lib/features/block_report/screens/blocked_users_screen.dart
+﻿// lib/features/block_report/screens/blocked_users_screen.dart
 //
 // Shows the list of blocked users with option to unblock.
 
@@ -32,14 +32,14 @@ class BlockedUsersScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('🛡️', style: TextStyle(fontSize: 48)),
+                  Text('ðŸ›¡ï¸', style: TextStyle(fontSize: 48)),
                   SizedBox(height: 12),
                   Text(
                     AppLocalizations.of(context)!.noBlockedSparqs,
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.54),
+                      ).colorScheme.onSurface.withValues(alpha: 0.54),
                     ),
                   ),
                 ],
@@ -49,10 +49,10 @@ class BlockedUsersScreen extends ConsumerWidget {
 
           return ListView.separated(
             itemCount: uids.length,
-            separatorBuilder: (_, _) => Divider(
+            separatorBuilder: (__, _) => Divider(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.10),
+              ).colorScheme.onSurface.withValues(alpha: 0.10),
               height: 1,
             ),
             itemBuilder: (context, index) {
@@ -81,7 +81,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.38),
+                    ).colorScheme.onSurface.withValues(alpha: 0.38),
                     fontSize: 12,
                   ),
                 ),
@@ -102,7 +102,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.7),
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         actions: [
@@ -113,7 +113,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.54),
+                                ).colorScheme.onSurface.withValues(alpha: 0.54),
                               ),
                             ),
                           ),

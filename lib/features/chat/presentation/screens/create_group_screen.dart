@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -120,24 +120,24 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                 labelStyle: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.6),
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 hintText: AppLocalizations.of(context)!.groupNameHint,
                 hintStyle: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.38),
+                  ).colorScheme.onSurface.withValues(alpha: 0.38),
                 ),
                 prefixIcon: Icon(
                   Icons.group_outlined,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.54),
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
                 ),
                 filled: true,
                 fillColor: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.05),
+                ).colorScheme.onSurface.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -190,7 +190,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                       ),
                       title: Text(friend.xparqName),
                       subtitle: Text(
-                        '@${friend.handle ?? friend.id.substring(0, 8)}',
+                        '@${friend.handle ?? 'Explorer'}',
                       ),
                       trailing: Checkbox(
                         value: isSelected,
@@ -211,3 +211,4 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     );
   }
 }
+

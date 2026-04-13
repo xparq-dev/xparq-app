@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 import 'package:xparq_app/features/radar/models/nearby_user_model.dart';
 
 class NearbyUserTile extends StatelessWidget {

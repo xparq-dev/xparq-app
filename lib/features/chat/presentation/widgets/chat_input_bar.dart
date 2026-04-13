@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/chat/presentation/providers/signal_chat_controller.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 
@@ -46,18 +46,18 @@ class ChatInputBar extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.08)
-                    : Colors.white.withOpacity(0.92),
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.08),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.08),
                   width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.08),
+                    color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.08),
                     blurRadius: 25,
                     spreadRadius: -5,
                     offset: const Offset(0, 10),
@@ -131,7 +131,7 @@ class ChatInputBar extends ConsumerWidget {
                           Icon(
                             Icons.edit_outlined,
                             size: 14,
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -139,7 +139,7 @@ class ChatInputBar extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -153,7 +153,7 @@ class ChatInputBar extends ConsumerWidget {
                             child: Icon(
                               Icons.close_rounded,
                               size: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                             ),
                           ),
                         ],
@@ -168,7 +168,7 @@ class ChatInputBar extends ConsumerWidget {
                             Icons.do_not_disturb_on,
                             color: state.isSensitive
                                 ? const Color(0xFF7C4DFF)
-                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
                             size: isLandscape ? 20 : 22,
                           ),
                           tooltip: 'Flag as sensitive (Black Hole Zone)',
@@ -177,7 +177,7 @@ class ChatInputBar extends ConsumerWidget {
                       IconButton(
                         icon: Icon(
                           Icons.image_outlined,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           size: isLandscape ? 20 : 22,
                         ),
                         tooltip: 'Attach Image',
@@ -195,13 +195,13 @@ class ChatInputBar extends ConsumerWidget {
                           decoration: InputDecoration(
                             hintText: state.editingMessage != null ? 'Recraft your signal…' : 'Transmit a signal…',
                             hintStyle: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
                               fontSize: isLandscape ? 13 : 15,
                             ),
                             filled: true,
                             fillColor: (Theme.of(context).brightness == Brightness.dark 
-                                ? Colors.white.withOpacity(0.05) 
-                                : Colors.black.withOpacity(0.02)),
+                                ? Colors.white.withValues(alpha: 0.05) 
+                                : Colors.black.withValues(alpha: 0.02)),
                             isDense: isLandscape,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -231,7 +231,7 @@ class ChatInputBar extends ConsumerWidget {
                                 : const Color(0xFF4FC3F7),
                             boxShadow: [
                               BoxShadow(
-                                color: (state.isSensitive ? const Color(0xFF7C4DFF) : const Color(0xFF4FC3F7)).withOpacity(0.45),
+                                color: (state.isSensitive ? const Color(0xFF7C4DFF) : const Color(0xFF4FC3F7)).withValues(alpha: 0.45),
                                 blurRadius: 12,
                                 spreadRadius: -2,
                                 offset: const Offset(0, 2),
@@ -292,12 +292,12 @@ class _QuickActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0xFF4FC3F7).withOpacity(0.15)
+              ? const Color(0xFF4FC3F7).withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isActive
               ? Border.all(
-                  color: const Color(0xFF4FC3F7).withOpacity(0.5),
+                  color: const Color(0xFF4FC3F7).withValues(alpha: 0.5),
                   width: 0.5,
                 )
               : null,
@@ -310,7 +310,7 @@ class _QuickActionButton extends StatelessWidget {
               size: 20,
               color: isActive
                   ? const Color(0xFF4FC3F7)
-                  : theme.colorScheme.onSurface.withOpacity(
+                  : theme.colorScheme.onSurface.withValues(alpha: 
                       theme.brightness == Brightness.dark ? 0.6 : 0.8
                     ),
             ),
@@ -322,7 +322,7 @@ class _QuickActionButton extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: isActive
                     ? const Color(0xFF4FC3F7)
-                    : theme.colorScheme.onSurface.withOpacity(
+                    : theme.colorScheme.onSurface.withValues(alpha: 
                         theme.brightness == Brightness.dark ? 0.6 : 0.8
                       ),
               ),
@@ -426,7 +426,7 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withOpacity(0.3),
+    barrierColor: Colors.black.withValues(alpha: 0.3),
     isScrollControlled: true,
     builder: (context) => Padding(
       padding: EdgeInsets.only(
@@ -458,7 +458,7 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 24,
                 spreadRadius: -8,
                 offset: const Offset(0, 12),
@@ -473,13 +473,13 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: (Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.white.withOpacity(0.08) 
-                      : Colors.white.withOpacity(0.92)),
+                      ? Colors.white.withValues(alpha: 0.08) 
+                      : Colors.white.withValues(alpha: 0.92)),
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.black.withOpacity(0.08),
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.08),
                     width: 1.5,
                   ),
                 ),
@@ -492,8 +492,8 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark 
-                            ? Colors.white.withOpacity(0.2)
-                            : Colors.black.withOpacity(0.1),
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -533,11 +533,11 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 4),
                                     ),

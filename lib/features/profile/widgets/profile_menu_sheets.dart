@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 
 class ProfileMenuSheets {
   static void showAvatarMenu({
@@ -301,7 +301,7 @@ class _BaseMenuSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor.withOpacity(0.2),
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -314,3 +314,4 @@ class _BaseMenuSheet extends StatelessWidget {
     );
   }
 }
+

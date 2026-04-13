@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 
 /// Repository responsible for all signal message operations,

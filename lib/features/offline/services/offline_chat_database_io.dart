@@ -482,6 +482,20 @@ CREATE TABLE offline_friends (
         as Map<String, dynamic>;
   }
 
+  Future<void> clearProfileCache({String? uid}) async {
+    final db = await instance.database;
+    if (uid == null) {
+      await db.delete('profile_cache');
+      return;
+    }
+
+    await db.delete(
+      'profile_cache',
+      where: 'uid = ?',
+      whereArgs: [uid],
+    );
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();

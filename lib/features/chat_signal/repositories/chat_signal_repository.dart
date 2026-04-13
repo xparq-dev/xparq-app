@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/chat_signal/models/signal_event_model.dart';
 
 class ChatSignalRepository {

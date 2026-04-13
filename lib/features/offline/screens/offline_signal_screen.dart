@@ -111,7 +111,7 @@ class _OfflineSignalScreenState extends ConsumerState<OfflineSignalScreen> {
                     size: 48,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.2),
+                    ).colorScheme.onSurface.withValues(alpha: 0.2),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -119,7 +119,7 @@ class _OfflineSignalScreenState extends ConsumerState<OfflineSignalScreen> {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -195,7 +195,7 @@ class _OfflineSignalScreenState extends ConsumerState<OfflineSignalScreen> {
                             size: 16,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.2),
+                            ).colorScheme.onSurface.withValues(alpha: 0.2),
                           ),
                     onTap: () {
                       if (activePeer != null) {

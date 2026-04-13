@@ -2,7 +2,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 
 class ProfilePhotoGallery extends StatefulWidget {
   final List<String> photos;
@@ -53,7 +53,7 @@ class _ProfilePhotoGalleryState extends State<ProfilePhotoGallery> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
               child: Container(
-                color: Colors.black.withOpacity(0.75),
+                color: Colors.black.withValues(alpha: 0.75),
               ),
             ),
           ),

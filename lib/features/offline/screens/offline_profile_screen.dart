@@ -90,7 +90,7 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: themeColors.onSurface.withOpacity(0.5),
+                  color: themeColors.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -105,7 +105,7 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
               },
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.grey.withOpacity(
+                fillColor: Colors.grey.withValues(alpha: 
                   0.2,
                 ), // Grey background
                 border: OutlineInputBorder(
@@ -114,7 +114,7 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
                 ),
                 hintText: AppLocalizations.of(context)!.offlineDisplayNameHint,
                 hintStyle: TextStyle(
-                  color: themeColors.onSurface.withOpacity(0.4),
+                  color: themeColors.onSurface.withValues(alpha: 0.4),
                 ),
               ),
             ),
@@ -147,7 +147,7 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
                   AppLocalizations.of(context)!.offlineAnonEditDisabled,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.redAccent.withOpacity(0.8),
+                    color: Colors.redAccent.withValues(alpha: 0.8),
                     fontSize: 12,
                   ),
                 ),
@@ -163,7 +163,7 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: themeColors.onSurface.withOpacity(0.5),
+                  color: themeColors.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -176,17 +176,17 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
                   return Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                     ),
                     child: Column(
                       children: [
                         Icon(
                           Icons.people_outline,
-                          color: themeColors.onSurface.withOpacity(0.2),
+                          color: themeColors.onSurface.withValues(alpha: 0.2),
                           size: 48,
                         ),
                         const SizedBox(height: 16),
@@ -194,7 +194,7 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
                           AppLocalizations.of(context)!.offlineNoFriends,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: themeColors.onSurface.withOpacity(0.4),
+                            color: themeColors.onSurface.withValues(alpha: 0.4),
                           ),
                         ),
                       ],
@@ -216,17 +216,17 @@ class _OfflineProfileScreenState extends ConsumerState<OfflineProfileScreen> {
 
                     return Container(
                       decoration: BoxDecoration(
-                        color: themeColors.onSurface.withOpacity(0.05),
+                        color: themeColors.onSurface.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: themeColors.onSurface.withOpacity(0.1),
+                          color: themeColors.onSurface.withValues(alpha: 0.1),
                         ),
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: isConnected
-                              ? Colors.green.withOpacity(0.2)
-                              : Colors.grey.withOpacity(0.2),
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.grey.withValues(alpha: 0.2),
                           child: Icon(
                             Icons.person,
                             color: isConnected

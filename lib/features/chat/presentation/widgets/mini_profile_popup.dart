@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
-import 'package:xparq_app/core/widgets/expandable_text.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
+import 'package:xparq_app/shared/widgets/common/expandable_text.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 
@@ -54,7 +54,7 @@ class MiniProfilePopup extends ConsumerWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: primaryColor.withOpacity(0.3),
+                                color: primaryColor.withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 spreadRadius: 5,
                               ),
@@ -111,7 +111,7 @@ class MiniProfilePopup extends ConsumerWidget {
                       '@${profile.handle}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -140,7 +140,7 @@ class MiniProfilePopup extends ConsumerWidget {
                           'Galactic Orbit',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -241,3 +241,4 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+

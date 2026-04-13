@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/offline/models/offline_task_model.dart';
 import 'package:xparq_app/features/offline/repositories/offline_repository.dart';
 

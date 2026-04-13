@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 import 'package:xparq_app/features/offline/providers/offline_provider.dart';
 import 'package:xparq_app/features/offline/widgets/offline_task_tile.dart';
 

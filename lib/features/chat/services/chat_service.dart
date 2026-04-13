@@ -1,4 +1,4 @@
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/chat/models/message_model.dart';
 import 'package:xparq_app/features/chat/repositories/chat_repository.dart';
 

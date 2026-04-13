@@ -10,8 +10,8 @@ import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/mini_profile_popup.dart';
 import 'dart:ui';
-import 'package:xparq_app/core/widgets/glass_card.dart';
-import 'package:xparq_app/core/widgets/glass_menu_item.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/menus/glass_menu_item.dart';
 import 'app_bar_components.dart';
 
 class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -87,14 +87,14 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
           IconButton(
             icon: Icon(
               Icons.call_outlined,
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             onPressed: () {},
           ),
           IconButton(
             icon: Icon(
               Icons.person_add_outlined,
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             onPressed: () => showDialog<void>(
               context: context,
@@ -104,7 +104,7 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
           IconButton(
             icon: Icon(
               Icons.more_vert,
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             onPressed: () => _showGlassMenu(context, ref, isGroupMenu: true),
           ),
@@ -149,7 +149,7 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 250),
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(opacity: animation, child: ScaleTransition(scale: animation, alignment: Alignment.topRight, child: child));

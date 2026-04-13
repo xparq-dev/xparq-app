@@ -160,7 +160,7 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.offlineReconnected(peerName)),
-            backgroundColor: Colors.blueAccent.withOpacity(0.8),
+            backgroundColor: Colors.blueAccent.withValues(alpha: 0.8),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -253,7 +253,7 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
               color: context.mounted
                   ? Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.08)
+                    ).colorScheme.onSurface.withValues(alpha: 0.08)
                   : Colors.transparent, // Fallback if context is not mounted
             ),
           ),

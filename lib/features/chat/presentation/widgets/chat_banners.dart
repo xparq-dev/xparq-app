@@ -1,4 +1,4 @@
-// lib/features/chat/widgets/chat_banners.dart
+﻿// lib/features/chat/widgets/chat_banners.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +23,7 @@ class PinnedMessagesBar extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E3A5F).withOpacity(0.5),
+            color: const Color(0xFF1E3A5F).withValues(alpha: 0.5),
             border: const Border(
               bottom: BorderSide(color: Colors.white10, width: 0.5),
             ),
@@ -71,7 +71,7 @@ class PinnedMessagesBar extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (__, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -95,7 +95,7 @@ class SpamWarningBanner extends StatelessWidget {
         horizontal: 12,
         vertical: isLandscape ? 6 : 12,
       ),
-      color: Colors.red.withOpacity(0.1),
+      color: Colors.red.withValues(alpha: 0.1),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -139,7 +139,7 @@ class SpamWarningBanner extends StatelessWidget {
       height: isLandscape ? 30 : 36,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           elevation: 0,
         ),
@@ -159,13 +159,13 @@ class NSFWSensitiveBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF7C4DFF).withOpacity(0.15),
+      color: const Color(0xFF7C4DFF).withValues(alpha: 0.15),
       padding: EdgeInsets.symmetric(
         horizontal: 16,
         vertical: isLandscape ? 4 : 6,
       ),
       child: Text(
-        '⚠️ Black Hole Zone active',
+        'âš ï¸ Black Hole Zone active',
         style: TextStyle(
           color: const Color(0xFF7C4DFF),
           fontSize: isLandscape ? 10 : 12,

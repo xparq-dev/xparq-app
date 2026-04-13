@@ -5,9 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/constants/language_data.dart';
-import 'package:xparq_app/core/providers/locale_provider.dart';
-import 'package:xparq_app/core/theme/theme_provider.dart';
+import 'package:xparq_app/shared/constants/language_data.dart';
+import 'package:xparq_app/shared/providers/locale_provider.dart';
+import 'package:xparq_app/shared/theme/theme_provider.dart';
 
 class ContentDisplayScreen extends ConsumerWidget {
   const ContentDisplayScreen({super.key});
@@ -16,7 +16,7 @@ class ContentDisplayScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
 
     final themeMode = ref.watch(themeProvider);
     final isDark = themeMode == ThemeMode.dark;

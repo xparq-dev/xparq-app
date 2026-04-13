@@ -93,7 +93,7 @@ class ChatTabBar extends StatelessWidget {
 
     return TabBar(
       labelColor: const Color(0xFF4FC3F7),
-      unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.54),
+      unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.54),
       indicatorColor: const Color(0xFF4FC3F7),
       indicatorSize: TabBarIndicatorSize.tab,
       dividerColor: theme.dividerColor,
@@ -177,7 +177,7 @@ class OfflineErrorView extends ConsumerWidget {
               l10n.chatListOfflineSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
             ),

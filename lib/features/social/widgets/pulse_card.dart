@@ -9,16 +9,16 @@ import 'package:xparq_app/features/block_report/widgets/report_bottom_sheet.dart
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/models/pulse_model.dart';
 import 'package:xparq_app/features/social/providers/pulse_providers.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'echo_bottom_sheet.dart';
 
 class PulseCard extends ConsumerStatefulWidget {
@@ -141,7 +141,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.24),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -164,7 +164,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                     ? AppLocalizations.of(context)!.pulseUnwarp
                     : AppLocalizations.of(context)!.pulseWarp,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                   fontSize: 12,
                 ),
               ),
@@ -174,7 +174,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
               },
             ),
             Divider(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
             ),
             ListTile(
               leading: Icon(
@@ -191,7 +191,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
               subtitle: Text(
                 AppLocalizations.of(context)!.pulseShareFriendsDesc,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                   fontSize: 12,
                 ),
               ),
@@ -264,7 +264,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.24),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -310,7 +310,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                         subtitle: Text(
                           AppLocalizations.of(context)!.pulseWarpMeMeDesc,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                             fontSize: 12,
                           ),
                         ),
@@ -325,7 +325,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                           AppLocalizations.of(context)!.pulseWarpInviteFriends,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -419,7 +419,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.24),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -474,7 +474,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
         content: Text(
           AppLocalizations.of(context)!.pulseDeleteConfirmDesc,
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         actions: [
@@ -483,7 +483,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
             child: Text(
               'Cancel',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
               ),
             ),
           ),
@@ -544,8 +544,8 @@ class _PulseCardState extends ConsumerState<PulseCard> {
         border: Border(
           bottom: BorderSide(
             color: pulse.isNsfw
-                ? Colors.redAccent.withOpacity(0.3)
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+                ? Colors.redAccent.withValues(alpha: 0.3)
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
           ),
         ),
       ),
@@ -587,7 +587,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                               backgroundImage: avatarUrl.isNotEmpty
                                   ? XparqImage.getImageProvider(avatarUrl)
                                   : null,
-                              backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.10),
+                              backgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.10),
                               radius: 20,
                               child: avatarUrl.isEmpty
                                   ? Icon(
@@ -595,7 +595,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.54),
+                                          .withValues(alpha: 0.54),
                                     )
                                   : null,
                             ),
@@ -631,7 +631,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.54),
+                                                .withValues(alpha: 0.54),
                                             fontSize: 12,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -645,12 +645,12 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.red.withOpacity(0.2),
+                                            color: Colors.red.withValues(alpha: 0.2),
                                             borderRadius: BorderRadius.circular(
                                               4,
                                             ),
                                             border: Border.all(
-                                              color: Colors.redAccent.withOpacity(0.5),
+                                              color: Colors.redAccent.withValues(alpha: 0.5),
                                             ),
                                           ),
                                           child: Text(
@@ -679,7 +679,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                 IconButton(
                   icon: Icon(
                     Icons.more_vert,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                     size: 20,
                   ),
                   onPressed: _showOptions,
@@ -703,7 +703,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.zero,
                       border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.3),
+                        color: Colors.redAccent.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(
@@ -712,7 +712,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                         Text(
                           _generateMosaicText(pulse.content.length),
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                             fontSize: 15,
                             fontFeatures: const [
                               ui.FontFeature.tabularFigures(),
@@ -767,7 +767,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                           content: Text(
                             AppLocalizations.of(context)!.pulseRevealDesc,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                           actions: [
@@ -776,7 +776,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                               child: Text(
                                 AppLocalizations.of(context)!.cancel,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                                 ),
                               ),
                             ),
@@ -833,7 +833,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                 children: [
                                   Icon(
                                     Icons.visibility_off,
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
@@ -841,7 +841,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                       context,
                                     )!.sensitiveTapToHide,
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -896,14 +896,14 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                             ),
                           ),
                           Container(
-                            color: Theme.of(context).colorScheme.surface.withOpacity(0.4),
+                            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
                             alignment: Alignment.center,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
                                   Icons.visibility_off,
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                   size: 40,
                                 ),
                                 const SizedBox(height: 10),
@@ -911,7 +911,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                   '⚠️ Tap to reveal\nBlack Hole content',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -955,7 +955,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                           children: [
                             Icon(
                               Icons.visibility_off,
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               size: 40,
                             ),
                             const SizedBox(height: 10),
@@ -963,7 +963,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                               '⚠️ Tap to reveal\nBlack Hole video content',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -999,7 +999,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                                     ? Icons.pause_circle_outline
                                     : Icons.play_circle_outline,
                                 size: 50,
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                           ),
@@ -1013,7 +1013,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                   height: 200,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Center(child: CircularProgressIndicator()),
@@ -1022,7 +1022,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
 
             const SizedBox(height: 16),
             Divider(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.10),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.10),
             ),
 
             // ── Action Bar ────────────────────────────────────────────────
@@ -1038,7 +1038,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                   icon: Icons.mode_comment_outlined,
                   label: 'Echo',
                   count: pulse.echoCount,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                   onTap: _openEcho,
                 ),
                 _ActionButton(
@@ -1049,7 +1049,7 @@ class _PulseCardState extends ConsumerState<PulseCard> {
                   count: _warpCount,
                   color: _isWarped
                       ? const Color(0xFF4FC3F7)
-                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                   onTap: _warp,
                 ),
               ],
@@ -1128,7 +1128,7 @@ class _SparkButtonState extends State<_SparkButton>
   Widget build(BuildContext context) {
     final color = widget.isSparked
         ? const Color(0xFFFFD700)
-        : Theme.of(context).colorScheme.onSurface.withOpacity(0.54);
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54);
 
     return InkWell(
       onTap: widget.onTap,
@@ -1195,3 +1195,4 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+

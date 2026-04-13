@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/message_bubble.dart';
@@ -49,7 +49,7 @@ class ChatMessagesList extends ConsumerWidget {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           );
@@ -133,7 +133,7 @@ class ChatTypingIndicator extends ConsumerWidget {
             fontSize: isLandscape ? 10 : 12,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.5),
+            ).colorScheme.onSurface.withValues(alpha: 0.5),
             fontStyle: FontStyle.italic,
           ),
         ),

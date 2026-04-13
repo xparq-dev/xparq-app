@@ -7,14 +7,14 @@ import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/radar/services/location_service.dart';
-import 'package:xparq_app/core/utils/thailand_location_utils.dart';
-import 'package:xparq_app/core/widgets/expandable_text.dart';
+import 'package:xparq_app/shared/utils/thailand_location_utils.dart';
+import 'package:xparq_app/shared/widgets/common/expandable_text.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/profile/providers/image_upload_provider.dart';
 import 'package:xparq_app/features/profile/repositories/profile_repository.dart';
-import 'package:xparq_app/core/constants/thailand_provinces.dart';
-import 'package:xparq_app/core/utils/stellar_identity_helper.dart';
+import 'package:xparq_app/shared/constants/thailand_provinces.dart';
+import 'package:xparq_app/shared/utils/stellar_identity_helper.dart';
 import 'package:xparq_app/features/profile/widgets/edit_profile/edit_profile_widgets.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -450,7 +450,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       AppLocalizations.of(context)!.editProfileContactInfoDesc,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -655,7 +655,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   height: 1,
                                   color: Theme.of(
                                     context,
-                                  ).dividerColor.withOpacity(0.1),
+                                  ).dividerColor.withValues(alpha: 0.1),
                                 ),
                                 itemBuilder: (BuildContext context, int index) {
                                   final String option = options.elementAt(
@@ -678,7 +678,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .primary
-                                            .withOpacity(0.5),
+                                            .withValues(alpha: 0.5),
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -803,7 +803,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.blueGrey.withOpacity(0.1),
+                  color: Colors.blueGrey.withValues(alpha: 0.1),
                   image: _newCoverFile != null
                       ? DecorationImage(
                           image: XparqImage.getImageProvider(
@@ -902,7 +902,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         icon: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.more_vert, size: 18, color: Colors.white),
@@ -974,10 +974,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             fillColor: locked
                 ? Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.02)
+                  ).colorScheme.onSurface.withValues(alpha: 0.02)
                 : Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.05),
+                  ).colorScheme.onSurface.withValues(alpha: 0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -1016,7 +1016,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 fontSize: 11,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           ),
@@ -1115,7 +1115,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.35),
+              ).colorScheme.onSurface.withValues(alpha: 0.35),
               fontSize: 11,
             ),
           ),
@@ -1146,24 +1146,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         labelStyle: TextStyle(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.35),
+          ).colorScheme.onSurface.withValues(alpha: 0.35),
           fontSize: 13,
         ),
         floatingLabelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
         ),
         hintText: hint,
         hintStyle: TextStyle(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.15),
+          ).colorScheme.onSurface.withValues(alpha: 0.15),
           fontSize: 13,
         ),
         filled: true,
         fillColor: Theme.of(
           context,
-        ).colorScheme.onSurface.withOpacity(0.05),
+        ).colorScheme.onSurface.withValues(alpha: 0.05),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -1171,7 +1171,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
         // Show counter only if maxLength is provided
         counterStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
           fontSize: 10,
         ),
       ),
@@ -1191,7 +1191,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             fontWeight: FontWeight.bold,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 12),
@@ -1209,7 +1209,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ? Theme.of(context).colorScheme.surface
                       : Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               selected: isSelected,
@@ -1229,7 +1229,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               selectedColor: const Color(0xFF4FC3F7),
               backgroundColor: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.05),
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
               checkmarkColor: Theme.of(context).colorScheme.surface,
               side: BorderSide(
                 color: isSelected
@@ -1256,7 +1256,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             fontWeight: FontWeight.bold,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 12),
@@ -1274,7 +1274,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ? Theme.of(context).colorScheme.surface
                       : Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               selected: isSelected,
@@ -1292,7 +1292,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               selectedColor: const Color(0xFF81C784), // Greenish for skills
               backgroundColor: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.05),
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
               checkmarkColor: Theme.of(context).colorScheme.surface,
               side: BorderSide(
                 color: isSelected

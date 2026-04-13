@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 
@@ -24,7 +24,7 @@ class PinnedMessagesBar extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E3A5F).withOpacity(0.5),
+            color: const Color(0xFF1E3A5F).withValues(alpha: 0.5),
             border: const Border(
               bottom: BorderSide(color: Colors.white10, width: 0.5),
             ),
@@ -63,7 +63,7 @@ class PinnedMessagesBar extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (__, _) => const SizedBox.shrink(),
     );
   }
 }

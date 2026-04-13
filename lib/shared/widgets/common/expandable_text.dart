@@ -6,138 +6,107 @@ class ExpandableText extends StatefulWidget {
   final int trimLines;
   final TextStyle? style;
 
-  final String expandText;
-  final String collapseText;
-
-  final Duration animationDuration;
-
   const ExpandableText({
     super.key,
     required this.text,
     this.trimLines = 3,
     this.style,
-    this.expandText = 'More',
-    this.collapseText = 'Show less',
-    this.animationDuration = const Duration(milliseconds: 200),
   });
 
   @override
   State<ExpandableText> createState() => _ExpandableTextState();
 }
 
-class _ExpandableTextState extends State<ExpandableText>
-    with SingleTickerProviderStateMixin {
-  bool _expanded = false;
+class _ExpandableTextState extends State<ExpandableText> {
+  bool _readMore = true;
 
-  void _toggle() => setState(() => _expanded = !_expanded);
+  void _onTapLink() {
+    setState(() => _readMore = !_readMore);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final textStyle =
-        widget.style ??
-        TextStyle(
-          color: theme.colorScheme.onSurface,
-          fontSize: 14,
-          height: 1.5,
-        );
-
-    final linkStyle = textStyle.copyWith(
-      color: theme.colorScheme.primary,
-      fontWeight: FontWeight.w600,
+    final linkStyle = TextStyle(
+      color: const Color(0xFF4FC3F7),
+      fontWeight: FontWeight.bold,
+      fontSize: (widget.style?.fontSize ?? 14) * 0.9,
     );
 
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final span = TextSpan(text: widget.text, style: textStyle);
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final textStyle =
+            widget.style ??
+            TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontSize: 14,
+              height: 1.5,
+            );
 
-        final tp = TextPainter(
-          text: span,
+        // Create a TextSpan with the full text
+        final textSpan = TextSpan(text: widget.text, style: textStyle);
+
+        // Use a TextPainter to determine if the text exceeds the line limit
+        final textPainter = TextPainter(
+          text: textSpan,
           maxLines: widget.trimLines,
+          textAlign: TextAlign.start,
           textDirection: TextDirection.ltr,
         );
 
-        tp.layout(maxWidth: constraints.maxWidth);
+        textPainter.layout(maxWidth: constraints.maxWidth);
 
-        final exceeds = tp.didExceedMaxLines;
-
-        if (!exceeds) {
+        if (!textPainter.didExceedMaxLines) {
           return Text(widget.text, style: textStyle);
         }
 
-        return AnimatedSize(
-          duration: widget.animationDuration,
-          curve: Curves.easeInOut,
-          child: _expanded
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.text, style: textStyle),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: _toggle,
-                      child: Text(widget.collapseText, style: linkStyle),
-                    ),
-                  ],
-                )
-              : RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: _truncateText(
-                          widget.text,
-                          tp,
-                          constraints.maxWidth,
-                          widget.expandText,
-                        ),
-                        style: textStyle,
-                      ),
-                      TextSpan(
-                        text: ' ...${widget.expandText}',
-                        style: linkStyle,
-                        recognizer: TapGestureRecognizer()..onTap = _toggle,
-                      ),
-                    ],
-                  ),
+        // Text exceeds max lines, show truncated with "More"
+        if (_readMore) {
+          return RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: _getTruncatedText(textPainter, constraints.maxWidth),
+                  style: textStyle,
                 ),
-        );
+                TextSpan(
+                  text: ' ...More',
+                  style: linkStyle,
+                  recognizer: TapGestureRecognizer()..onTap = _onTapLink,
+                ),
+              ],
+            ),
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.text, style: textStyle),
+              GestureDetector(
+                onTap: _onTapLink,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text('Show Less', style: linkStyle),
+                ),
+              ),
+            ],
+          );
+        }
       },
     );
   }
 
-  String _truncateText(
-    String text,
-    TextPainter tp,
-    double maxWidth,
-    String expandText,
-  ) {
-    int low = 0;
-    int high = text.length;
+  String _getTruncatedText(TextPainter painter, double maxWidth) {
+    // This is a simplified truncation.
+    // For a more robust solution, we can binary search or use character positions.
+    final position = painter.getPositionForOffset(
+      Offset(maxWidth, painter.height),
+    );
+    final endOffset = position.offset;
 
-    while (low < high) {
-      final mid = (low + high) ~/ 2;
-
-      final span = TextSpan(
-        text: text.substring(0, mid) + ' ...$expandText',
-        style: tp.text!.style,
-      );
-
-      final testPainter = TextPainter(
-        text: span,
-        maxLines: tp.maxLines,
-        textDirection: TextDirection.ltr,
-      );
-
-      testPainter.layout(maxWidth: maxWidth);
-
-      if (testPainter.didExceedMaxLines) {
-        high = mid;
-      } else {
-        low = mid + 1;
-      }
-    }
-
-    return text.substring(0, low).trim();
+    // Backtrack a bit to make room for " ...More"
+    return widget.text
+        .substring(0, (endOffset - 10).clamp(0, widget.text.length))
+        .trim();
   }
 }

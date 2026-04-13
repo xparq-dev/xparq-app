@@ -87,10 +87,10 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                      color: const Color(0xFFFF6B6B).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                        color: const Color(0xFFFF6B6B).withValues(alpha: 0.3),
                       ),
                     ),
                     child: const Text(
@@ -172,14 +172,14 @@ class _AccountRecoveryScreenState extends ConsumerState<AccountRecoveryScreen> {
                       decoration: InputDecoration(
                         counterText: '',
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
+                        fillColor: Colors.white.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         hintText: '000000',
                         hintStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                         ),
                       ),
                     ),

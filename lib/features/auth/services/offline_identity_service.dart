@@ -6,8 +6,8 @@
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:xparq_app/core/constants/app_constants.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/constants/app_constants.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 
 class OfflineIdentityService {
   static const _uuid = Uuid();

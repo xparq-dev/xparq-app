@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import '../../data/services/message_encryption_service.dart';
@@ -874,39 +874,16 @@ class ChatRepository {
     String? reaction,
   }) async {
     try {
-      // 1. Fetch current metadata
-      final message = await _client
-          .from('messages')
-          .select('metadata')
-          .eq('id', messageId)
-          .single();
-
-      final metadata = Map<String, dynamic>.from(message['metadata'] ?? {});
-      final sparks = _normalizeSparks(metadata['sparks']);
-
-      final reactions = Map<String, String>.from(metadata['reactions'] ?? {});
-
-      if (reactions.containsKey(uid) &&
-          (reaction == null || reactions[uid] == reaction)) {
-        // Remove reaction (toggle off)
-        reactions.remove(uid);
-        sparks.remove(uid);
-      } else {
-        // Add or Change reaction
-        reactions[uid] = reaction ?? '⚡';
-        if (!sparks.contains(uid)) sparks.add(uid);
-      }
-
-      metadata['sparks'] = sparks;
-      metadata['reactions'] = reactions;
-
-      // 2. Update metadata
-      await _client
-          .from('messages')
-          .update({'metadata': metadata})
-          .eq('id', messageId);
-
-      debugPrint('SPARK: Toggled spark for message $messageId by $uid');
+      // Use RPC to bypass RLS and ensure atomic update
+      await _client.rpc(
+        'toggle_message_reaction',
+        params: {
+          'p_message_id': messageId,
+          'p_user_id': uid,
+          'p_reaction': reaction ?? '❤️',
+        },
+      );
+      debugPrint('SPARK: Toggled reaction for message $messageId by $uid via RPC');
     } catch (e) {
       debugPrint('SPARK: Error toggling spark for message $messageId: $e');
       rethrow;
@@ -975,10 +952,4 @@ class ChatRepository {
     return counts;
   }
 
-  List<String> _normalizeSparks(dynamic raw) {
-    if (raw == null) return [];
-    if (raw is List) return List<String>.from(raw.map((e) => e.toString()));
-    if (raw is Map) return List<String>.from(raw.keys.map((e) => e.toString()));
-    return [];
-  }
 }

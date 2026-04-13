@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 import 'package:xparq_app/features/control_deck/screens/control_deck_screen.dart';
 import 'package:xparq_app/features/chat/data/services/signal/signal_backup_service.dart';
-import 'package:xparq_app/core/utils/isolate_logger.dart';
+import 'package:xparq_app/shared/utils/isolate_logger.dart';
 
 class SettingsScreen extends ConsumerWidget {
   final bool isEmbedded;
@@ -21,7 +21,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textColor = Theme.of(context).colorScheme.onSurface;
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
     final authState = ref.watch(authNotifierProvider);
     final notifier = ref.read(authNotifierProvider.notifier);
     final isLoading = authState.isLoading;
@@ -42,7 +42,7 @@ class SettingsScreen extends ConsumerWidget {
         if (isLoading)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Center(
                 child: GlassCard(
                   blur: 12,
@@ -251,7 +251,7 @@ class SettingsScreen extends ConsumerWidget {
             label: Text(AppLocalizations.of(context)!.signOutButton),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.red,
-              side: BorderSide(color: Colors.red.withOpacity(0.5)),
+              side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -286,7 +286,7 @@ class SettingsScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.logout, color: Colors.red, size: 28),
@@ -304,7 +304,7 @@ class SettingsScreen extends ConsumerWidget {
                   l10n.signOutConfirmMessage,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                     fontSize: 14,
                   ),
                 ),
@@ -591,7 +591,7 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -599,7 +599,7 @@ class _SettingsTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.12),
+          color: iconColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: iconColor, size: 22),
@@ -626,3 +626,4 @@ class _SettingsTile extends StatelessWidget {
     );
   }
 }
+

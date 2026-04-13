@@ -8,9 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/widgets/galaxy_text_field.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/widgets/ui/inputs/galaxy_text_field.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/auth/widgets/galaxy_error_banner.dart';
 
@@ -537,7 +537,7 @@ class _EmailAuthScreenState extends ConsumerState<EmailAuthScreen>
                                         context,
                                       )!.emailOtpSentDesc,
                                       style: TextStyle(
-                                        color: textColor.withOpacity(0.7),
+                                        color: textColor.withValues(alpha: 0.7),
                                       ),
                                     ),
                                     const SizedBox(height: 28),
@@ -740,3 +740,4 @@ class _EmailAuthScreenState extends ConsumerState<EmailAuthScreen>
     }
   }
 }
+

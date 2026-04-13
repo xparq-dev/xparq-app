@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/block_report/screens/blocked_users_screen.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
@@ -44,7 +44,7 @@ class _PrivacySafetyScreenState extends ConsumerState<PrivacySafetyScreen> {
   Widget build(BuildContext context) {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
     final profile = ref.watch(planetProfileProvider).valueOrNull;
     final ageGroup = ref.watch(currentAgeGroupProvider);
     final notifier = ref.read(authNotifierProvider.notifier);
@@ -188,7 +188,7 @@ class _PrivacySafetyScreenState extends ConsumerState<PrivacySafetyScreen> {
                     : AppLocalizations.of(context)!.privacyNsfwOff,
                 style: TextStyle(
                   color: nsfwEnabled
-                      ? const Color(0xFF9C27B0).withOpacity(0.8)
+                      ? const Color(0xFF9C27B0).withValues(alpha: 0.8)
                       : subtitleColor,
                   fontSize: 12,
                 ),

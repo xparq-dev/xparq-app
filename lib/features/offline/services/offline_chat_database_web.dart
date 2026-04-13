@@ -59,6 +59,8 @@ class OfflineChatDatabase {
 
   Future<Map<String, dynamic>?> getProfileCache(String uid) async => null;
 
+  Future<void> clearProfileCache({String? uid}) async {}
+
   Future<void> close() async {}
 
   Future<Map<String, List<Map<String, dynamic>>>> exportSignalData() async =>

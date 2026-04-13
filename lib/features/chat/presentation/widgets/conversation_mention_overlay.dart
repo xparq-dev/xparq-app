@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/signal_chat_controller.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 
 class MentionOverlay extends ConsumerWidget {
   final String chatId;

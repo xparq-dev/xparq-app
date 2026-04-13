@@ -447,7 +447,7 @@ class _NebulaPickerScreenState extends ConsumerState<NebulaPickerScreen>
           gradient: LinearGradient(
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
-            colors: [Colors.black.withOpacity(0.5), Colors.transparent],
+            colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent],
           ),
         ),
         child: Column(
@@ -655,7 +655,7 @@ class _NebulaPickerScreenState extends ConsumerState<NebulaPickerScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.85),
+            color: Colors.red.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(

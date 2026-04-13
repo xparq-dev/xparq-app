@@ -1,21 +1,21 @@
-// lib/features/auth/screens/onboarding/welcome_screen.dart
+﻿// lib/features/auth/screens/onboarding/welcome_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/providers/locale_provider.dart';
-import 'package:xparq_app/core/theme/theme_provider.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/providers/locale_provider.dart';
+import 'package:xparq_app/shared/theme/theme_provider.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/widgets/xparq_logo.dart';
-import 'package:xparq_app/core/constants/language_data.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
-import 'package:xparq_app/core/widgets/typing_text.dart';
+import 'package:xparq_app/shared/widgets/branding/xparq_logo.dart';
+import 'package:xparq_app/shared/constants/language_data.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
+import 'package:xparq_app/shared/widgets/common/typing_text.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/auth/models/quick_account.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:xparq_app/core/widgets/galactic_background.dart';
+import 'package:xparq_app/shared/widgets/backgrounds/galactic_background.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -52,7 +52,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final labelColor = isDark
         ? Colors.white54
-        : const Color(0xFF0D1B2A).withOpacity(0.5);
+        : const Color(0xFF0D1B2A).withValues(alpha: 0.5);
 
     // Listen for auth success to navigate home
     ref.listen(authNotifierProvider, (previous, next) {
@@ -125,7 +125,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Theme.of(context).colorScheme.onSurface
-                                      .withOpacity(0.6),
+                                      .withValues(alpha: 0.6),
                                 ),
                               ),
                               const Spacer(flex: 3),
@@ -172,13 +172,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                   size: 16,
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.primary.withOpacity(0.7),
+                                  ).colorScheme.primary.withValues(alpha: 0.7),
                                 ),
                                 label: Text(
                                   l10n.enterGuest,
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.primary
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -206,7 +206,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                 },
               ),
 
-              // ── Controls Overlay (Drawn on top) ──────────────────────────────
+              // â”€â”€ Controls Overlay (Drawn on top) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               // Language Selector (Top Left)
               Positioned(
                 top: 8,
@@ -355,7 +355,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.2),
+                    ).colorScheme.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -447,8 +447,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
         decoration: BoxDecoration(
           color: isPlaceholder
               ? (isDark
-                    ? Colors.white.withOpacity(0.02)
-                    : Colors.black.withOpacity(0.02))
+                    ? Colors.white.withValues(alpha: 0.02)
+                    : Colors.black.withValues(alpha: 0.02))
               : (isDark ? const Color(0xFF0D1B2A) : Colors.blueGrey.shade50),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -491,7 +491,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   }
 }
 
-// ── Animated Theme Toggle Button ──────────────────────────────────────────────
+// â”€â”€ Animated Theme Toggle Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ThemeToggleButton extends ConsumerStatefulWidget {
   const _ThemeToggleButton();
@@ -514,7 +514,7 @@ class _ThemeToggleButtonState extends ConsumerState<_ThemeToggleButton>
       duration: const Duration(milliseconds: 480),
     );
 
-    // Scale: pop out (1→0) then bounce back in (0→1)
+    // Scale: pop out (1â†’0) then bounce back in (0â†’1)
     _scale = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(
@@ -550,7 +550,7 @@ class _ThemeToggleButtonState extends ConsumerState<_ThemeToggleButton>
     final isDark = ref.watch(themeProvider) == ThemeMode.dark;
     final iconColor = isDark
         ? Colors.white54
-        : const Color(0xFF0D1B2A).withOpacity(0.5);
+        : const Color(0xFF0D1B2A).withValues(alpha: 0.5);
 
     return GestureDetector(
       onTap: () {
@@ -562,7 +562,7 @@ class _ThemeToggleButtonState extends ConsumerState<_ThemeToggleButton>
         padding: const EdgeInsets.all(12),
         child: AnimatedBuilder(
           animation: _ctrl,
-          builder: (_, _) => Transform.scale(
+          builder: (__, _) => Transform.scale(
             scale: _scale.value,
             child: Transform.rotate(
               angle: _rotate.value,
@@ -583,7 +583,7 @@ class _ThemeToggleButtonState extends ConsumerState<_ThemeToggleButton>
   }
 }
 
-// ── Quick Account List Widget ───────────────────────────────────────────────
+// â”€â”€ Quick Account List Widget â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _QuickAccountList extends ConsumerWidget {
   @override
@@ -602,7 +602,7 @@ class _QuickAccountList extends ConsumerWidget {
             shrinkWrap: true,
             padding: const EdgeInsets.symmetric(horizontal: 0),
             itemCount: accounts.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 20),
+            separatorBuilder: (__, _) => const SizedBox(width: 20),
             itemBuilder: (context, index) {
               final account = accounts[index];
               return GestureDetector(
@@ -617,7 +617,7 @@ class _QuickAccountList extends ConsumerWidget {
                         border: Border.all(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.5),
+                          ).colorScheme.primary.withValues(alpha: 0.5),
                           width: 2,
                         ),
                       ),
@@ -688,7 +688,7 @@ class _QuickAccountList extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.2),
+                    ).colorScheme.onSurface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -727,8 +727,8 @@ class _QuickAccountList extends ConsumerWidget {
                     ),
                     filled: true,
                     fillColor: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.black.withOpacity(0.05),
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
@@ -809,3 +809,4 @@ class _QuickAccountList extends ConsumerWidget {
     );
   }
 }
+

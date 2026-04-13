@@ -83,7 +83,7 @@ class _FocusedMessageOverlayState extends ConsumerState<FocusedMessageOverlay> w
                   sigmaY: _controller.value * 8,
                 ),
                 child: Container(
-                  color: Colors.black.withOpacity((_controller.value * 0.5).clamp(0.0, 1.0)), // Lighter background
+                  color: Colors.black.withValues(alpha: (_controller.value * 0.5).clamp(0.0, 1.0)), // Lighter background
                 ),
               );
             },
@@ -234,15 +234,15 @@ class _MenuButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: color?.withOpacity(0.15) ?? Colors.white.withOpacity(0.12),
+            color: color?.withValues(alpha: 0.15) ?? Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(22), // Circular
             border: Border.all(
-              color: color?.withOpacity(0.3) ?? Colors.white.withOpacity(0.08),
+              color: color?.withValues(alpha: 0.3) ?? Colors.white.withValues(alpha: 0.08),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: (color ?? Colors.black).withOpacity(0.15),
+                color: (color ?? Colors.black).withValues(alpha: 0.15),
                 blurRadius: 8,
                 spreadRadius: 1,
                 offset: const Offset(0, 2),
@@ -250,7 +250,7 @@ class _MenuButton extends StatelessWidget {
             ],
           ),
           alignment: Alignment.center,
-          child: Icon(icon, size: 20, color: color ?? Colors.white.withOpacity(0.9)),
+          child: Icon(icon, size: 20, color: color ?? Colors.white.withValues(alpha: 0.9)),
         ),
       ),
     );

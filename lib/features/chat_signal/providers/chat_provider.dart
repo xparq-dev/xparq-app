@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/chat_signal/models/signal_event_model.dart';
 import 'package:xparq_app/features/chat_signal/repositories/chat_signal_repository.dart';
 import 'package:xparq_app/features/chat_signal/services/signal_service.dart';

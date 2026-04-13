@@ -6,9 +6,9 @@ import '../providers/offline_user_provider.dart';
 import '../providers/offline_state_provider.dart';
 import '../services/nearby_service.dart';
 
-import 'package:xparq_app/core/widgets/xparq_logo.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
-import 'package:xparq_app/core/widgets/galaxy_text_field.dart';
+import 'package:xparq_app/shared/widgets/branding/xparq_logo.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
+import 'package:xparq_app/shared/widgets/ui/inputs/galaxy_text_field.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class OfflineOnboardingScreen extends ConsumerStatefulWidget {
@@ -115,10 +115,10 @@ class _OfflineOnboardingScreenState
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
+                              color: primaryColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: primaryColor.withOpacity(0.2),
+                                color: primaryColor.withValues(alpha: 0.2),
                               ),
                             ),
                             child: Text(
@@ -209,7 +209,7 @@ class _OfflineOnboardingScreenState
                                         : Theme.of(context)
                                               .colorScheme
                                               .onSurface
-                                              .withOpacity(0.5),
+                                              .withValues(alpha: 0.5),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -234,7 +234,7 @@ class _OfflineOnboardingScreenState
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.5),
+                                                .withValues(alpha: 0.5),
                                           ),
                                         ),
                                       ],

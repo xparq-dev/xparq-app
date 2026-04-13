@@ -9,7 +9,7 @@ import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/chat/data/services/message_encryption_service.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/block_report/providers/block_report_providers.dart';
 import 'chat_tile_components.dart';
@@ -39,10 +39,11 @@ class ChatTile extends ConsumerWidget {
         ? (chat.name ?? l10n.chatListGroupDefaultName)
         : (isSelfChat
               ? l10n.chatListSavedMe.toUpperCase()
-              : (profile?.xparqName ??
-                    (otherUid.length > 8
-                        ? otherUid.substring(0, 8)
-                        : otherUid)));
+              : (profile != null
+                    ? (profile.handle != null && profile.handle!.isNotEmpty
+                        ? '${profile.xparqName} (@${profile.handle})'
+                        : profile.xparqName)
+                    : 'Explorer'));
 
     final avatarInitials = chat.isGroup
         ? (chat.name?.isNotEmpty == true
@@ -94,8 +95,8 @@ class ChatTile extends ConsumerWidget {
               showPreview,
               style: TextStyle(
                 color: chat.isSensitive
-                    ? const Color(0xFFFF6B6B).withOpacity(0.7)
-                    : theme.colorScheme.onSurface.withOpacity(0.38),
+                    ? const Color(0xFFFF6B6B).withValues(alpha: 0.7)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.38),
                 fontSize: 13,
               ),
               overflow: TextOverflow.ellipsis,
@@ -105,7 +106,7 @@ class ChatTile extends ConsumerWidget {
                 ? Text(
                     DateFormat('HH:mm').format(chat.lastAt!),
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 
                         0.38,
                       ),
                       fontSize: 11,
@@ -317,3 +318,4 @@ class ChatTile extends ConsumerWidget {
     }
   }
 }
+

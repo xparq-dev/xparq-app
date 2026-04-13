@@ -100,7 +100,7 @@ class EditProfileProfessional extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 12),
@@ -118,7 +118,7 @@ class EditProfileProfessional extends StatelessWidget {
                       ? Theme.of(context).colorScheme.surface
                       : Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               selected: isSelected,
@@ -126,7 +126,7 @@ class EditProfileProfessional extends StatelessWidget {
               selectedColor: const Color(0xFF81C784),
               backgroundColor: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.05),
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
               checkmarkColor: Theme.of(context).colorScheme.surface,
               side: BorderSide(
                 color: isSelected

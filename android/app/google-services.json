@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625282680034",
+    "project_id": "xparq-b59e4",
+    "storage_bucket": "xparq-b59e4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625282680034:android:2dee766445a0829e58cabb",
+        "android_client_info": {
+          "package_name": "com.xparq.xparq_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOzAYVUxLMOyjLW-BV4t0q11o0-cOCXqo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

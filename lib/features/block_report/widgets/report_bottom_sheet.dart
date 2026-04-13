@@ -119,7 +119,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.24),
+                ).colorScheme.onSurface.withValues(alpha: 0.24),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -140,7 +140,7 @@ class _ReportSheetState extends State<_ReportSheet> {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.54),
+              ).colorScheme.onSurface.withValues(alpha: 0.54),
               fontSize: 13,
             ),
           ),
@@ -160,7 +160,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                         ? Colors.black
                         : Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                     fontSize: 13,
                   ),
                 ),
@@ -173,7 +173,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                       ? const Color(0xFFFF6B6B)
                       : Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.12),
+                        ).colorScheme.onSurface.withValues(alpha: 0.12),
                 ),
               );
             }).toList(),
@@ -190,7 +190,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               hintStyle: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
               filled: true,
               fillColor: const Color(0xFF1A2A40),
@@ -216,7 +216,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.7),
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -234,7 +234,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                 backgroundColor: const Color(0xFFFF6B6B),
                 disabledBackgroundColor: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.12),
+                ).colorScheme.onSurface.withValues(alpha: 0.12),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

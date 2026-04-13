@@ -11,20 +11,20 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:xparq_app/features/chat/data/repositories/chat_repository.dart';
-import 'package:xparq_app/core/config/supabase_config.dart';
+import 'package:xparq_app/shared/config/supabase_config.dart';
 import 'package:xparq_app/features/chat/data/services/notification_service.dart';
 import 'package:xparq_app/features/chat/data/services/signal/signal_session_manager.dart';
-import 'package:xparq_app/core/utils/isolate_logger.dart';
+import 'package:xparq_app/shared/utils/isolate_logger.dart';
 
 // ── Background tap handler (must be top-level for platform channel) ───────────
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse response) async {
-  print('NOTIF_TAP_BG: Start. Action=${response.actionId}');
+  debugPrint('NOTIF_TAP_BG: Start. Action=${response.actionId}');
   await IsolateLogger.log('Background action received: ${response.actionId}');
   await IsolateLogger.log('Background action input: ${response.input}');
   if (response.payload == null) {
-    print('NOTIF_TAP_BG: Payload is null');
+    debugPrint('NOTIF_TAP_BG: Payload is null');
     return;
   }
 

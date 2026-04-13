@@ -23,10 +23,16 @@ class ChatAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOnline = otherPresence?.isOnline ?? false;
+    final profile = otherProfile;
+    final presence = otherPresence;
+    final isOnline = presence?.isOnline ?? false;
     final displayName = isGroup
         ? (chat?.groupName ?? 'Cluster')
-        : (otherProfile?.xparqName ?? '...');
+        : (profile != null
+              ? (profile.handle != null && profile.handle!.isNotEmpty
+                  ? '${profile.xparqName} (@${profile.handle})'
+                  : profile.xparqName)
+              : 'Explorer');
 
     return Row(
       children: [
@@ -54,7 +60,7 @@ class ChatAppBarTitle extends StatelessWidget {
                     fontSize: 11,
                     color: isOnline
                         ? const Color(0xFF4FC3F7)
-                        : theme.colorScheme.onSurface.withOpacity(0.5),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     fontWeight: isOnline ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
@@ -63,7 +69,7 @@ class ChatAppBarTitle extends StatelessWidget {
                   '${chat?.participants.length ?? 0} iXPARQs',
                   style: TextStyle(
                     fontSize: 11,
-                    color: theme.colorScheme.onSurface.withOpacity(0.5),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
             ],

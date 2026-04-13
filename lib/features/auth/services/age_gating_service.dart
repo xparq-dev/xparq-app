@@ -1,69 +1,40 @@
-import 'package:xparq_app/core/constants/app_constants.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+// lib/features/auth/services/age_gating_service.dart
 
-/// AgeGatingService (v2)
-/// - Timezone safe
-/// - Localization ready
-/// - Clean API
-/// - Optional caching
+import 'package:xparq_app/shared/constants/app_constants.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 
+/// AgeGatingService
+/// Centralizes all age-related calculations and gating decisions.
+/// NOTE: Client-side checks are UX only. Server-side Cloud Functions
+/// perform the authoritative validation.
 class AgeGatingService {
   AgeGatingService._();
 
-  static int? _cachedAge;
-  static DateTime? _cachedDob;
-
-  /// 🔥 Inject current date (timezone-safe)
-  static int calculateAge(
-    DateTime birthDate, {
-    DateTime? now,
-  }) {
-    final today = now ?? DateTime.now();
-
+  /// Calculate age in years from a given [birthDate].
+  static int calculateAge(DateTime birthDate) {
+    final today = DateTime.now();
     int age = today.year - birthDate.year;
-
+    // Adjust if birthday hasn't occurred yet this year
     if (today.month < birthDate.month ||
-        (today.month == birthDate.month &&
-            today.day < birthDate.day)) {
+        (today.month == birthDate.month && today.day < birthDate.day)) {
       age--;
     }
-
     return age;
   }
 
-  /// 🔥 Cached version (optional optimization)
-  static int calculateAgeCached(
-    DateTime birthDate, {
-    DateTime? now,
-  }) {
-    if (_cachedDob == birthDate && _cachedAge != null) {
-      return _cachedAge!;
-    }
-
-    final age = calculateAge(birthDate, now: now);
-    _cachedDob = birthDate;
-    _cachedAge = age;
-
-    return age;
-  }
-
-  static AgeGroup calculateAgeGroup(
-    DateTime birthDate, {
-    DateTime? now,
-  }) {
-    final age = calculateAge(birthDate, now: now);
-
+  /// Determine [AgeGroup] from [birthDate].
+  ///
+  /// - < 13  → [AgeGroup.blocked]
+  /// - 13–17 → [AgeGroup.cadet]
+  /// - 18+   → [AgeGroup.explorer]
+  static AgeGroup calculateAgeGroup(DateTime birthDate) {
+    final age = calculateAge(birthDate);
     if (age < AppConstants.minimumAge) return AgeGroup.blocked;
     if (age < AppConstants.adultAge) return AgeGroup.cadet;
     return AgeGroup.explorer;
   }
 
-  /// 🔥 Clean API (ใช้ง่ายขึ้น)
-  static bool isAdult(DateTime birthDate, {DateTime? now}) {
-    return calculateAgeGroup(birthDate, now: now) ==
-        AgeGroup.explorer;
-  }
-
+  /// Returns true if the user can view or send sensitive (NSFW) content.
   static bool canViewSensitive({
     required AgeGroup ageGroup,
     required bool nsfwOptIn,
@@ -71,65 +42,45 @@ class AgeGatingService {
     return ageGroup == AgeGroup.explorer && nsfwOptIn;
   }
 
-  /// 🔥 Localization-ready validator
-  /// ส่ง message จาก UI layer เข้ามาแทน hardcode
-  static String? validateDob(
-    DateTime? dob, {
-    required String requiredMessage,
-    required String underAgeMessage,
-    required String futureMessage,
-    required String invalidMessage,
-    DateTime? now,
-  }) {
-    final today = now ?? DateTime.now();
-
-    if (dob == null) return requiredMessage;
-
-    if (dob.isAfter(today)) return futureMessage;
-
-    final age = calculateAge(dob, now: today);
-
-    if (age > 120) return invalidMessage;
-
-    if (age < AppConstants.minimumAge) {
-      return underAgeMessage;
+  /// Validate DOB input from the registration form.
+  /// Returns an error string, or null if valid.
+  static String? validateDob(DateTime? dob) {
+    if (dob == null) return 'Please select your date of birth.';
+    final group = calculateAgeGroup(dob);
+    if (group == AgeGroup.blocked) {
+      return 'You must be at least ${AppConstants.minimumAge} years old to join the galaxy.';
     }
-
+    // Sanity check: DOB cannot be in the future
+    if (dob.isAfter(DateTime.now())) {
+      return 'Date of birth cannot be in the future.';
+    }
+    // Sanity check: DOB cannot be more than 120 years ago
+    if (calculateAge(dob) > 120) {
+      return 'Please enter a valid date of birth.';
+    }
     return null;
   }
 
+  /// Check if a birthday transition has occurred (Cadet → Explorer).
+  /// Returns the new [AgeGroup] if changed, otherwise null.
   static AgeGroup? checkBirthdayTransition({
     required DateTime birthDate,
     required AgeGroup currentGroup,
-    DateTime? now,
   }) {
-    final newGroup = calculateAgeGroup(birthDate, now: now);
+    final newGroup = calculateAgeGroup(birthDate);
     if (newGroup != currentGroup) return newGroup;
     return null;
   }
 
-  /// 🔥 Date picker helpers
-  static DateTime getMaxDobDate({DateTime? now}) {
-    final today = now ?? DateTime.now();
-    return DateTime(
-      today.year - AppConstants.minimumAge,
-      today.month,
-      today.day,
-    );
+  /// Maximum selectable date for DOB picker (today - minimum age).
+  static DateTime get maxDobDate {
+    final now = DateTime.now();
+    return DateTime(now.year - AppConstants.minimumAge, now.month, now.day);
   }
 
-  static DateTime getMinDobDate({DateTime? now}) {
-    final today = now ?? DateTime.now();
-    return DateTime(
-      today.year - 120,
-      today.month,
-      today.day,
-    );
-  }
-
-  /// 🔥 clear cache (optional)
-  static void clearCache() {
-    _cachedAge = null;
-    _cachedDob = null;
+  /// Minimum selectable date for DOB picker (today - 120 years).
+  static DateTime get minDobDate {
+    final now = DateTime.now();
+    return DateTime(now.year - 120, now.month, now.day);
   }
 }

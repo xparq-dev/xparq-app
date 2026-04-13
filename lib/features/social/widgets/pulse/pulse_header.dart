@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/social/models/pulse_model.dart';
 
 class PulseHeader extends ConsumerWidget {
@@ -21,14 +21,14 @@ class PulseHeader extends ConsumerWidget {
               : null,
           backgroundColor: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.1),
+          ).colorScheme.onSurface.withValues(alpha: 0.1),
           radius: 20,
           child: avatarUrl.isEmpty
               ? Icon(
                   Icons.person,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.54),
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
                 )
               : null,
         ),
@@ -49,7 +49,7 @@ class PulseHeader extends ConsumerWidget {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.54),
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
                   fontSize: 12,
                 ),
               ),
@@ -60,10 +60,10 @@ class PulseHeader extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.2),
+              color: Colors.red.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: Colors.redAccent.withOpacity(0.5),
+                color: Colors.redAccent.withValues(alpha: 0.5),
               ),
             ),
             child: const Text(

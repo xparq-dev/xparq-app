@@ -22,7 +22,7 @@ class PulseListTab extends ConsumerWidget {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           );
@@ -38,7 +38,7 @@ class PulseListTab extends ConsumerWidget {
         child: CircularProgressIndicator(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.24),
+          ).colorScheme.onSurface.withValues(alpha: 0.24),
         ),
       ),
       error: (e, _) => Center(
@@ -47,7 +47,7 @@ class PulseListTab extends ConsumerWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.38),
+            ).colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ),
       ),

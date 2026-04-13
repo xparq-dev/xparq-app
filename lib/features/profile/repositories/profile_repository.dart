@@ -1,14 +1,37 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
+import 'package:xparq_app/shared/constants/app_constants.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/profile/models/user_model.dart';
 
 class ProfileRepository {
   final SupabaseClient _client;
+  final http.Client _httpClient;
 
-  ProfileRepository({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+  ProfileRepository({SupabaseClient? client, http.Client? httpClient})
+      : _client = client ?? Supabase.instance.client,
+        _httpClient = httpClient ?? http.Client();
 
   Future<UserModel> get({required String id}) async {
+    if (AppConstants.useCentralBackendRead ||
+        AppConstants.useCentralBackendProfileRead) {
+      try {
+        return await _getViaCentralBackend(id: id);
+      } on AppException catch (error) {
+        if (!_shouldFallbackToLegacy(error)) {
+          rethrow;
+        }
+      } catch (_) {
+        // Fall back to the legacy path for any unexpected adapter failure.
+      }
+    }
+
+    return _getViaLegacy(id: id);
+  }
+
+  Future<UserModel> _getViaLegacy({required String id}) async {
     try {
       final response = await _client
           .from('profiles')
@@ -30,11 +53,98 @@ class ProfileRepository {
     }
   }
 
+  Future<UserModel> _getViaCentralBackend({required String id}) async {
+    final session = _client.auth.currentSession;
+    final accessToken = session?.accessToken ?? '';
+    if (accessToken.isEmpty) {
+      throw const AuthException(
+        'No active session is available for the platform backend request.',
+      );
+    }
+
+    final currentUserId = _client.auth.currentUser?.id;
+    final path = currentUserId == id
+        ? '/profiles/me'
+        : '/profiles/${Uri.encodeComponent(id)}/summary';
+    final uri = Uri.parse('${AppConstants.platformApiBaseUrl}$path');
+
+    try {
+      final response = await _httpClient.get(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final payload = jsonDecode(response.body);
+        if (payload is! Map<String, dynamic>) {
+          throw const AppException(
+            'The platform backend returned an invalid profile payload.',
+          );
+        }
+        return UserModel.fromJson(payload);
+      }
+
+      final backendDetail = _decodeBackendDetail(response.body);
+      final backendCode = _extractBackendCode(backendDetail);
+      final backendMessage = _extractBackendMessage(
+        backendDetail,
+        fallbackMessage:
+            'The platform backend could not load the requested profile.',
+      );
+
+      if (response.statusCode == 404) {
+        throw NotFoundException(backendMessage);
+      }
+      if (response.statusCode == 401) {
+        throw AuthException(backendMessage);
+      }
+      if (response.statusCode == 403) {
+        throw PermissionException(backendMessage);
+      }
+      if (response.statusCode == 409 &&
+          backendCode == 'SUPABASE_ID_NOT_LINKED') {
+        throw AppException(backendMessage);
+      }
+
+      throw NetworkException(
+        backendMessage,
+        statusCode: response.statusCode,
+      );
+    } on AppException {
+      rethrow;
+    } catch (error) {
+      throw NetworkException(
+        'Unable to reach the platform backend right now.',
+        cause: error,
+      );
+    }
+  }
+
   Future<UserModel> update({
     required String id,
     required String name,
     required String bio,
   }) async {
+    if (_canUseCentralBackendProfileWrite(id)) {
+      try {
+        return await _updateViaCentralBackend(
+          updates: {
+            'xparq_name': name,
+            'bio': bio,
+          },
+        );
+      } on AppException catch (error) {
+        if (!_shouldFallbackToLegacy(error)) {
+          rethrow;
+        }
+      } catch (_) {
+        // Fall back to the legacy path for any unexpected adapter failure.
+      }
+    }
+
     try {
       final response = await _client
           .from('profiles')
@@ -132,6 +242,19 @@ class ProfileRepository {
     if (isContactPublic != null) updates['is_contact_public'] = isContactPublic;
 
     if (updates.isNotEmpty) {
+      if (_canUseCentralBackendProfileWrite(uid)) {
+        try {
+          await _updateViaCentralBackend(updates: updates);
+          return;
+        } on AppException catch (error) {
+          if (!_shouldFallbackToLegacy(error)) {
+            rethrow;
+          }
+        } catch (_) {
+          // Fall back to the legacy path for any unexpected adapter failure.
+        }
+      }
+
       await _client.from('profiles').update(updates).eq('id', uid);
     }
   }
@@ -198,5 +321,147 @@ class ProfileRepository {
           : 'A database error occurred while processing the profile.',
       cause: error,
     );
+  }
+
+  bool _shouldFallbackToLegacy(AppException error) {
+    if (error is NotFoundException) {
+      return true;
+    }
+
+    if (error is NetworkException) {
+      final statusCode = error.statusCode;
+      if (statusCode == null) {
+        return true;
+      }
+      return statusCode >= 500 || statusCode == 409 || statusCode == 501;
+    }
+
+    return error.message
+        .contains('Current user is not linked to a Supabase identity.');
+  }
+
+  Object? _decodeBackendDetail(String body) {
+    if (body.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded['detail'] ?? decoded;
+      }
+      return decoded;
+    } catch (_) {
+      return body;
+    }
+  }
+
+  String? _extractBackendCode(Object? detail) {
+    if (detail is Map<String, dynamic>) {
+      final code = detail['code'];
+      if (code is String && code.isNotEmpty) {
+        return code;
+      }
+    }
+    return null;
+  }
+
+  String _extractBackendMessage(
+    Object? detail, {
+    required String fallbackMessage,
+  }) {
+    if (detail is String && detail.isNotEmpty) {
+      return detail;
+    }
+
+    if (detail is Map<String, dynamic>) {
+      final message = detail['message'];
+      if (message is String && message.isNotEmpty) {
+        return message;
+      }
+      final rawDetail = detail['detail'];
+      if (rawDetail is String && rawDetail.isNotEmpty) {
+        return rawDetail;
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  bool _canUseCentralBackendProfileWrite(String targetUserId) {
+    if (!AppConstants.useCentralBackendProfileWrite) {
+      return false;
+    }
+    return _client.auth.currentUser?.id == targetUserId;
+  }
+
+  Future<UserModel> _updateViaCentralBackend({
+    required Map<String, dynamic> updates,
+  }) async {
+    final session = _client.auth.currentSession;
+    final accessToken = session?.accessToken ?? '';
+    if (accessToken.isEmpty) {
+      throw const AuthException(
+        'No active session is available for the platform backend request.',
+      );
+    }
+
+    final uri = Uri.parse('${AppConstants.platformApiBaseUrl}/profiles/me');
+
+    try {
+      final response = await _httpClient.patch(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode(updates),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final payload = jsonDecode(response.body);
+        if (payload is! Map<String, dynamic>) {
+          throw const AppException(
+            'The platform backend returned an invalid profile payload.',
+          );
+        }
+        return UserModel.fromJson(payload);
+      }
+
+      final backendDetail = _decodeBackendDetail(response.body);
+      final backendCode = _extractBackendCode(backendDetail);
+      final backendMessage = _extractBackendMessage(
+        backendDetail,
+        fallbackMessage:
+            'The platform backend could not update the requested profile.',
+      );
+
+      if (response.statusCode == 404) {
+        throw NotFoundException(backendMessage);
+      }
+      if (response.statusCode == 401) {
+        throw AuthException(backendMessage);
+      }
+      if (response.statusCode == 403) {
+        throw PermissionException(backendMessage);
+      }
+      if (response.statusCode == 409 &&
+          backendCode == 'SUPABASE_ID_NOT_LINKED') {
+        throw AppException(backendMessage);
+      }
+
+      throw NetworkException(
+        backendMessage,
+        statusCode: response.statusCode,
+      );
+    } on AppException {
+      rethrow;
+    } catch (error) {
+      throw NetworkException(
+        'Unable to reach the platform backend right now.',
+        cause: error,
+      );
+    }
   }
 }

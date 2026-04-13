@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 
 class OfflineTask {
   const OfflineTask({required this.id, required this.payload});

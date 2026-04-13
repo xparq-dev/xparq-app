@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/profile/models/user_model.dart';
 import 'package:xparq_app/features/profile/repositories/profile_repository.dart';
 import 'package:xparq_app/features/profile/services/profile_service.dart';
@@ -65,7 +65,19 @@ class ProfileProvider extends StateNotifier<ProfileState> {
 
     try {
       final user = await _service.getProfile(id: id);
-      state = state.copyWith(user: user, isLoading: false, clearError: true);
+      
+      // Guard: do not replace valid cached profile with an empty placeholder
+      final isIncomingEmpty = user.name.isEmpty && user.bio.isEmpty;
+      final isCachedValid = state.user != null && 
+          (state.user!.name.isNotEmpty || state.user!.bio.isNotEmpty);
+
+      if (isCachedValid && isIncomingEmpty) {
+        // Keep existing valid profile, just clear loading
+        state = state.copyWith(isLoading: false, clearError: true);
+      } else {
+        // Normal update
+        state = state.copyWith(user: user, isLoading: false, clearError: true);
+      }
     } on AppException catch (error) {
       state = state.copyWith(isLoading: false, errorMessage: error.message);
     } catch (_) {

@@ -22,7 +22,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:xparq_app/core/config/supabase_config.dart';
+import 'package:xparq_app/shared/config/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:xparq_app/features/chat/data/services/fcm_token_service.dart';
 import 'package:xparq_app/features/chat/data/services/notification_action_handler.dart';
@@ -146,7 +146,7 @@ class NotificationService {
       final actionHandler = NotificationActionHandler.instance;
 
       final initSettings = InitializationSettings(
-        android: const AndroidInitializationSettings('@mipmap/launcher_icon'),
+        android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: true,
@@ -248,7 +248,7 @@ class NotificationService {
           ?.createNotificationChannel(_chatChannel);
 
       const initSettings = InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(),
       );
       await _localNotifications.initialize(
@@ -362,7 +362,7 @@ class NotificationService {
           channelDescription: _chatChannel.description,
           importance: Importance.max,
           priority: Priority.high,
-          icon: '@mipmap/launcher_icon',
+          icon: '@mipmap/ic_launcher',
           color: const Color(0xFF4FC3F7),
           styleInformation: MessagingStyleInformation(
             person,

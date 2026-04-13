@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/profile/widgets/profile_flexible_header.dart';
 import 'package:xparq_app/features/profile/widgets/profile_tabs.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
@@ -107,3 +107,4 @@ class ProfileSliverAppBar extends StatelessWidget {
     );
   }
 }
+

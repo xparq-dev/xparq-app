@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/social/models/pulse_model.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 
 class SupernovaViewerScreen extends StatefulWidget {
   final List<PulseModel> pulses;
@@ -151,7 +151,7 @@ class _SupernovaViewerScreenState extends State<SupernovaViewerScreen>
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black.withOpacity(0.6),
+                              Colors.black.withValues(alpha: 0.6),
                             ],
                             stops: const [0.0, 0.2, 0.8, 1.0],
                           ),
@@ -204,7 +204,7 @@ class _SupernovaViewerScreenState extends State<SupernovaViewerScreen>
                             value: index == _currentIndex
                                 ? _progressController.value
                                 : (index < _currentIndex ? 1.0 : 0.0),
-                            backgroundColor: Colors.white.withOpacity(0.3),
+                            backgroundColor: Colors.white.withValues(alpha: 0.3),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               Colors.white,
                             ),
@@ -253,7 +253,7 @@ class _SupernovaViewerScreenState extends State<SupernovaViewerScreen>
                           Text(
                             _formatTime(widget.pulses[_currentIndex].createdAt),
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 11,
                             ),
                           ),

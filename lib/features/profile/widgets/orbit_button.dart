@@ -1,4 +1,4 @@
-// lib/features/profile/widgets/orbit_button.dart
+﻿// lib/features/profile/widgets/orbit_button.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,7 +48,7 @@ class OrbitButton extends ConsumerWidget {
             icon: const Icon(Icons.hourglass_empty, size: 18),
             label: Text(AppLocalizations.of(context)!.requested),
             style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+              backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
               foregroundColor: theme.colorScheme.onSurface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -87,7 +87,7 @@ class OrbitButton extends ConsumerWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (__, _) => const SizedBox.shrink(),
     );
   }
 

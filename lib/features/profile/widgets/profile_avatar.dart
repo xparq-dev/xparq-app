@@ -1,7 +1,7 @@
 // lib/features/profile/widgets/profile_avatar.dart
 
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 
 class ProfileAvatar extends StatelessWidget {
@@ -41,12 +41,12 @@ class ProfileAvatar extends StatelessWidget {
         padding: EdgeInsets.all(isDark ? 4 : 2.5),
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.12)
-              : Colors.white.withOpacity(0.6),
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.6),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.45 : 0.08),
+              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
               blurRadius: isDark ? 25 : 20,
               spreadRadius: 1,
               offset: Offset(0, isDark ? 6 : 2),

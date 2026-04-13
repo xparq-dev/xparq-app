@@ -2,7 +2,7 @@
 
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
@@ -103,8 +103,8 @@ class ProfileCover extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     Colors.blueGrey.shade900,
-                    const Color(0xFF1A237E).withOpacity(0.4),
-                    const Color(0xFF311B92).withOpacity(0.4),
+                    const Color(0xFF1A237E).withValues(alpha: 0.4),
+                    const Color(0xFF311B92).withValues(alpha: 0.4),
                     Colors.blueGrey.shade900,
                   ],
                   stops: const [0.0, 0.4, 0.6, 1.0],
@@ -118,7 +118,7 @@ class ProfileCover extends StatelessWidget {
               child: Icon(
                 Icons.landscape_outlined,
                 size: 60,
-                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
               ),
             ),
         ],
@@ -134,12 +134,12 @@ class ProfileCover extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(
+            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 
               0.15,
             ),
             width: 1.2,
           ),
-          color: (isDark ? Colors.black : Colors.white).withOpacity(0.1),
+          color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -147,7 +147,7 @@ class ProfileCover extends StatelessWidget {
             Icon(
               Icons.add_photo_alternate_outlined,
               size: 18,
-              color: theme.colorScheme.onSurface.withOpacity(0.4),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
             const SizedBox(width: 8),
             Text(
@@ -155,7 +155,7 @@ class ProfileCover extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
           ],
@@ -176,9 +176,9 @@ class ProfileCover extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.white.withOpacity(0.0),
-              Colors.white.withOpacity(0.4),
-              Colors.white.withOpacity(0.8),
+              Colors.white.withValues(alpha: 0.0),
+              Colors.white.withValues(alpha: 0.4),
+              Colors.white.withValues(alpha: 0.8),
               Colors.white,
             ],
             stops: const [0.0, 0.4, 0.8, 1.0],

@@ -553,7 +553,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         o = 0.4;
         break;
     }
-    return Container(color: c.withOpacity(o));
+    return Container(color: c.withValues(alpha: o));
   }
 
   Widget _buildGridOverlay() {
@@ -590,10 +590,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.4),
+                Colors.black.withValues(alpha: 0.4),
                 Colors.transparent,
                 Colors.transparent,
-                Colors.black.withOpacity(0.6),
+                Colors.black.withValues(alpha: 0.6),
               ],
               stops: const [0.0, 0.2, 0.8, 1.0],
             ),
@@ -624,7 +624,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white.withValues(alpha: 0.9),
           width: 1.0,
         ),
       ),
@@ -753,7 +753,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withOpacity(0.2)
+              ? Colors.white.withValues(alpha: 0.2)
               : Colors.black38,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
@@ -790,7 +790,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
   void _showFilterPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.black.withOpacity(0.9),
+      backgroundColor: Colors.black.withValues(alpha: 0.9),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -831,7 +831,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                         ),
                         decoration: BoxDecoration(
                           color: isS
-                              ? const Color(0xFF00E5FF).withOpacity(0.2)
+                              ? const Color(0xFF00E5FF).withValues(alpha: 0.2)
                               : Colors.white10,
                           borderRadius: BorderRadius.circular(25),
                           border: Border.all(
@@ -1031,7 +1031,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         width: 54,
         height: 54,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
+          color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white10),
         ),

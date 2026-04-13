@@ -41,12 +41,12 @@ class RadarFilterBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isExpanded
                     ? Colors.transparent
-                    : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isExpanded
                       ? primaryColor
-                      : primaryColor.withOpacity(0.3),
+                      : primaryColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -114,7 +114,7 @@ class RadarFilterBar extends StatelessWidget {
                           side: BorderSide(
                             color: isSelected
                                 ? primaryColor
-                                : textSecondary.withOpacity(0.2),
+                                : textSecondary.withValues(alpha: 0.2),
                           ),
                         ),
                       ),

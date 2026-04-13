@@ -11,11 +11,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/profile/providers/image_upload_provider.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
-import 'package:xparq_app/core/utils/stellar_identity_helper.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
+import 'package:xparq_app/shared/utils/stellar_identity_helper.dart';
 import 'nsfw_opt_in_dialog.dart';
 
 class PlanetCreationScreen extends ConsumerStatefulWidget {
@@ -105,10 +105,9 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                 value: true,
                 ageGroup: ref.read(currentAgeGroupProvider),
               );
-              if (mounted) {
-                nav.pop(); // Close Dialog
-                ref.invalidate(planetProfileProvider); // Force router check
-              }
+              if (!context.mounted) return;
+              nav.pop(); // Close Dialog
+              ref.invalidate(planetProfileProvider); // Force router check
             },
             onDecline: () async {
               final nav = Navigator.of(context);
@@ -116,10 +115,9 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                 value: false,
                 ageGroup: ref.read(currentAgeGroupProvider),
               );
-              if (mounted) {
-                nav.pop(); // Close Dialog
-                ref.invalidate(planetProfileProvider); // Force router check
-              }
+              if (!context.mounted) return;
+              nav.pop(); // Close Dialog
+              ref.invalidate(planetProfileProvider); // Force router check
             },
           ),
         );
@@ -293,7 +291,7 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                                         return Text(
                                           '@$handle',
                                           style: TextStyle(
-                                            color: primaryColor.withOpacity(0.8),
+                                            color: primaryColor.withValues(alpha: 0.8),
                                             fontSize: 13,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -454,14 +452,13 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                             constellations: _selectedConstellations,
                           );
                         } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error: ${e.toString()}'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         } finally {
                           if (mounted) setState(() => _isUploading = false);
                         }
@@ -527,8 +524,8 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
       borderSide: BorderSide(color: const Color(0xFFF91880), width: 2),
     ),
     fillColor: isDark
-        ? Colors.white.withOpacity(0.02)
-        : Colors.black.withOpacity(0.01),
+        ? Colors.white.withValues(alpha: 0.02)
+        : Colors.black.withValues(alpha: 0.01),
     filled: true,
   );
 
@@ -666,13 +663,13 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: hasValue
-              ? primaryColor.withOpacity(0.12)
-              : primaryColor.withOpacity(isDark ? 0.05 : 0.03),
+              ? primaryColor.withValues(alpha: 0.12)
+              : primaryColor.withValues(alpha: isDark ? 0.05 : 0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasValue
-                ? primaryColor.withOpacity(0.5)
-                : textColor.withOpacity(0.1),
+                ? primaryColor.withValues(alpha: 0.5)
+                : textColor.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -684,7 +681,7 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
             Text(
               value ?? label,
               style: TextStyle(
-                color: hasValue ? textColor : textColor.withOpacity(0.5),
+                color: hasValue ? textColor : textColor.withValues(alpha: 0.5),
                 fontSize: 12,
                 fontWeight: hasValue ? FontWeight.bold : FontWeight.w500,
               ),
@@ -734,7 +731,7 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: textColor.withOpacity(0.1),
+                        color: textColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -756,7 +753,7 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                       IconButton(
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close),
-                        color: textColor.withOpacity(0.5),
+                        color: textColor.withValues(alpha: 0.5),
                       ),
                     ],
                   ),
@@ -787,13 +784,13 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
                           child: Container(
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? primaryColor.withOpacity(0.15)
+                                  ? primaryColor.withValues(alpha: 0.15)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
                                     ? primaryColor
-                                    : textColor.withOpacity(0.1),
+                                    : textColor.withValues(alpha: 0.1),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -864,3 +861,4 @@ class _PlanetCreationScreenState extends ConsumerState<PlanetCreationScreen>
     }
   }
 }
+

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/offline/models/offline_task_model.dart';
 import 'package:xparq_app/features/offline/repositories/offline_repository.dart';
 import 'package:xparq_app/features/offline/services/offline_service.dart';

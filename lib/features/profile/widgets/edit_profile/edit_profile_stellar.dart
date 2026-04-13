@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_widgets.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/utils/stellar_identity_helper.dart';
+import 'package:xparq_app/shared/utils/stellar_identity_helper.dart';
 
 class EditProfileStellar extends StatelessWidget {
   final TextEditingController mbtiController;
@@ -112,7 +112,7 @@ class EditProfileStellar extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 12),
@@ -130,7 +130,7 @@ class EditProfileStellar extends StatelessWidget {
                       ? Theme.of(context).colorScheme.surface
                       : Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               selected: isSelected,
@@ -140,7 +140,7 @@ class EditProfileStellar extends StatelessWidget {
               selectedColor: const Color(0xFF4FC3F7),
               backgroundColor: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.05),
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
               checkmarkColor: Theme.of(context).colorScheme.surface,
               side: BorderSide(
                 color: isSelected

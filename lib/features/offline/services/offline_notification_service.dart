@@ -176,7 +176,7 @@ class _InAppNotificationWidgetState extends State<_InAppNotificationWidget>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -184,7 +184,7 @@ class _InAppNotificationWidgetState extends State<_InAppNotificationWidget>
                   border: Border.all(
                     color: isDark
                         ? Colors.white10
-                        : Colors.black.withOpacity(0.05),
+                        : Colors.black.withValues(alpha: 0.05),
                   ),
                 ),
                 child: Row(
@@ -192,7 +192,7 @@ class _InAppNotificationWidgetState extends State<_InAppNotificationWidget>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1D9BF0).withOpacity(0.1),
+                        color: const Color(0xFF1D9BF0).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

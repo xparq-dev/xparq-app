@@ -68,7 +68,7 @@ class RadarPulseHeader extends StatelessWidget {
                     ? '${radiusKm < 1000 ? "${radiusKm.toStringAsFixed(0)}km" : AppLocalizations.of(context)!.radarRadiusGlobal} ${AppLocalizations.of(context)!.radarRadiusLabel}'
                     : AppLocalizations.of(context)!.radarBluetoothRange,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                   fontSize: 12,
                 ),
               ),
@@ -109,7 +109,7 @@ class PulsePainter extends CustomPainter {
         center,
         r,
         Paint()
-          ..color = color.withOpacity(opacity * 0.4)
+          ..color = color.withValues(alpha: opacity * 0.4)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5,
       );
@@ -137,7 +137,7 @@ class PulsePainter extends CustomPainter {
           offset,
           4,
           Paint()
-            ..color = color.withOpacity(0.3)
+            ..color = color.withValues(alpha: 0.3)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
         );
 

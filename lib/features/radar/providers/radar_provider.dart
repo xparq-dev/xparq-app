@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/radar/models/nearby_user_model.dart';
 import 'package:xparq_app/features/radar/repositories/radar_repository.dart';
 import 'package:xparq_app/features/radar/services/radar_service.dart';

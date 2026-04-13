@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_widgets.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'package:xparq_app/core/constants/thailand_provinces.dart';
+import 'package:xparq_app/shared/constants/thailand_provinces.dart';
 
 class EditProfilePersona extends StatelessWidget {
   final TextEditingController shortBioController;
@@ -207,7 +207,7 @@ class EditProfilePersona extends StatelessWidget {
                 itemCount: options.length,
                 separatorBuilder: (context, index) => Divider(
                   height: 1,
-                  color: Theme.of(context).dividerColor.withOpacity(0.1),
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                 ),
                 itemBuilder: (BuildContext context, int index) {
                   final String option = options.elementAt(index);
@@ -223,7 +223,7 @@ class EditProfilePersona extends StatelessWidget {
                     trailing: Text(
                       'TH',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),

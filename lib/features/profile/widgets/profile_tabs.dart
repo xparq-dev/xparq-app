@@ -14,10 +14,10 @@ class ProfileTabs extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
 
     return TabBar(
-      dividerColor: theme.colorScheme.onSurface.withOpacity(0.05),
+      dividerColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
       indicatorColor: const Color(0xFF4FC3F7),
       labelColor: const Color(0xFF4FC3F7),
-      unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.54),
+      unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.54),
       tabs: [
         Tab(text: AppLocalizations.of(context)!.about),
         Tab(text: AppLocalizations.of(context)!.pulses),

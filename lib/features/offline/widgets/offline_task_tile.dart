@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 import 'package:xparq_app/features/offline/models/offline_task_model.dart';
 
 class OfflineTaskTile extends StatelessWidget {

@@ -44,7 +44,7 @@ class NsfwOptInDialog extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.6),
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.5,
                 fontSize: 14,
               ),
@@ -84,7 +84,7 @@ class NsfwOptInDialog extends StatelessWidget {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.38),
+                    ).colorScheme.onSurface.withValues(alpha: 0.38),
                   ),
                 ),
               ),

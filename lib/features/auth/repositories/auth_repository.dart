@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/auth/models/user_model.dart';
 
 class AuthRepository {

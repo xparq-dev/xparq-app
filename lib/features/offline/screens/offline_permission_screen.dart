@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/offline/services/bluetooth_permission_manager.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
 import 'package:xparq_app/features/offline/providers/offline_state_provider.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
 class OfflinePermissionScreen extends ConsumerStatefulWidget {
@@ -91,7 +91,7 @@ class _OfflinePermissionScreenState
                   fontSize: 16,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.8),
+                  ).colorScheme.onSurface.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),
@@ -110,7 +110,7 @@ class _OfflinePermissionScreenState
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                   ),
                 ),
               ),
@@ -121,3 +121,4 @@ class _OfflinePermissionScreenState
     );
   }
 }
+

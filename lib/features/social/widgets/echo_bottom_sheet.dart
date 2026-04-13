@@ -74,17 +74,17 @@ class _EchoBottomSheetState extends ConsumerState<EchoBottomSheet> {
     final inputBarBgColor = isDark
         ? const Color(0xFF0A1628)
         : const Color(0xFFF8FAFC);
-    final handleColor = theme.colorScheme.onSurface.withOpacity(
+    final handleColor = theme.colorScheme.onSurface.withValues(alpha: 
       isDark ? 0.24 : 0.18,
     );
-    final dividerColor = theme.colorScheme.onSurface.withOpacity(
+    final dividerColor = theme.colorScheme.onSurface.withValues(alpha: 
       isDark ? 0.12 : 0.08,
     );
-    final headerTextColor = theme.colorScheme.onSurface.withOpacity(
+    final headerTextColor = theme.colorScheme.onSurface.withValues(alpha: 
       isDark ? 0.70 : 0.78,
     );
     final inputFillColor = isDark
-        ? theme.colorScheme.onSurface.withOpacity(0.10)
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.10)
         : const Color(0xFFEEF2F7);
 
     return DraggableScrollableSheet(
@@ -101,7 +101,7 @@ class _EchoBottomSheetState extends ConsumerState<EchoBottomSheet> {
                 ? null
                 : Border(
                     top: BorderSide(
-                      color: theme.colorScheme.onSurface.withOpacity(0.08),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
                     ),
                   ),
           ),
@@ -156,7 +156,7 @@ class _EchoBottomSheetState extends ConsumerState<EchoBottomSheet> {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.54),
+                        ).colorScheme.onSurface.withValues(alpha: 0.54),
                       ),
                     ),
                   ),
@@ -170,7 +170,7 @@ class _EchoBottomSheetState extends ConsumerState<EchoBottomSheet> {
                               Icons.mode_comment_outlined,
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.24),
+                              ).colorScheme.onSurface.withValues(alpha: 0.24),
                               size: 48,
                             ),
                             SizedBox(height: 12),
@@ -180,7 +180,7 @@ class _EchoBottomSheetState extends ConsumerState<EchoBottomSheet> {
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.38),
+                                ).colorScheme.onSurface.withValues(alpha: 0.38),
                               ),
                             ),
                           ],
@@ -227,7 +227,7 @@ class _EchoBottomSheetState extends ConsumerState<EchoBottomSheet> {
                           hintStyle: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.38),
+                            ).colorScheme.onSurface.withValues(alpha: 0.38),
                           ),
                           filled: true,
                           fillColor: inputFillColor,
@@ -297,13 +297,13 @@ class _EchoTile extends ConsumerWidget {
                 : null,
             backgroundColor: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.10),
+            ).colorScheme.onSurface.withValues(alpha: 0.10),
             child: echo.authorAvatar.isEmpty
                 ? Icon(
                     Icons.person,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                     size: 16,
                   )
                 : null,
@@ -329,7 +329,7 @@ class _EchoTile extends ConsumerWidget {
                       style: TextStyle(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.38),
+                        ).colorScheme.onSurface.withValues(alpha: 0.38),
                         fontSize: 11,
                       ),
                     ),
@@ -352,7 +352,7 @@ class _EchoTile extends ConsumerWidget {
                 Icons.delete_outline,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
                 size: 18,
               ),
               onPressed: () async {

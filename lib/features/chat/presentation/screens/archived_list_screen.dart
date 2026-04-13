@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/chat/data/services/message_encryption_service.dart';
 
 class ArchivedListScreen extends ConsumerWidget {
@@ -25,7 +25,7 @@ class ArchivedListScreen extends ConsumerWidget {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -48,7 +48,7 @@ class ArchivedListScreen extends ConsumerWidget {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.38),
+                      ).colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                 ],
@@ -101,7 +101,7 @@ class ArchivedListScreen extends ConsumerWidget {
                         radius: 24,
                         backgroundColor: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.1),
+                        ).colorScheme.onSurface.withValues(alpha: 0.1),
                         backgroundImage: hasAvatar
                             ? XparqImage.getImageProvider(avatarUrl!)
                             : null,
@@ -110,7 +110,7 @@ class ArchivedListScreen extends ConsumerWidget {
                                 chat.isGroup ? Icons.group : Icons.person,
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.38),
+                                ).colorScheme.onSurface.withValues(alpha: 0.38),
                               )
                             : null,
                       ),
@@ -137,7 +137,7 @@ class ArchivedListScreen extends ConsumerWidget {
                             style: TextStyle(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.5),
+                              ).colorScheme.onSurface.withValues(alpha: 0.5),
                               fontSize: 13,
                             ),
                           );
@@ -348,3 +348,4 @@ class ArchivedListScreen extends ConsumerWidget {
     }
   }
 }
+

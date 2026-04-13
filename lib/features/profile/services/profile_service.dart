@@ -1,5 +1,5 @@
-import 'package:xparq_app/core/errors/app_exception.dart';
-import 'package:xparq_app/core/security/input_validator.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
+import 'package:xparq_app/shared/security/input_validator.dart';
 import 'package:xparq_app/features/profile/models/user_model.dart';
 import 'package:xparq_app/features/profile/repositories/profile_repository.dart';
 
@@ -59,3 +59,4 @@ class ProfileService {
     }
   }
 }
+

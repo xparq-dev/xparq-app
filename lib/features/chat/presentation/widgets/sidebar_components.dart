@@ -4,8 +4,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/qr_invite_dialog.dart';
@@ -34,7 +34,7 @@ class SidebarProfileHeader extends StatelessWidget {
             bottom: 20,
           ),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withOpacity(0.05),
+            color: theme.colorScheme.surface.withValues(alpha: 0.05),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +48,7 @@ class SidebarProfileHeader extends StatelessWidget {
               Text(
                 profile.handle != null ? '@${profile.handle}' : '',
                 style: TextStyle(
-                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
               ),
@@ -62,7 +62,7 @@ class SidebarProfileHeader extends StatelessWidget {
             child: IconButton(
               icon: Icon(
                 Icons.settings_outlined,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               onPressed: () => unawaited(context.push(AppRoutes.settings)),
               tooltip: 'Settings',
@@ -197,7 +197,7 @@ class SidebarMenu extends ConsumerWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
       ),
       title: Text(
         label,
@@ -263,7 +263,7 @@ class FriendsListSheet extends ConsumerWidget {
                             style: const TextStyle(color: Colors.white),
                           ),
                           subtitle: Text(
-                            '@${friend.handle ?? friend.id.substring(0, 8)}',
+                            '@${friend.handle ?? 'Explorer'}',
                             style: const TextStyle(color: Colors.white30),
                           ),
                           onTap: () async {
@@ -292,3 +292,4 @@ class FriendsListSheet extends ConsumerWidget {
     );
   }
 }
+

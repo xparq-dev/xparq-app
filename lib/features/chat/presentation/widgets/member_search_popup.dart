@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
@@ -129,7 +129,7 @@ class _MemberSearchPopupState extends ConsumerState<MemberSearchPopup> {
                         color: Colors.white70,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                      fillColor: Colors.white.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -152,7 +152,7 @@ class _MemberSearchPopupState extends ConsumerState<MemberSearchPopup> {
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: _results.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        separatorBuilder: (__, _) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final user = _results[index];
                           return ListTile(
@@ -178,7 +178,7 @@ class _MemberSearchPopupState extends ConsumerState<MemberSearchPopup> {
                             subtitle: Text(
                               '@${user.handle}',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 fontSize: 12,
                               ),
                             ),

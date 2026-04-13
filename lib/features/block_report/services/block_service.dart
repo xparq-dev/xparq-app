@@ -1,4 +1,4 @@
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/block_report/repositories/block_repository.dart';
 
 class BlockService {

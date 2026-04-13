@@ -1,6 +1,6 @@
 // lib/features/auth/models/planet_model.dart
 
-import '../../../core/enums/age_group.dart';
+import '../../../shared/enums/age_group.dart';
 
 class PlanetModel {
   final String id;
@@ -112,6 +112,26 @@ class PlanetModel {
     if (!isOnline || lastSeen == null) return false;
     final diff = DateTime.now().toUtc().difference(lastSeen!);
     return diff.inMinutes < 5;
+  }
+
+  factory PlanetModel.placeholder(String id) {
+    return PlanetModel(
+      id: id,
+      xparqName: 'Explorer',
+      bio: 'Searching the galaxy...',
+      photoUrl: '',
+      coverPhotoUrl: '',
+      birthDateEncrypted: '',
+      ageGroup: AgeGroup.explorer,
+      blueOrbit: false,
+      isAdultVerified: false,
+      nsfwOptIn: false,
+      constellations: [],
+      isOnline: false,
+      createdAt: DateTime.now(),
+      ghostMode: false,
+      accountStatus: 'unknown',
+    );
   }
 
   factory PlanetModel.fromMap(Map<String, dynamic> data, String id) {

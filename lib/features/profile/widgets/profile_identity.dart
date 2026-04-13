@@ -31,13 +31,13 @@ class ProfileIdentity extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : Colors.white.withOpacity(0.6),
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
           ),
           child: Column(
@@ -91,7 +91,7 @@ class ProfileIdentity extends ConsumerWidget {
               ? '@${profile.handle}'
               : '@${profile.xparqName.toLowerCase().replaceAll(' ', '')}',
           style: TextStyle(
-            color: theme.colorScheme.onSurface.withOpacity(0.75),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -101,7 +101,7 @@ class ProfileIdentity extends ConsumerWidget {
           child: Text(
             '•',
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.4),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),

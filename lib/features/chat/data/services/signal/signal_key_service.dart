@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/services/device_service.dart';
+import 'package:xparq_app/shared/services/device_service.dart';
 import 'package:xparq_app/features/auth/repositories/devices_repository.dart';
 import 'package:xparq_app/features/offline/services/offline_chat_database.dart';
 

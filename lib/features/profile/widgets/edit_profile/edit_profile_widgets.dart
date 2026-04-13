@@ -1,7 +1,7 @@
 // lib/features/profile/widgets/edit_profile/edit_profile_widgets.dart
 
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/expandable_text.dart';
+import 'package:xparq_app/shared/widgets/common/expandable_text.dart';
 
 class EditProfileWidgets {
   static Widget buildTextField({
@@ -27,7 +27,7 @@ class EditProfileWidgets {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.35),
+              ).colorScheme.onSurface.withValues(alpha: 0.35),
               fontSize: 11,
             ),
           ),
@@ -58,31 +58,31 @@ class EditProfileWidgets {
         labelStyle: TextStyle(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.35),
+          ).colorScheme.onSurface.withValues(alpha: 0.35),
           fontSize: 13,
         ),
         floatingLabelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
           fontSize: 12,
         ),
         hintText: hint,
         hintStyle: TextStyle(
           color: Theme.of(
             context,
-          ).colorScheme.onSurface.withOpacity(0.15),
+          ).colorScheme.onSurface.withValues(alpha: 0.15),
           fontSize: 13,
         ),
         filled: true,
         fillColor: Theme.of(
           context,
-        ).colorScheme.onSurface.withOpacity(0.05),
+        ).colorScheme.onSurface.withValues(alpha: 0.05),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         counterStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
           fontSize: 10,
         ),
       ),
@@ -113,7 +113,7 @@ class EditProfileWidgets {
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.2),
+                  ).colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -152,7 +152,7 @@ class EditProfileWidgets {
                           border: Border.all(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.1),
+                            ).colorScheme.onSurface.withValues(alpha: 0.1),
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -239,7 +239,7 @@ class EditProfileWidgets {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -278,13 +278,13 @@ class EditProfileWidgets {
                           child: Container(
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? Theme.of(context).colorScheme.primary.withOpacity(0.15)
+                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),

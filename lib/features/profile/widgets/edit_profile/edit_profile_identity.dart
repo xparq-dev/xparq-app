@@ -72,7 +72,7 @@ class EditProfileIdentity extends StatelessWidget {
                   fontSize: 11,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.5),
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 12),
@@ -119,10 +119,10 @@ class EditProfileIdentity extends StatelessWidget {
             fillColor: locked
                 ? Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.02)
+                  ).colorScheme.onSurface.withValues(alpha: 0.02)
                 : Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.05),
+                  ).colorScheme.onSurface.withValues(alpha: 0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -158,7 +158,7 @@ class EditProfileIdentity extends StatelessWidget {
                 fontSize: 11,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.38),
+                ).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           ),

@@ -5,7 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
 import 'package:xparq_app/features/social/providers/pulse_providers.dart';
 import 'package:xparq_app/features/social/widgets/pulse_card.dart';
@@ -143,7 +143,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.2),
+                        ).colorScheme.onSurface.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -316,10 +316,10 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: tonedColor.withOpacity(isDark ? 0.15 : 0.12),
+          color: tonedColor.withValues(alpha: isDark ? 0.15 : 0.12),
           shape: BoxShape.circle,
           border: Border.all(
-            color: tonedColor.withOpacity(isDark ? 0.30 : 0.22),
+            color: tonedColor.withValues(alpha: isDark ? 0.30 : 0.22),
             width: 1,
           ),
         ),
@@ -338,12 +338,12 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
           border: isDark
               ? null
               : Border.all(
-                  color: theme.colorScheme.onSurface.withOpacity(0.08),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
                 ),
           boxShadow: isDark
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -490,7 +490,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
                                   Icons.rocket_launch,
                                   size: 64,
                                   color: Theme.of(context).colorScheme.onSurface
-                                      .withOpacity(0.24),
+                                      .withValues(alpha: 0.24),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
@@ -499,7 +499,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.54),
+                                        .withValues(alpha: 0.54),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -512,7 +512,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.38),
+                                        .withValues(alpha: 0.38),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -562,7 +562,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.54),
+                            ).colorScheme.onSurface.withValues(alpha: 0.54),
                           ),
                         ),
                       ),
@@ -582,7 +582,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
                       ),
                       child: Container(
                         color: Theme.of(context).scaffoldBackgroundColor
-                            .withOpacity((_overscroll / 200).clamp(0.0, 0.6)),
+                            .withValues(alpha: (_overscroll / 200).clamp(0.0, 0.6)),
                       ),
                     ),
                   ),
@@ -609,7 +609,7 @@ class _OrbitScreenState extends ConsumerState<OrbitScreen>
               child: AnimatedBuilder(
                 animation: _menuController,
                 builder: (context, child) => Container(
-                  color: Colors.black.withOpacity((_menuController.value * 0.4).clamp(0.0, 1.0)),
+                  color: Colors.black.withValues(alpha: (_menuController.value * 0.4).clamp(0.0, 1.0)),
                 ),
               ),
             ),
@@ -876,7 +876,7 @@ class _NotificationsPanel extends StatelessWidget {
           ),
           Divider(
             height: 1,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           ),
           Expanded(
             child: ListView.separated(
@@ -885,7 +885,7 @@ class _NotificationsPanel extends StatelessWidget {
                 height: 1,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.05),
+                ).colorScheme.onSurface.withValues(alpha: 0.05),
               ),
               itemBuilder: (context, index) {
                 return ListTile(
@@ -897,7 +897,7 @@ class _NotificationsPanel extends StatelessWidget {
                     radius: 18,
                     backgroundColor: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.1),
+                    ).colorScheme.onSurface.withValues(alpha: 0.1),
                     child: Icon(
                       Icons.star,
                       size: 16,
@@ -918,7 +918,7 @@ class _NotificationsPanel extends StatelessWidget {
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.4),
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
                       fontSize: 11,
                     ),
                   ),
@@ -961,7 +961,7 @@ class _LaunchMenuItem extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(isLandscape ? 12 : 16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: isLandscape ? 22 : 28),
@@ -983,3 +983,4 @@ class _LaunchMenuItem extends StatelessWidget {
     );
   }
 }
+

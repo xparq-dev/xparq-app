@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/chat/presentation/screens/signal_chat_screen.dart';
 
 class ChatListAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -205,7 +205,7 @@ class _CreateChatSheetState extends ConsumerState<CreateChatSheet> {
               filled: true,
               fillColor: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.05),
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -233,7 +233,7 @@ class _CreateChatSheetState extends ConsumerState<CreateChatSheet> {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                   ),
                 ),
               ),
@@ -261,11 +261,13 @@ class _CreateChatSheetState extends ConsumerState<CreateChatSheet> {
                   subtitle: Text(
                     user.id == widget.myUid
                         ? 'SAVED (ME)'
-                        : (user.handle ?? user.id.substring(0, 8)),
+                        : (user.handle != null && user.handle!.isNotEmpty
+                            ? '@${user.handle}'
+                            : 'Explorer'),
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                   onTap: () async {
@@ -297,3 +299,4 @@ class _CreateChatSheetState extends ConsumerState<CreateChatSheet> {
     );
   }
 }
+

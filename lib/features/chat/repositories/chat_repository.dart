@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/errors/app_exception.dart';
+import 'package:xparq_app/shared/errors/app_exception.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart'
     show ChatModel;
 import 'package:xparq_app/features/chat/models/message_model.dart';

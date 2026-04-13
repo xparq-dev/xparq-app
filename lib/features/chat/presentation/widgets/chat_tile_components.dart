@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 
@@ -31,7 +31,7 @@ class ChatAvatar extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 26,
-          backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+          backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
           backgroundImage: hasAvatar
               ? XparqImage.getImageProvider(avatarUrl!)
               : null,

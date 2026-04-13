@@ -10,9 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:intl/intl.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
 import 'package:xparq_app/features/auth/services/age_gating_service.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
@@ -320,7 +320,7 @@ class _AgeGroupBadge extends StatelessWidget {
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                     fontSize: 12,
                   ),
                 ),
@@ -332,3 +332,4 @@ class _AgeGroupBadge extends StatelessWidget {
     );
   }
 }
+

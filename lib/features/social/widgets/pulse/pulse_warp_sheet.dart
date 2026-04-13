@@ -59,7 +59,7 @@ class _PulseWarpSheetState extends ConsumerState<PulseWarpSheet> {
                 borderRadius: BorderRadius.circular(12),
               ),
               filled: true,
-              fillColor: theme.colorScheme.onSurface.withOpacity(0.05),
+              fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
             ),
             maxLines: 3,
             textInputAction: TextInputAction.send,

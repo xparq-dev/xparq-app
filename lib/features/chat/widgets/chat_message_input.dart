@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:xparq_app/core/widgets/galaxy_button.dart';
-import 'package:xparq_app/core/widgets/glass_card.dart';
+import 'package:xparq_app/shared/widgets/ui/buttons/galaxy_button.dart';
+import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 
 class ChatMessageInput extends StatelessWidget {
   const ChatMessageInput({

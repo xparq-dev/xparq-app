@@ -14,7 +14,7 @@ class HelpSupportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).colorScheme.onSurface;
-    final subtitleColor = textColor.withOpacity(0.55);
+    final subtitleColor = textColor.withValues(alpha: 0.55);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -94,7 +94,7 @@ class HelpSupportScreen extends StatelessWidget {
                 Text(
                   'iXPARQ',
                   style: TextStyle(
-                    color: const Color(0xFF1D9BF0).withOpacity(0.5),
+                    color: const Color(0xFF1D9BF0).withValues(alpha: 0.5),
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                   ),
@@ -103,7 +103,7 @@ class HelpSupportScreen extends StatelessWidget {
                 Text(
                   'Made with ♥ in the galaxy',
                   style: TextStyle(
-                    color: subtitleColor.withOpacity(0.5),
+                    color: subtitleColor.withValues(alpha: 0.5),
                     fontSize: 11,
                   ),
                 ),

@@ -7,7 +7,7 @@ import 'dart:io' as io;
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart' as share_plus;
 import 'package:gal/gal.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/profile/providers/image_upload_provider.dart';
 import 'package:xparq_app/features/social/providers/pulse_providers.dart';
@@ -99,7 +99,7 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         actions: [
@@ -110,7 +110,7 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.54),
+                ).colorScheme.onSurface.withValues(alpha: 0.54),
               ),
             ),
           ),
@@ -225,7 +225,7 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00E5FF).withOpacity(0.8),
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -318,7 +318,7 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
           hintStyle: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.5),
+            ).colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           border: InputBorder.none,
         ),
@@ -373,7 +373,7 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00E5FF).withOpacity(0.3),
+                  color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -424,8 +424,8 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
           onTap: onTap,
           size: 50,
           bgColor: isActive
-              ? Theme.of(context).colorScheme.error.withOpacity(0.2)
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              ? Theme.of(context).colorScheme.error.withValues(alpha: 0.2)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           innerIconColor: isActive
               ? Theme.of(context).colorScheme.error
               : Theme.of(context).colorScheme.onSurface,
@@ -436,7 +436,7 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
           style: TextStyle(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.7),
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
             fontSize: 10,
           ),
         ),
@@ -454,16 +454,16 @@ class _CreatePulseScreenState extends ConsumerState<CreatePulseScreen> {
               end: Alignment.bottomCenter,
               colors: widget.isSupernova
                   ? [
-                      const Color(0xFF00E5FF).withOpacity(0.3),
-                      const Color(0xFFFF4081).withOpacity(0.2),
-                      const Color(0xFFFF4081).withOpacity(0.4),
-                      const Color(0xFF00E5FF).withOpacity(0.6),
+                      const Color(0xFF00E5FF).withValues(alpha: 0.3),
+                      const Color(0xFFFF4081).withValues(alpha: 0.2),
+                      const Color(0xFFFF4081).withValues(alpha: 0.4),
+                      const Color(0xFF00E5FF).withValues(alpha: 0.6),
                     ]
                   : [
-                      Colors.black.withOpacity(0.5),
+                      Colors.black.withValues(alpha: 0.5),
                       Colors.transparent,
                       Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                     ],
               stops: widget.isSupernova
                   ? const [0.0, 0.3, 0.7, 1.0]

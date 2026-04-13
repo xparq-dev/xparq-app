@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
@@ -36,7 +36,7 @@ class SignalSidebar extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 20),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +92,7 @@ class SignalSidebar extends ConsumerWidget {
                       Text(
                         profile.handle != null ? '@${profile.handle}' : '',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           fontSize: 14,
                         ),
                       ),
@@ -106,7 +106,7 @@ class SignalSidebar extends ConsumerWidget {
                     child: IconButton(
                       icon: Icon(
                         Icons.settings_outlined,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       onPressed: () => context.push(AppRoutes.settings),
                       tooltip: 'Settings',
@@ -172,7 +172,7 @@ class SignalSidebar extends ConsumerWidget {
     );
 
     final theme = Theme.of(context);
-    final bgColor = theme.colorScheme.surface.withOpacity(theme.brightness == Brightness.dark ? 0.96 : 1.0);
+    final bgColor = theme.colorScheme.surface.withValues(alpha: theme.brightness == Brightness.dark ? 0.96 : 1.0);
 
     if (isDrawer) {
       return Drawer(width: MediaQuery.sizeOf(context).width * 0.75, backgroundColor: bgColor, child: content);
@@ -183,7 +183,7 @@ class SignalSidebar extends ConsumerWidget {
 
   Widget _drawerItem({required BuildContext context, required IconData icon, required String label, required VoidCallback onTap}) {
     return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
       title: Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
       onTap: onTap,
     );
@@ -221,7 +221,10 @@ class SignalSidebar extends ConsumerWidget {
                               child: friend.photoUrl.isEmpty ? const Icon(Icons.person) : null,
                             ),
                             title: Text(friend.xparqName, style: const TextStyle(color: Colors.white)),
-                            subtitle: Text('@${friend.handle ?? friend.id.substring(0, 8)}', style: const TextStyle(color: Colors.white30)),
+                            subtitle: Text(
+                              '@${friend.handle ?? 'Explorer'}',
+                              style: const TextStyle(color: Colors.white30),
+                            ),
                             onTap: () async {
                               Navigator.pop(ctx);
                               final repo = ref.read(chatRepositoryProvider);
@@ -244,3 +247,4 @@ class SignalSidebar extends ConsumerWidget {
     );
   }
 }
+

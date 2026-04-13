@@ -98,7 +98,7 @@ class _ControlDeckScreenState extends ConsumerState<ControlDeckScreen> {
                 Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -107,7 +107,7 @@ class _ControlDeckScreenState extends ConsumerState<ControlDeckScreen> {
               top: BorderSide(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.08),
+                ).colorScheme.onSurface.withValues(alpha: 0.08),
               ),
             ),
           ),

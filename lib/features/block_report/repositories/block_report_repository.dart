@@ -1,17 +1,22 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:xparq_app/shared/constants/app_constants.dart';
+
 import '../models/block_report_models.dart';
 
 class BlockReportRepository {
+  BlockReportRepository({SupabaseClient? client, http.Client? httpClient})
+    : _client = client ?? Supabase.instance.client,
+      _httpClient = httpClient ?? http.Client();
+
   final SupabaseClient _client;
+  final http.Client _httpClient;
   static const _offlineBlockKey = 'iXPARQ_offline_blocks';
 
-  BlockReportRepository({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
-
-  // ── BLOCK ─────────────────────────────────────────────────────────────────
-
-  /// Block a user — writes to Supabase.
+  /// Block a user. This remains on the legacy write path for Batch A3.1.
   Future<void> blockUser({
     required String myUid,
     required String targetUid,
@@ -36,12 +41,23 @@ class BlockReportRepository {
         .eq('blocker_id', myUid)
         .eq('blocked_id', targetUid);
 
-    // Also remove from offline cache
     await _removeOfflineBlock(targetUid);
   }
 
   /// Stream of blocked IDs for the current user.
+  ///
+  /// When the central backend flag is enabled, this emits a backend-owned
+  /// snapshot first and then continues on the legacy Supabase realtime stream
+  /// so the rollout stays low-risk.
   Stream<List<String>> watchBlockedUids(String myUid) {
+    if (AppConstants.useCentralBackendBlockListRead) {
+      return _watchBlockedUidsViaCentralBackend(myUid);
+    }
+
+    return _watchBlockedUidsViaLegacy(myUid);
+  }
+
+  Stream<List<String>> _watchBlockedUidsViaLegacy(String myUid) {
     return _client
         .from('blocked_users')
         .stream(primaryKey: ['id'])
@@ -49,13 +65,37 @@ class BlockReportRepository {
         .map((data) => data.map((d) => d['blocked_id'] as String).toList());
   }
 
+  Stream<List<String>> _watchBlockedUidsViaCentralBackend(String myUid) async* {
+    try {
+      final snapshot = await _getBlockedUidsViaCentralBackend();
+      if (snapshot != null) {
+        yield snapshot;
+      }
+    } catch (_) {
+      yield* _watchBlockedUidsViaLegacy(myUid);
+      return;
+    }
+
+    yield* _watchBlockedUidsViaLegacy(myUid);
+  }
+
   /// Check if a user is blocked (one-time check).
   Future<bool> isBlocked({
     required String myUid,
     required String targetUid,
   }) async {
-    // Check offline cache first (fast path)
     if (await _isOfflineBlocked(targetUid)) return true;
+
+    if (AppConstants.useCentralBackendBlockListRead) {
+      try {
+        final blockedUids = await _getBlockedUidsViaCentralBackend();
+        if (blockedUids != null) {
+          return blockedUids.contains(targetUid);
+        }
+      } catch (_) {
+        // Fall back to the legacy query below.
+      }
+    }
 
     final response = await _client
         .from('blocked_users')
@@ -67,7 +107,41 @@ class BlockReportRepository {
     return response != null;
   }
 
-  // ── OFFLINE BLOCK ─────────────────────────────────────────────────────────
+  Future<List<String>?> _getBlockedUidsViaCentralBackend() async {
+    final session = _client.auth.currentSession;
+    final accessToken = session?.accessToken ?? '';
+    if (accessToken.isEmpty) {
+      return null;
+    }
+
+    final response = await _httpClient.get(
+      Uri.parse('${AppConstants.platformApiBaseUrl}/moderation/blocks/me'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return null;
+    }
+
+    final payload = jsonDecode(response.body);
+    if (payload is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final blockedUsers = payload['blocked_users'];
+    if (blockedUsers is! List) {
+      return null;
+    }
+
+    return blockedUsers
+        .whereType<Map<String, dynamic>>()
+        .map((entry) => entry['blocked_user_id'])
+        .whereType<String>()
+        .toList();
+  }
 
   Future<void> addOfflineBlock(String deviceId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -104,8 +178,6 @@ class BlockReportRepository {
     await prefs.remove(_offlineBlockKey);
   }
 
-  // ── REPORT ────────────────────────────────────────────────────────────────
-
   Future<void> submitReport(ReportModel report) async {
     await _client.from('reports').insert(report.toMap());
   }
@@ -113,7 +185,7 @@ class BlockReportRepository {
   Future<void> applyGuardianSanction({
     required String reporterUid,
     required String targetUid,
-    required String violationLevel, // "minor" | "major" | "permanent"
+    required String violationLevel,
   }) async {
     final now = DateTime.now();
     DateTime? expiresAt;
@@ -153,7 +225,6 @@ class BlockReportRepository {
       });
     }
 
-    // Permanent invisibility (using blocks table for simplicity or separate table)
     await _client.from('permanent_invisibility').insert({
       'blocker_id': reporterUid,
       'blocked_id': targetUid,

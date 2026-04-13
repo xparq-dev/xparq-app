@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
@@ -48,7 +48,7 @@ class MessageListView extends ConsumerWidget {
             child: Text(
               'Send the first signal 📡',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
               ),
             ),
           );

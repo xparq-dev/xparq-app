@@ -3,7 +3,7 @@ import 'dart:convert' as dart_convert;
 import 'dart:io' as dart_io;
 import 'package:path/path.dart' as dart_path;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/data/repositories/chat_base_repository.dart';

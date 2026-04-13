@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:flutter/foundation.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
+import 'package:xparq_app/features/chat/presentation/providers/reaction_controller.dart';
 import 'package:xparq_app/features/chat/data/services/signal/encrypted_image_widget.dart';
 import 'mini_profile_popup.dart';
 
@@ -50,15 +50,61 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
   static final DateFormat _timeFormatter = DateFormat('HH:mm');
   Timer? _longPressTimer;
   Offset? _lastTapDownPosition;
-  Offset? _lastLocalTapPosition;
   
   // Interaction state
-  late final GlobalKey<_InteractionOverlayState> _overlayKey = GlobalKey<_InteractionOverlayState>();
   int _tapCount = 0;
   Timer? _tapResetTimer;
   bool _isRushing = false;
   Timer? _stopRushTimer;
   Timer? _rushPeriodicTimer;
+
+  @override
+  void didUpdateWidget(covariant MessageBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Listen for reaction changes (Real-time sync)
+    final hasChanges = !mapEquals(widget.message.reactions, oldWidget.message.reactions);
+    
+    if (hasChanges) {
+      debugPrint('[REACTION_DEBUG] Reactions changed for message ${widget.message.messageId}');
+      debugPrint('[REACTION_DEBUG] Old: ${oldWidget.message.reactions}');
+      debugPrint('[REACTION_DEBUG] New: ${widget.message.reactions}');
+      _checkForRemoteReactions(oldWidget.message.reactions);
+    }
+  }
+
+  void _checkForRemoteReactions(Map<String, String> oldReactions) {
+    final myUid = ref.read(authRepositoryProvider).currentUser?.id;
+    final currentReactions = widget.message.reactions;
+
+    debugPrint('[REACTION_DEBUG] Checking for remote reactions. MyUID: $myUid');
+
+    for (var entry in currentReactions.entries) {
+      final userId = entry.key;
+      final emoji = entry.value;
+
+      if (userId != myUid && (!oldReactions.containsKey(userId) || oldReactions[userId] != emoji)) {
+        _triggerRemoteAnimation(emoji);
+      }
+    }
+  }
+
+  void _triggerRemoteAnimation(String emoji) {
+    if (!mounted) return;
+    
+    // Use addPostFrameCallback to ensure the build phase is completely finished.
+    // This is the safest way to trigger animations and update overlay state.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      
+      final RenderBox? box = context.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return;
+
+      final center = box.localToGlobal(Offset(box.size.width / 2, box.size.height / 2));
+      final type = emoji == '❤️' ? ReactionType.heart : ReactionType.spark;
+      
+      ref.read(reactionControllerProvider.notifier).addReaction(center, type);
+    });
+  }
 
   Future<void> _togglePin() async {
     try {
@@ -86,12 +132,18 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
       final repo = ref.read(chatRepositoryProvider);
       final myUid = ref.read(authRepositoryProvider).currentUser?.id;
       if (myUid != null) {
+        debugPrint('[REACTION_DEBUG] Toggling spark for message ${widget.message.messageId} by $myUid');
         await repo.toggleMessageSpark(
           widget.message.messageId, 
           myUid, 
           reaction: emoji
         );
         HapticFeedback.lightImpact();
+      } else {
+        debugPrint('[REACTION_DEBUG] UID is NULL! Cannot toggle spark.');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Auth Error: Please re-login to react.')));
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -102,7 +154,6 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
 
   void _handleTap(TapDownDetails details) {
     _lastTapDownPosition = details.globalPosition;
-    _lastLocalTapPosition = details.localPosition;
     
     setState(() {
       _tapCount++;
@@ -118,11 +169,9 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
       }
     });
 
-    // 1. Double Tap -> Heart Reaction
+    // 1. Double Tap -> Heart Reaction (Moved to native onDoubleTap)
     if (_tapCount == 2) {
-      _overlayKey.currentState?.addHeart(details.localPosition);
-      _toggleSpark(emoji: '❤️');
-      HapticFeedback.mediumImpact();
+      // Logic handled by native onDoubleTap
     }
 
     // 2. Multi-Tap (>5) -> Spark Rush
@@ -153,8 +202,8 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
   void _startRushLoop() {
     _rushPeriodicTimer?.cancel();
     _rushPeriodicTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
-      if (mounted && _isRushing && _lastLocalTapPosition != null) {
-        _overlayKey.currentState?.addSparks(_lastLocalTapPosition!);
+      if (mounted && _isRushing && _lastTapDownPosition != null) {
+        ref.read(reactionControllerProvider.notifier).addReaction(_lastTapDownPosition!, ReactionType.spark);
       } else {
         timer.cancel();
       }
@@ -192,11 +241,11 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
       margin: const EdgeInsets.only(bottom: 4, left: 4, right: 4),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: (widget.isMe ? Colors.white10 : Colors.black12).withOpacity(0.1),
+        color: (widget.isMe ? Colors.white10 : Colors.black12).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border(
           left: BorderSide(
-            color: const Color(0xFF4FC3F7).withOpacity(0.7),
+            color: const Color(0xFF4FC3F7).withValues(alpha: 0.7),
             width: 3,
           ),
         ),
@@ -292,7 +341,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
                       backgroundImage: profile.photoUrl.isNotEmpty
                           ? NetworkImage(profile.photoUrl)
                           : null,
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       child: profile.photoUrl.isEmpty
                           ? Icon(Icons.person, size: 16, color: Theme.of(context).colorScheme.primary)
                           : null,
@@ -300,133 +349,130 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
                   );
                 },
                 loading: () => const CircleAvatar(radius: 14, child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2))),
-                error: (_, _) => const CircleAvatar(radius: 14, child: Icon(Icons.person, size: 16)),
+                error: (__, _) => const CircleAvatar(radius: 14, child: Icon(Icons.person, size: 16)),
               ),
             ),
-          Column(
-            crossAxisAlignment: widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              if (widget.message.replyToId != null) _buildReplyHeader(context),
-              if (widget.message.isSensitive && !widget.isMe)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4, left: 4),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _isRevealed = !_isRevealed),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF6B6B), size: 12),
-                        const SizedBox(width: 4),
-                        Text(
-                          _isRevealed
-                              ? AppLocalizations.of(context)!.sensitiveTapToHide
-                              : AppLocalizations.of(context)!.sensitiveTapToReveal,
-                          style: const TextStyle(color: Color(0xFFFF6B6B), fontSize: 11),
-                        ),
-                      ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                if (widget.message.replyToId != null) _buildReplyHeader(context),
+                if (widget.message.isSensitive && !widget.isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4, left: 4),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isRevealed = !_isRevealed),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF6B6B), size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isRevealed
+                                ? AppLocalizations.of(context)!.sensitiveTapToHide
+                                : AppLocalizations.of(context)!.sensitiveTapToReveal,
+                            style: const TextStyle(color: Color(0xFFFF6B6B), fontSize: 11),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: _handleTap,
-                onTapUp: (_) => _cancelLongPress(),
-                onTapCancel: () => _cancelLongPress(),
-                onVerticalDragStart: (_) => _cancelLongPress(),
-                onHorizontalDragStart: (_) => _cancelLongPress(),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    fit: StackFit.passthrough,
-                    children: [
-                      RepaintBoundary(
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
-                          decoration: BoxDecoration(
-                            color: widget.isMe
-                                ? (widget.message.isSensitive
-                                    ? const Color(0xFF3D1A7A)
-                                    : (Theme.of(context).brightness == Brightness.dark
-                                        ? const Color(0xFF1E3A5F)
-                                        : Colors.grey[200]))
-                                : (Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFF0D1B2A)
-                                    : Colors.grey[100]),
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(18),
-                              topRight: const Radius.circular(18),
-                              bottomLeft: Radius.circular(widget.isMe ? 18 : 4),
-                              bottomRight: Radius.circular(widget.isMe ? 4 : 18),
-                            ),
-                            border: widget.message.isSensitive
-                                ? Border.all(color: const Color(0xFFFF6B6B).withOpacity(0.3))
-                                : null,
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Stack(
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: _handleTap,
+                  onTap: () {}, 
+                  onDoubleTap: () {
+                    debugPrint('[REACTION_DEBUG] Native Double Tap detected');
+                    if (_lastTapDownPosition != null) {
+                      ref.read(reactionControllerProvider.notifier).addReaction(_lastTapDownPosition!, ReactionType.heart);
+                      _toggleSpark(emoji: '❤️');
+                      HapticFeedback.mediumImpact();
+                    }
+                  },
+                  onTapUp: (_) => _cancelLongPress(),
+                  onTapCancel: () => _cancelLongPress(),
+                  onVerticalDragStart: (_) => _cancelLongPress(),
+                  onHorizontalDragStart: (_) => _cancelLongPress(),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 4),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+                    decoration: BoxDecoration(
+                      color: widget.isMe
+                          ? (widget.message.isSensitive
+                              ? const Color(0xFF3D1A7A)
+                              : (Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF1E3A5F)
+                                  : Colors.grey[200]))
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF0D1B2A)
+                              : Colors.grey[100]),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(18),
+                        topRight: const Radius.circular(18),
+                        bottomLeft: Radius.circular(widget.isMe ? 18 : 4),
+                        bottomRight: Radius.circular(widget.isMe ? 4 : 18),
+                      ),
+                      border: widget.message.isSensitive
+                          ? Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.3))
+                          : null,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (widget.otherUid == 'group' && !widget.isMe)
-                                        _buildSenderName(context),
-                                      if (widget.message.messageType == MessageType.image)
-                                        _buildImagePayload(displayContent)
-                                      else if (widget.message.messageType == MessageType.sticker)
-                                        Text(
-                                          displayContent,
-                                          style: const TextStyle(
-                                            fontSize: 40,
-                                          ),
-                                        )
-                                      else if (widget.message.messageType == MessageType.deleted)
-                                        Text(
-                                          AppLocalizations.of(context)!.messageDeleted,
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                                            fontSize: 14,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        )
-                                      else
-                                        Text(
-                                          displayContent,
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                            fontSize: 15,
-                                            height: 1.4,
-                                          ),
-                                        ),
-                                      const SizedBox(height: 4),
-                                      _buildTimestampAndStatus(context),
-                                      if (widget.otherUid == 'group' &&
-                                          widget.message.metadata['sparks'] != null &&
-                                          _getSparkCount(widget.message.metadata['sparks']) > 0)
-                                        _buildSparkIndicator(),
-                                      if (widget.message.reactions.isNotEmpty)
-                                        _buildEmojiReactions(),
-                                    ],
+                                if (widget.otherUid == 'group' && !widget.isMe)
+                                  _buildSenderName(context),
+                                if (widget.message.messageType == MessageType.image)
+                                  _buildImagePayload(displayContent)
+                                else if (widget.message.messageType == MessageType.sticker)
+                                  Text(
+                                    displayContent,
+                                    style: const TextStyle(
+                                      fontSize: 40,
+                                    ),
+                                  )
+                                else if (widget.message.messageType == MessageType.deleted)
+                                  Text(
+                                    AppLocalizations.of(context)!.messageDeleted,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                      fontSize: 14,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  )
+                                else
+                                  Text(
+                                    displayContent,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 15,
+                                      height: 1.4,
+                                    ),
                                   ),
-                                ),
-                                if (isNsfwBlurred) _buildBlurOverlay(context),
+                                const SizedBox(height: 4),
+                                _buildTimestampAndStatus(context),
+                                if (widget.otherUid == 'group' &&
+                                    widget.message.metadata['sparks'] != null &&
+                                    _getSparkCount(widget.message.metadata['sparks']) > 0)
+                                  _buildSparkIndicator(),
                               ],
                             ),
                           ),
-                        ),
+                          if (isNsfwBlurred) _buildBlurOverlay(context),
+                        ],
                       ),
-                      // High-Performance Interaction Layer
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: _InteractionOverlay(key: _overlayKey),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-              ),
-            ],
+                ),
+                if (widget.message.reactions.isNotEmpty)
+                  _buildEmojiReactions(),
+              ],
+            ),
           ),
         ],
       ),
@@ -447,7 +493,11 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
                 }
               },
               child: Text(
-                p?.xparqName ?? widget.message.senderUid.substring(0, 8),
+                (p != null
+                    ? (p.handle != null && p.handle!.isNotEmpty
+                        ? '${p.xparqName} (@${p.handle})'
+                        : p.xparqName)
+                    : 'Explorer'),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -456,7 +506,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
               ),
             ),
             loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
+            error: (__, _) => const SizedBox.shrink(),
           ),
     );
   }
@@ -474,7 +524,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
       );
     } catch (e) {
       return const Text(
-        '🔒 [Encrypted Media Error]',
+        'ðŸ”’ [Encrypted Media Error]',
         style: TextStyle(fontStyle: FontStyle.italic),
       );
     }
@@ -487,7 +537,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
         Text(
           _timeFormatter.format(widget.message.timestamp),
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
             fontSize: 10,
           ),
         ),
@@ -496,7 +546,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
           Text(
             'Edited',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
               fontSize: 9,
               fontStyle: FontStyle.italic,
             ),
@@ -513,7 +563,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
             size: 12,
             color: widget.message.read
                 ? const Color(0xFF4FC3F7)
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ],
         if (widget.message.isOfflineRelay)
@@ -533,10 +583,10 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.15),
+            color: Colors.amber.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.amber.withOpacity(0.3),
+              color: Colors.amber.withValues(alpha: 0.3),
               width: 0.5,
             ),
           ),
@@ -568,43 +618,48 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: reactionCounts.entries.map((entry) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 0.5,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  entry.key,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                if (entry.value > 1) ...[
-                  const SizedBox(width: 4),
-                  Text(
-                    '${entry.value}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Column(
+        crossAxisAlignment: widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: reactionCounts.entries.map((entry) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 0.5,
                   ),
-                ],
-              ],
-            ),
-          );
-        }).toList(),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      entry.key,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    if (entry.value > 1) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '${entry.value}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -615,13 +670,13 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
         onTap: () => setState(() => _isRevealed = true),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.92),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(18),
           ),
           alignment: Alignment.center,
           child: Icon(
             Icons.visibility_off,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
             size: 28,
           ),
         ),
@@ -655,7 +710,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
             ),
             ListTile(
               leading: const Icon(Icons.bolt, color: Colors.amber),
-              title: const Text('⚡ Spark (Like)'),
+              title: const Text('âš¡ Spark (Like)'),
               onTap: () {
                 Navigator.pop(ctx);
                 _toggleSpark();
@@ -711,10 +766,10 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
           margin: const EdgeInsets.only(bottom: 12, left: 16, right: 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
             ),
           ),
           child: Row(
@@ -723,15 +778,15 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
               Icon(
                 Icons.satellite_alt_outlined,
                 size: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
               ),
               const SizedBox(width: 8),
               Text(
-                '🛰️ สัญญาณถูกยกเลิกโดยผู้ส่ง',
+                'ðŸ›°ï¸ à¸ªà¸±à¸à¸à¸²à¸“à¸–à¸¹à¸à¸¢à¸à¹€à¸¥à¸´à¸à¹‚à¸”à¸¢à¸œà¸¹à¹‰à¸ªà¹ˆà¸‡',
                 style: TextStyle(
                   fontSize: 13,
                   fontStyle: FontStyle.italic,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                 ),
               ),
             ],
@@ -772,7 +827,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
                    Icon(Icons.undo_rounded, size: 10, color: isDark ? Colors.white30 : Colors.black26),
                    const SizedBox(width: 4),
                    Text(
-                    'ยกเลิกแล้ว',
+                    'à¸¢à¸à¹€à¸¥à¸´à¸à¹à¸¥à¹‰à¸§',
                     style: TextStyle(
                       fontSize: 9, 
                       color: isDark ? Colors.white30 : Colors.black26, 
@@ -789,171 +844,4 @@ class _MessageBubbleState extends ConsumerState<MessageBubble>
   }
 }
 
-class _InteractionOverlay extends StatefulWidget {
-  const _InteractionOverlay({super.key});
-
-  @override
-  State<_InteractionOverlay> createState() => _InteractionOverlayState();
-}
-
-class _InteractionOverlayState extends State<_InteractionOverlay> with SingleTickerProviderStateMixin {
-  final List<_Particle> _particles = [];
-  late AnimationController _ticker;
-  final _random = math.Random();
-
-  @override
-  void initState() {
-    super.initState();
-    _ticker = AnimationController(vsync: this, duration: const Duration(seconds: 1));
-    _ticker.addListener(() {
-      if (_particles.isEmpty && _ticker.isAnimating) {
-        _ticker.stop();
-      }
-      _updateParticles();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ticker.dispose();
-    super.dispose();
-  }
-
-  void _updateParticles() {
-    if (!mounted) return;
-    setState(() {
-      final now = DateTime.now();
-      _particles.removeWhere((p) => now.difference(p.startTime) > p.duration);
-      for (var p in _particles) {
-        final progress = now.difference(p.startTime).inMilliseconds / p.duration.inMilliseconds;
-        p.progress = progress.clamp(0.0, 1.0);
-      }
-    });
-  }
-
-  void addSparks(Offset position) {
-    if (!mounted) return;
-    for (int i = 0; i < 3; i++) {
-      _particles.add(_Particle(
-        position: position,
-        startTime: DateTime.now(),
-        duration: Duration(milliseconds: 1400 + _random.nextInt(800)),
-        velocity: Offset((_random.nextDouble() - 0.5) * 100, -120 - _random.nextDouble() * 180),
-        rotation: (_random.nextDouble() - 0.5) * 1.5,
-        rotationSpeed: (_random.nextDouble() - 0.5) * 3,
-        isHeart: false,
-      ));
-    }
-    if (!_ticker.isAnimating) _ticker.repeat();
-  }
-
-  void addHeart(Offset position) {
-    if (!mounted) return;
-    _particles.add(_Particle(
-      position: position,
-      startTime: DateTime.now(),
-      duration: const Duration(milliseconds: 1500),
-      velocity: const Offset(0, -40),
-      rotation: 0,
-      rotationSpeed: 0,
-      isHeart: true,
-    ));
-    if (!_ticker.isAnimating) _ticker.repeat();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _ParticlePainter(particles: _particles),
-      child: const SizedBox.expand(),
-    );
-  }
-}
-
-class _Particle {
-  final Offset position;
-  final DateTime startTime;
-  final Duration duration;
-  final Offset velocity;
-  final double rotation;
-  final double rotationSpeed;
-  final bool isHeart;
-  double progress = 0.0;
-
-  _Particle({
-    required this.position,
-    required this.startTime,
-    required this.duration,
-    required this.velocity,
-    required this.rotation,
-    required this.rotationSpeed,
-    required this.isHeart,
-  });
-}
-
-class _ParticlePainter extends CustomPainter {
-  final List<_Particle> particles;
-  _ParticlePainter({required this.particles});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (var p in particles) {
-      final double opacity = p.isHeart 
-          ? (p.progress < 0.2 ? p.progress * 5 : (p.progress > 0.7 ? (1 - p.progress) * 3.33 : 1.0)).clamp(0.0, 1.0)
-          : (1.0 - p.progress).clamp(0.0, 1.0);
-      
-      final double scale = p.isHeart 
-          ? (p.progress < 0.3 ? p.progress * 3.33 : 1.0) 
-          : (0.6 + p.progress * 0.8);
-      
-      final double dx = p.position.dx + (p.velocity.dx * p.progress) + (p.isHeart ? 0 : math.sin(p.progress * 15) * 15);
-      final double dy = p.position.dy + (p.velocity.dy * p.progress);
-      final double rot = p.rotation + (p.rotationSpeed * p.progress);
-
-      canvas.save();
-      canvas.translate(dx, dy);
-      canvas.rotate(rot);
-      canvas.scale(scale);
-
-      if (p.isHeart) {
-        _drawText(canvas, '❤️', 50, opacity);
-      } else {
-        _drawIcon(canvas, Icons.bolt, 32, Colors.amber.withOpacity(opacity));
-      }
-      canvas.restore();
-    }
-  }
-
-  void _drawText(Canvas canvas, String text, double size, double opacity) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(fontSize: size, color: Colors.white.withOpacity(opacity)),
-      ),
-      textDirection: ui.TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
-  }
-
-  void _drawIcon(Canvas canvas, IconData icon, double size, Color color) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: String.fromCharCode(icon.codePoint),
-        style: TextStyle(
-          fontSize: size,
-          fontFamily: icon.fontFamily,
-          package: icon.fontPackage,
-          color: color,
-        ),
-      ),
-      textDirection: ui.TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
-  }
-
-  @override
-  bool shouldRepaint(covariant _ParticlePainter oldDelegate) => true;
-}
 

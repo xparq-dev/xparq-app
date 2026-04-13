@@ -1,15 +1,15 @@
-// lib/features/auth/screens/auth_gate_screen.dart
+﻿// lib/features/auth/screens/auth_gate_screen.dart
 //
 // Root screen that listens to Firebase auth state and routes accordingly.
-// - Not logged in → OnboardingScreen
-// - Logged in, no profile → PlanetCreationScreen
-// - Logged in, profile exists → ControlDeck (main app)
+// - Not logged in â†’ OnboardingScreen
+// - Logged in, no profile â†’ PlanetCreationScreen
+// - Logged in, profile exists â†’ ControlDeck (main app)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/auth/screens/onboarding/welcome_screen.dart';
 import 'package:xparq_app/features/auth/screens/onboarding/account_recovery_screen.dart';
-import 'package:xparq_app/core/widgets/xparq_logo.dart';
+import 'package:xparq_app/shared/widgets/branding/xparq_logo.dart';
 import 'package:xparq_app/features/auth/screens/onboarding/planet_creation_screen.dart';
 import 'package:xparq_app/features/control_deck/screens/control_deck_screen.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
@@ -28,7 +28,7 @@ class AuthGateScreen extends ConsumerWidget {
 
     return authState.when(
       loading: () => const _GalaxyLoadingScreen(),
-      error: (_, _) => const WelcomeScreen(),
+      error: (__, _) => const WelcomeScreen(),
       data: (user) {
         if (user == null) return const WelcomeScreen();
 
@@ -36,7 +36,7 @@ class AuthGateScreen extends ConsumerWidget {
 
         return profileAsync.when(
           loading: () => const _GalaxyLoadingScreen(),
-          error: (_, _) => const WelcomeScreen(),
+          error: (__, _) => const WelcomeScreen(),
           data: (profile) {
             if (profile == null) {
               if (isLoginFlow) {

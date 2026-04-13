@@ -1,9 +1,12 @@
 // lib/features/auth/repositories/supabase_auth_repository.dart
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
-// import '../../../core/constants/app_constants.dart'; // Removed as it was unused
-import 'package:xparq_app/core/enums/age_group.dart';
+import 'package:xparq_app/shared/constants/app_constants.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/auth/services/age_gating_service.dart';
 import 'package:xparq_app/features/auth/services/dob_encryption_service.dart';
@@ -11,9 +14,11 @@ import 'package:xparq_app/features/chat/data/services/signal/signal_session_mana
 
 class SupabaseAuthRepository {
   final SupabaseClient _client;
+  final http.Client _httpClient;
 
-  SupabaseAuthRepository({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+  SupabaseAuthRepository({SupabaseClient? client, http.Client? httpClient})
+      : _client = client ?? Supabase.instance.client,
+        _httpClient = httpClient ?? http.Client();
 
   // ── Auth State ────────────────────────────────────────────────────────────
 
@@ -107,7 +112,8 @@ class SupabaseAuthRepository {
         // Add a timeout to status update to prevent hanging the whole signout
         await updateOnlineStatus(uid, false).timeout(
           const Duration(seconds: 2),
-          onTimeout: () => debugPrint('PRESENCE: Status update timed out during signout'),
+          onTimeout: () =>
+              debugPrint('PRESENCE: Status update timed out during signout'),
         );
       }
     } catch (e) {
@@ -176,37 +182,29 @@ class SupabaseAuthRepository {
   Future<void> updateGhostMode(bool enabled) async {
     final uid = currentUser?.id;
     if (uid == null) return;
-    await _client
-        .from('profiles')
-        .update({'ghost_mode': enabled, if (enabled) 'is_online': false})
-        .eq('id', uid);
+    await _client.from('profiles').update(
+        {'ghost_mode': enabled, if (enabled) 'is_online': false}).eq('id', uid);
   }
 
   Future<void> deleteUserAccount() async {
     final uid = currentUser?.id;
     if (uid == null) return;
 
-    await _client
-        .from('profiles')
-        .update({
-          'account_status': 'pending_deletion',
-          'deletion_requested_at': DateTime.now().toIso8601String(),
-          'is_online': false,
-        })
-        .eq('id', uid);
+    await _client.from('profiles').update({
+      'account_status': 'pending_deletion',
+      'deletion_requested_at': DateTime.now().toIso8601String(),
+      'is_online': false,
+    }).eq('id', uid);
 
     await _client.auth.signOut();
   }
 
   Future<void> restoreAccount(String uid) async {
-    await _client
-        .from('profiles')
-        .update({
-          'account_status': 'active',
-          'deletion_requested_at': null,
-          'is_online': true,
-        })
-        .eq('id', uid);
+    await _client.from('profiles').update({
+      'account_status': 'active',
+      'deletion_requested_at': null,
+      'is_online': true,
+    }).eq('id', uid);
   }
 
   Future<void> setNsfwOptIn({
@@ -300,6 +298,25 @@ class SupabaseAuthRepository {
     return await _client.from('profiles').select().eq('id', uid).maybeSingle();
   }
 
+  Future<Map<String, dynamic>?> fetchPlanetProfileForProvider(
+      String uid) async {
+    if (!(AppConstants.useCentralBackendRead ||
+        AppConstants.useCentralBackendProfileRead)) {
+      return fetchProfile(uid);
+    }
+
+    try {
+      final backendProfile = await _fetchProfileViaCentralBackend(uid);
+      if (backendProfile != null) {
+        return backendProfile;
+      }
+    } catch (e) {
+      debugPrint('[AuthRepo] Provider backend profile fetch failed: $e');
+    }
+
+    return fetchProfile(uid);
+  }
+
   // Renaming to match expected name in providers/notifier
   Future<Map<String, dynamic>?> fetchPlanetProfile(String uid) =>
       fetchProfile(uid);
@@ -313,4 +330,66 @@ class SupabaseAuthRepository {
   }
 
   // ... other methods like delete account etc. can be added similarly
+
+  Future<Map<String, dynamic>?> _fetchProfileViaCentralBackend(
+      String uid) async {
+    final session = _client.auth.currentSession;
+    final accessToken = session?.accessToken ?? '';
+    if (accessToken.isEmpty) {
+      return null;
+    }
+
+    final currentUserId = _client.auth.currentUser?.id;
+    final path = currentUserId == uid
+        ? '/profiles/me'
+        : '/profiles/${Uri.encodeComponent(uid)}/summary';
+    final uri = Uri.parse('${AppConstants.platformApiBaseUrl}$path');
+
+    final response = await _httpClient.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final payload = jsonDecode(response.body);
+      if (payload is Map<String, dynamic>) {
+        return payload;
+      }
+      return null;
+    }
+
+    if (_shouldFallbackToLegacy(response.statusCode, response.body)) {
+      return null;
+    }
+
+    throw Exception(
+      'Platform backend profile request failed with HTTP ${response.statusCode}.',
+    );
+  }
+
+  bool _shouldFallbackToLegacy(int statusCode, String responseBody) {
+    if (statusCode == 404 || statusCode >= 500) {
+      return true;
+    }
+
+    if (statusCode == 409) {
+      try {
+        final decoded = jsonDecode(responseBody);
+        if (decoded is Map<String, dynamic>) {
+          final detail = decoded['detail'];
+          if (detail is Map<String, dynamic> &&
+              detail['code'] == 'SUPABASE_ID_NOT_LINKED') {
+            return true;
+          }
+        }
+      } catch (_) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }

@@ -34,7 +34,7 @@ class QRInviteDialog extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.7),
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -50,17 +50,6 @@ class QRInviteDialog extends StatelessWidget {
                 version: QrVersions.auto,
                 size: 200.0,
                 gapless: false,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'UID: ${uid.substring(0, 8)}',
-              style: TextStyle(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withOpacity(0.24),
-                fontSize: 12,
-                fontFamily: 'monospace',
               ),
             ),
             const SizedBox(height: 24),

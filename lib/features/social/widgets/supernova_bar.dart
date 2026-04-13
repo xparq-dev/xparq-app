@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/social/models/pulse_model.dart';
 import 'package:xparq_app/features/social/providers/pulse_providers.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
@@ -71,7 +71,7 @@ class SupernovaBar extends ConsumerWidget {
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.2),
+                      ).colorScheme.onSurface.withValues(alpha: 0.2),
                       width: 2,
                     ),
                     image:
@@ -90,7 +90,7 @@ class SupernovaBar extends ConsumerWidget {
                           Icons.person,
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
                         )
                       : null,
                 ),
@@ -191,3 +191,4 @@ class SupernovaBar extends ConsumerWidget {
     );
   }
 }
+

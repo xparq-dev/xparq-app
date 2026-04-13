@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
@@ -27,7 +27,7 @@ class OrbitRequestsScreen extends ConsumerWidget {
                 style: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.54),
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
                 ),
               ),
             );
@@ -168,7 +168,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
             style: TextStyle(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.54),
+              ).colorScheme.onSurface.withValues(alpha: 0.54),
             ),
           ),
           trailing: trailingWidget,
@@ -180,7 +180,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
         ),
         title: Text(AppLocalizations.of(context)!.loading),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (__, _) => const SizedBox.shrink(),
     );
   }
 }

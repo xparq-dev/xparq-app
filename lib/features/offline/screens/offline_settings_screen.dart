@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/offline/providers/offline_state_provider.dart';
 import 'package:xparq_app/features/offline/providers/offline_user_provider.dart';
 import 'package:xparq_app/features/offline/services/offline_chat_database.dart';
-import 'package:xparq_app/core/router/app_router.dart';
-import 'package:xparq_app/core/theme/theme_provider.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
+import 'package:xparq_app/shared/theme/theme_provider.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
 class OfflineSettingsScreen extends ConsumerWidget {
@@ -154,3 +154,4 @@ class OfflineSettingsScreen extends ConsumerWidget {
     }
   }
 }
+

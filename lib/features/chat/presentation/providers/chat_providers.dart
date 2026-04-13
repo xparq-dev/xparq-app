@@ -68,8 +68,8 @@ final chatProfileProvider = StreamProvider.autoDispose
     .family<PlanetModel?, String>((ref, uid) {
       if (uid.isEmpty) return Stream.value(null);
       // ignore: deprecated_member_use
-      // .stream will be removed in 3.0.0 but required for current implementation
-      return ref.watch(planetProfileByUidProvider(uid).stream);
+      // .stream will be removed in 3.0.0
+      return ref.watch(planetProfileByUidProvider(uid).future).asStream();
     });
 
 // ── My Chats List ─────────────────────────────────────────────────────────────
@@ -80,14 +80,11 @@ final rawChatsProvider = StreamProvider<List<ChatModel>>((ref) {
   return ref.watch(chatRepositoryProvider).watchMyChats(uid);
 });
 
-final unreadCountsProvider = FutureProvider<Map<String, int>>((ref) async {
+final unreadCountsProvider = StreamProvider<Map<String, int>>((ref) {
   final uid = ref.watch(authRepositoryProvider).currentUser?.id;
-  if (uid == null) return const {};
+  if (uid == null) return Stream.value(const {});
 
-  // Re-fetch counts whenever the overall chats list switches/updates (e.g. new message)
-  ref.watch(rawChatsProvider);
-
-  return ref.watch(chatRepositoryProvider).getUnreadCounts(uid);
+  return ref.watch(chatRepositoryProvider).watchUnreadCounts(uid);
 });
 
 final chatSettingsProvider = StreamProvider<Map<String, Map<String, dynamic>>>((

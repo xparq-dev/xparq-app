@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/presentation/providers/chat_providers.dart';
@@ -10,7 +10,7 @@ import 'package:xparq_app/features/chat/data/services/message_encryption_service
 import 'package:xparq_app/features/chat/presentation/screens/signal_chat_screen.dart';
 import 'package:xparq_app/features/chat/presentation/screens/spam_list_screen.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/signal_sidebar.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
 import 'package:xparq_app/features/offline/providers/connectivity_provider.dart';
 import 'package:xparq_app/features/social/widgets/supernova_bar.dart';
@@ -132,7 +132,7 @@ class _SidebarRail extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -330,7 +330,7 @@ class _ChatTabBar extends StatelessWidget {
 
     return TabBar(
       labelColor: const Color(0xFF4FC3F7),
-      unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.54),
+      unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.54),
       indicatorColor: const Color(0xFF4FC3F7),
       indicatorSize: TabBarIndicatorSize.tab,
       dividerColor: theme.dividerColor,
@@ -413,7 +413,7 @@ class _OfflineErrorView extends ConsumerWidget {
               l10n.chatListOfflineSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
             ),
@@ -497,7 +497,7 @@ class _ChatListView extends ConsumerWidget {
           _ => Divider(
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withOpacity(0.10),
+            ).colorScheme.onSurface.withValues(alpha: 0.10),
             height: 1,
           ),
         };
@@ -522,7 +522,7 @@ class _ReconnectingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      color: Colors.amber.withOpacity(0.1),
+      color: Colors.amber.withValues(alpha: 0.1),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
         children: [
@@ -560,12 +560,12 @@ class _EmptyStateView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('📡', style: TextStyle(fontSize: 48)),
+            const Text('ðŸ“¡', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 12),
             Text(
               l10n.chatListEmptyTitle,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 16,
               ),
             ),
@@ -574,7 +574,7 @@ class _EmptyStateView extends StatelessWidget {
               l10n.chatListEmptySubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 fontSize: 13,
               ),
             ),
@@ -610,7 +610,11 @@ class _ChatTile extends ConsumerWidget {
         ? (chat.name ?? l10n.chatListGroupDefaultName)
         : (isSelfChat
               ? l10n.chatListSavedMe.toUpperCase()
-              : (profile?.xparqName ?? otherUid.substring(0, 8)));
+              : (profile != null
+                    ? (profile.handle != null && profile.handle!.isNotEmpty
+                        ? '${profile.xparqName} (@${profile.handle})'
+                        : profile.xparqName)
+                    : 'Explorer'));
 
     final avatarInitials = chat.isGroup
         ? (chat.name?.isNotEmpty == true
@@ -620,7 +624,7 @@ class _ChatTile extends ConsumerWidget {
               ? 'ME'
               : (profile?.xparqName.isNotEmpty == true
                     ? profile!.xparqName.substring(0, 1).toUpperCase()
-                    : otherUid.substring(0, 2).toUpperCase()));
+                    : '?'));
 
     final hasAvatar = chat.isGroup
         ? (chat.groupAvatar?.isNotEmpty ?? false)
@@ -658,8 +662,8 @@ class _ChatTile extends ConsumerWidget {
               showPreview,
               style: TextStyle(
                 color: chat.isSensitive
-                    ? const Color(0xFFFF6B6B).withOpacity(0.7)
-                    : theme.colorScheme.onSurface.withOpacity(0.38),
+                    ? const Color(0xFFFF6B6B).withValues(alpha: 0.7)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.38),
                 fontSize: 13,
               ),
               overflow: TextOverflow.ellipsis,
@@ -669,7 +673,7 @@ class _ChatTile extends ConsumerWidget {
                 ? Text(
                     DateFormat('HH:mm').format(chat.lastAt!),
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface.withOpacity(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 
                         0.38,
                       ),
                       fontSize: 11,
@@ -901,7 +905,7 @@ class _ChatAvatar extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 26,
-          backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+          backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
           backgroundImage: hasAvatar
               ? XparqImage.getImageProvider(avatarUrl!)
               : null,
@@ -1090,10 +1094,10 @@ class _SignalRequestsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return ListTile(
-      tileColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+      tileColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
       leading: CircleAvatar(
         radius: 26,
-        backgroundColor: Colors.amber.withOpacity(0.1),
+        backgroundColor: Colors.amber.withValues(alpha: 0.1),
         child: const Icon(Icons.mark_chat_unread_outlined, color: Colors.amber),
       ),
       title: Text(
@@ -1106,7 +1110,7 @@ class _SignalRequestsTile extends StatelessWidget {
       subtitle: Text(
         l10n.chatListRequestsSubtitle(requests.length),
         style: TextStyle(
-          color: Colors.amber.withOpacity(0.6),
+          color: Colors.amber.withValues(alpha: 0.6),
           fontSize: 13,
         ),
       ),
@@ -1175,7 +1179,11 @@ class _RequestTile extends ConsumerWidget {
     );
     final profileAsync = ref.watch(chatProfileProvider(otherUid));
     final profile = profileAsync.valueOrNull;
-    final displayName = profile?.xparqName ?? otherUid.substring(0, 8);
+    final displayName = profile != null
+        ? (profile.handle != null && profile.handle!.isNotEmpty
+            ? '${profile.xparqName} (@${profile.handle})'
+            : profile.xparqName)
+        : 'Explorer';
     final hasAvatar = profile?.photoUrl.isNotEmpty ?? false;
     final l10n = AppLocalizations.of(context)!;
 
@@ -1196,7 +1204,7 @@ class _RequestTile extends ConsumerWidget {
       subtitle: Text(
         l10n.chatListRequestsSubtitle(1),
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
       onTap: () => _handleTap(context, otherUid),
@@ -1255,29 +1263,29 @@ class _SpamFolderTile extends ConsumerWidget {
           tileColor: Colors.transparent,
           leading: CircleAvatar(
             radius: 26,
-            backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),
+            backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
             child: Icon(
               Icons.mark_email_read_outlined,
-              color: theme.colorScheme.onSurface.withOpacity(0.54),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
             ),
           ),
           title: Text(
             'Spam Signals',
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,
             ),
           ),
           subtitle: Text(
             '${chats.length} signals from high-risk creators',
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.38),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
               fontSize: 13,
             ),
           ),
           trailing: Icon(
             Icons.chevron_right,
-            color: theme.colorScheme.onSurface.withOpacity(0.24),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.24),
           ),
           onTap: () => Navigator.push(
             context,
@@ -1286,7 +1294,7 @@ class _SpamFolderTile extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (__, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -1386,7 +1394,7 @@ class _CreateChatSheetState extends ConsumerState<_CreateChatSheet> {
               filled: true,
               fillColor: Theme.of(
                 context,
-              ).colorScheme.onSurface.withOpacity(0.05),
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -1410,11 +1418,11 @@ class _CreateChatSheetState extends ConsumerState<_CreateChatSheet> {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  'No users found 🌌',
+                  'No users found ðŸŒŒ',
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.54),
+                    ).colorScheme.onSurface.withValues(alpha: 0.54),
                   ),
                 ),
               ),
@@ -1442,11 +1450,13 @@ class _CreateChatSheetState extends ConsumerState<_CreateChatSheet> {
                   subtitle: Text(
                     user.id == widget.myUid
                         ? 'SAVED (ME)'
-                        : (user.handle ?? user.id.substring(0, 8)),
+                        : (user.handle != null && user.handle!.isNotEmpty
+                            ? '@${user.handle}'
+                            : 'Explorer'),
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.5),
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                   onTap: () async {
@@ -1478,3 +1488,4 @@ class _CreateChatSheetState extends ConsumerState<_CreateChatSheet> {
     );
   }
 }
+

@@ -35,7 +35,7 @@ class ProfileActions extends ConsumerWidget {
                   onPressed: () => _handleMessage(context, ref),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.24),
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

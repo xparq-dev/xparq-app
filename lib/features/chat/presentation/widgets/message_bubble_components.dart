@@ -24,11 +24,11 @@ class MessageReplyHeader extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 4, left: 4, right: 4),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: (isMe ? Colors.white10 : Colors.black12).withOpacity(0.1),
+        color: (isMe ? Colors.white10 : Colors.black12).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border(
           left: BorderSide(
-            color: const Color(0xFF4FC3F7).withOpacity(0.7),
+            color: const Color(0xFF4FC3F7).withValues(alpha: 0.7),
             width: 3,
           ),
         ),
@@ -140,7 +140,7 @@ class MessageStatus extends StatelessWidget {
         Text(
           _timeFormatter.format(message.timestamp),
           style: TextStyle(
-            color: theme.colorScheme.onSurface.withOpacity(0.38),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
             fontSize: 10,
           ),
         ),
@@ -155,7 +155,7 @@ class MessageStatus extends StatelessWidget {
             size: 12,
             color: message.read
                 ? const Color(0xFF4FC3F7)
-                : theme.colorScheme.onSurface.withOpacity(0.38),
+                : theme.colorScheme.onSurface.withValues(alpha: 0.38),
           ),
         ],
         if (message.isOfflineRelay)
@@ -187,10 +187,10 @@ class MessageSparkBadge extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.15),
+            color: Colors.amber.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.amber.withOpacity(0.3),
+              color: Colors.amber.withValues(alpha: 0.3),
               width: 0.5,
             ),
           ),

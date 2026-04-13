@@ -1,174 +1,98 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-
-enum GalaxyBannerVariant { error, warning, info, success }
+import 'dart:ui';
+import 'package:xparq_app/l10n/app_localizations.dart';
 
 class GalaxyErrorBanner extends StatelessWidget {
   final String message;
-  final String? title;
   final VoidCallback? onDismiss;
 
-  final GalaxyBannerVariant variant;
-  final bool enableBlur;
-  final Widget? icon;
-
-  const GalaxyErrorBanner({
-    super.key,
-    required this.message,
-    this.title,
-    this.onDismiss,
-    this.variant = GalaxyBannerVariant.error,
-    this.enableBlur = true,
-    this.icon,
-  });
+  const GalaxyErrorBanner({super.key, required this.message, this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryError = const Color(0xFFFF6B6B);
 
-    final colors = _resolveColors(theme);
-
-    Widget content = Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.background,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border, width: 1.5),
-        boxShadow: [
-          if (isDark)
-            BoxShadow(
-              color: colors.main.withOpacity(0.15),
-              blurRadius: 20,
-              spreadRadius: -5,
-            ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: colors.main.withOpacity(0.2),
-              shape: BoxShape.circle,
+              color: primaryError.withValues(alpha: isDark ? 0.1 : 0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.fromBorderSide(
+                BorderSide(
+                  color: primaryError.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+              ),
+              boxShadow: [
+                if (isDark)
+                  BoxShadow(
+                    color: primaryError.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    spreadRadius: -5,
+                  ),
+              ],
             ),
-            child: icon ??
-                Icon(
-                  _resolveIcon(),
-                  color: colors.main,
-                  size: 20,
-                ),
-          ),
-
-          const SizedBox(width: 16),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
               children: [
-                if (title != null)
-                  Text(
-                    title!,
-                    style: TextStyle(
-                      color: colors.main,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primaryError.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
                   ),
-                if (title != null) const SizedBox(height: 2),
-                Text(
-                  message,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.9),
-                    fontSize: 13,
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFFF6B6B),
+                    size: 20,
                   ),
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.authErrorGeneric
+                            .split('.')
+                            .first, // "An error occurred"
+                        style: const TextStyle(
+                          color: Color(0xFFFF6B6B),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        message,
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.9)
+                              : Colors.black87,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (onDismiss != null)
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: onDismiss,
+                    color: primaryError.withValues(alpha: 0.5),
+                  ),
               ],
             ),
           ),
-
-          if (onDismiss != null)
-            IconButton(
-              icon: const Icon(Icons.close, size: 18),
-              onPressed: onDismiss,
-              color: colors.main.withOpacity(0.6),
-            ),
-        ],
-      ),
-    );
-
-    if (!enableBlur) return content;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: content,
+        ),
       ),
     );
   }
-
-  // ======================
-  // Helpers
-  // ======================
-
-  IconData _resolveIcon() {
-    switch (variant) {
-      case GalaxyBannerVariant.error:
-        return Icons.error_outline;
-      case GalaxyBannerVariant.warning:
-        return Icons.warning_amber_rounded;
-      case GalaxyBannerVariant.info:
-        return Icons.info_outline;
-      case GalaxyBannerVariant.success:
-        return Icons.check_circle_outline;
-    }
-  }
-
-  _BannerColors _resolveColors(ThemeData theme) {
-    final scheme = theme.colorScheme;
-
-    switch (variant) {
-      case GalaxyBannerVariant.error:
-        return _BannerColors(
-          main: scheme.error,
-          background: scheme.error.withOpacity(0.08),
-          border: scheme.error.withOpacity(0.3),
-        );
-
-      case GalaxyBannerVariant.warning:
-        return _BannerColors(
-          main: Colors.orange,
-          background: Colors.orange.withOpacity(0.08),
-          border: Colors.orange.withOpacity(0.3),
-        );
-
-      case GalaxyBannerVariant.info:
-        return _BannerColors(
-          main: scheme.primary,
-          background: scheme.primary.withOpacity(0.08),
-          border: scheme.primary.withOpacity(0.3),
-        );
-
-      case GalaxyBannerVariant.success:
-        return _BannerColors(
-          main: Colors.green,
-          background: Colors.green.withOpacity(0.08),
-          border: Colors.green.withOpacity(0.3),
-        );
-    }
-  }
-}
-
-class _BannerColors {
-  final Color main;
-  final Color background;
-  final Color border;
-
-  _BannerColors({
-    required this.main,
-    required this.background,
-    required this.border,
-  });
 }

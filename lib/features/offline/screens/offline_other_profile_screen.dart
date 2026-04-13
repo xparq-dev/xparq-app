@@ -136,8 +136,8 @@ class _OfflineOtherProfileScreenState
                           boxShadow: [
                             BoxShadow(
                               color: _isFriend
-                                  ? Colors.greenAccent.withOpacity(0.3)
-                                  : Colors.blueAccent.withOpacity(0.3),
+                                  ? Colors.greenAccent.withValues(alpha: 0.3)
+                                  : Colors.blueAccent.withValues(alpha: 0.3),
                               blurRadius: 100,
                               spreadRadius: 10,
                             ),
@@ -208,7 +208,7 @@ class _OfflineOtherProfileScreenState
                     Text(
                       isOnline ? 'Online via Mesh' : 'Offline / Out of Range',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 14,
                       ),
                     ),
@@ -277,7 +277,7 @@ class _OfflineOtherProfileScreenState
                                     ? Colors.blueAccent
                                     : Colors.orangeAccent,
                                 foregroundColor: Colors.white,
-                                disabledBackgroundColor: Colors.grey.withOpacity(
+                                disabledBackgroundColor: Colors.grey.withValues(alpha: 
                                   0.3,
                                 ),
                                 minimumSize: const Size(double.infinity, 50),
@@ -293,7 +293,7 @@ class _OfflineOtherProfileScreenState
                           Text(
                             'Peer must be online to connect.',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 12,
                             ),
                             textAlign: TextAlign.center,
@@ -323,7 +323,7 @@ class _OfflineOtherProfileScreenState
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.green.withOpacity(
+                            disabledBackgroundColor: Colors.green.withValues(alpha: 
                               0.3,
                             ),
                             minimumSize: const Size(double.infinity, 50),
@@ -337,7 +337,7 @@ class _OfflineOtherProfileScreenState
                           Text(
                             'Peer must be online to add as friend.',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 12,
                             ),
                             textAlign: TextAlign.center,
@@ -358,7 +358,7 @@ class _OfflineOtherProfileScreenState
                     style: TextStyle(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.38),
+                      ).colorScheme.onSurface.withValues(alpha: 0.38),
                       fontSize: 12,
                     ),
                   ),

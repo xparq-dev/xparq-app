@@ -195,7 +195,12 @@ class SignalChatController extends _$SignalChatController {
 
     try {
       final myProfile = ref.read(planetProfileProvider).value;
-      if (myProfile == null) return;
+      if (myProfile == null) {
+        debugPrint('sendMessage: ABORTED — myProfile is null. Auth may not be ready.');
+        ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+        textController.text = trimmedText;
+        return;
+      }
 
       final chatList = ref.read(myChatsProvider).valueOrNull ?? [];
       final chat = chatList.firstWhere(
@@ -226,7 +231,11 @@ class SignalChatController extends _$SignalChatController {
             state = state.copyWith(isSilentSend: false);
           }
         }).catchError((e) {
+          debugPrint('sendMessage: Repository/RPC Error — $e');
           ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+          if (textController.text.isEmpty) {
+            textController.text = trimmedText;
+          }
         }),
       );
     } catch (e) {

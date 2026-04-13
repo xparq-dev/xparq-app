@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:xparq_app/core/router/app_router.dart';
+import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/radar/models/radar_xparq_model.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/social/providers/orbit_providers.dart';
-import 'package:xparq_app/core/widgets/xparq_image.dart';
+import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 
 class OnlineXparqSliverList extends StatelessWidget {
   final List<RadarXparq> xparqs;
@@ -42,7 +42,7 @@ class OnlineXparqSliverList extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.radarNoNearby,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 16),
@@ -130,7 +130,7 @@ class _OnlineXparqCardState extends ConsumerState<OnlineXparqCard> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = Theme.of(context).colorScheme.surface;
-    final borderColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.12);
+    final borderColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12);
     final textSecondary = isDark
         ? const Color(0xFF71767B)
         : const Color(0xFF536471);
@@ -287,7 +287,7 @@ class OnlineIndicator extends StatelessWidget {
         color: const Color(0xFF4CAF50),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withOpacity(0.5),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.5),
             blurRadius: 6,
           ),
         ],
@@ -295,3 +295,4 @@ class OnlineIndicator extends StatelessWidget {
     );
   }
 }
+

@@ -22,6 +22,7 @@ import 'package:xparq_app/features/chat/presentation/widgets/group_info_popup.da
 import 'package:xparq_app/features/chat/presentation/widgets/focused_message_overlay.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/silence_cluster_dialog.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/message_bubble.dart';
+import 'package:xparq_app/features/chat/presentation/widgets/reaction_overlay_layer.dart';
 import 'package:xparq_app/features/offline/services/offline_chat_database.dart';
 
 class SignalChatScreen extends ConsumerStatefulWidget {
@@ -131,88 +132,90 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
         onRepairSession: () => _repairSignalSession(),
         onGroupAction: (action, chatObj) => _handleGroupAction(context, action, chatObj),
       ),
-      body: Stack(
-        children: [
-          Row(
-            children: [
-              if (isLandscape)
-                SignalSidebar(
-                  myUid: myUid,
-                ),
-              Expanded(
-                child: Column(
-                  children: [
-                    if (isGroup) PinnedMessagesBar(chatId: widget.chatId),
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          MessageListView(
-                            chatId: widget.chatId,
-                            myUid: myUid,
-                            otherUid: widget.otherUid,
-                            ageGroup: ageGroup,
-                            chat: chat,
-                            scrollController: _scrollController,
-                            onReply: (msg) => ref.read(signalChatControllerProvider(widget.chatId).notifier).setReplyingTo(msg),
-                            onLongPress: (pos, msg) => _showFocusedOverlay(pos, msg),
-                            onTap: () {
-                              final controller = ref.read(signalChatControllerProvider(widget.chatId).notifier);
-                              if (ref.read(signalChatControllerProvider(widget.chatId)).replyingTo != null) {
-                                controller.setReplyingTo(null);
-                              }
-                            },
-                          ),
-                          MentionOverlay(
-                            chatId: widget.chatId,
-                            textController: _textController,
-                          ),
-                        ],
+      body: ReactionOverlayLayer(
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                if (isLandscape)
+                  SignalSidebar(
+                    myUid: myUid,
+                  ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (isGroup) PinnedMessagesBar(chatId: widget.chatId),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            MessageListView(
+                              chatId: widget.chatId,
+                              myUid: myUid,
+                              otherUid: widget.otherUid,
+                              ageGroup: ageGroup,
+                              chat: chat,
+                              scrollController: _scrollController,
+                              onReply: (msg) => ref.read(signalChatControllerProvider(widget.chatId).notifier).setReplyingTo(msg),
+                              onLongPress: (pos, msg) => _showFocusedOverlay(pos, msg),
+                              onTap: () {
+                                final controller = ref.read(signalChatControllerProvider(widget.chatId).notifier);
+                                if (ref.read(signalChatControllerProvider(widget.chatId)).replyingTo != null) {
+                                  controller.setReplyingTo(null);
+                                }
+                              },
+                            ),
+                            MentionOverlay(
+                              chatId: widget.chatId,
+                              textController: _textController,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    ConversationReplyPreview(chatId: widget.chatId),
-                    TypingIndicator(chatId: widget.chatId, otherUid: widget.otherUid),
-                    ChatInputBar(
-                      chatId: widget.chatId,
-                      otherUid: widget.otherUid,
-                      ageGroup: ageGroup,
-                      isSpamMode: widget.isSpamMode,
-                      textController: _textController,
-                    ),
-                  ],
+                      ConversationReplyPreview(chatId: widget.chatId),
+                      TypingIndicator(chatId: widget.chatId, otherUid: widget.otherUid),
+                      ChatInputBar(
+                        chatId: widget.chatId,
+                        otherUid: widget.otherUid,
+                        ageGroup: ageGroup,
+                        isSpamMode: widget.isSpamMode,
+                        textController: _textController,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (_focusedMessage != null && _focusedPosition != null && _focusedSize != null)
+              FocusedMessageOverlay(
+                message: _focusedMessage!,
+                messageGlobalPosition: _focusedPosition!,
+                messageSize: _focusedSize!,
+                messageWidget: MessageBubble(
+                  message: _focusedMessage!,
+                  isMe: _focusedMessage!.senderUid == myUid,
+                  chatId: widget.chatId,
+                  callerAgeGroup: ageGroup,
+                  otherUid: widget.otherUid,
+                  isPinned: chat?.pinnedMessages.contains(_focusedMessage!.messageId) ?? false,
+                ),
+                onDismiss: () => setState(() {
+                  _focusedMessage = null;
+                  _focusedPosition = null;
+                  _focusedSize = null;
+                }),
+                onReply: (msg) => ref.read(signalChatControllerProvider(widget.chatId).notifier).setReplyingTo(msg),
+                onPin: (msg) => _handlePin(msg),
+                onDelete: (msg) => _handleDelete(msg),
+                onRecall: (msg) => _handleRecall(msg),
+                onEdit: (msg) => _handleEdit(msg),
+                onReaction: (code) => ref.read(chatRepositoryProvider).toggleMessageSpark(
+                  _focusedMessage!.messageId, 
+                  myUid,
+                  reaction: code,
                 ),
               ),
-            ],
-          ),
-          if (_focusedMessage != null && _focusedPosition != null && _focusedSize != null)
-            FocusedMessageOverlay(
-              message: _focusedMessage!,
-              messageGlobalPosition: _focusedPosition!,
-              messageSize: _focusedSize!,
-              messageWidget: MessageBubble(
-                message: _focusedMessage!,
-                isMe: _focusedMessage!.senderUid == myUid,
-                chatId: widget.chatId,
-                callerAgeGroup: ageGroup,
-                otherUid: widget.otherUid,
-                isPinned: chat?.pinnedMessages.contains(_focusedMessage!.messageId) ?? false,
-              ),
-              onDismiss: () => setState(() {
-                _focusedMessage = null;
-                _focusedPosition = null;
-                _focusedSize = null;
-              }),
-              onReply: (msg) => ref.read(signalChatControllerProvider(widget.chatId).notifier).setReplyingTo(msg),
-              onPin: (msg) => _handlePin(msg),
-              onDelete: (msg) => _handleDelete(msg),
-              onRecall: (msg) => _handleRecall(msg),
-              onEdit: (msg) => _handleEdit(msg),
-              onReaction: (code) => ref.read(chatRepositoryProvider).toggleMessageSpark(
-                _focusedMessage!.messageId, 
-                myUid,
-                reaction: code,
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

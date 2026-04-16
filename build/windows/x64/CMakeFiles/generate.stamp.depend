@@ -81,8 +81,8 @@ C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/Commo
 C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.31/Modules/Platform/Windows-MSVC.cmake
 C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.31/Modules/Platform/Windows.cmake
 C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.31/Modules/Platform/WindowsPaths.cmake
-C:/XPARQ/xparq_mobile/build/windows/x64/CMakeFiles/3.31.6-msvc6/CMakeCXXCompiler.cmake
-C:/XPARQ/xparq_mobile/build/windows/x64/CMakeFiles/3.31.6-msvc6/CMakeRCCompiler.cmake
-C:/XPARQ/xparq_mobile/build/windows/x64/CMakeFiles/3.31.6-msvc6/CMakeSystem.cmake
-C:/XPARQ/xparq_mobile/windows/CMakeLists.txt
-C:/XPARQ/xparq_mobile/windows/flutter/generated_plugins.cmake
+C:/XPARQ/xparq-app/build/windows/x64/CMakeFiles/3.31.6-msvc6/CMakeCXXCompiler.cmake
+C:/XPARQ/xparq-app/build/windows/x64/CMakeFiles/3.31.6-msvc6/CMakeRCCompiler.cmake
+C:/XPARQ/xparq-app/build/windows/x64/CMakeFiles/3.31.6-msvc6/CMakeSystem.cmake
+C:/XPARQ/xparq-app/windows/CMakeLists.txt
+C:/XPARQ/xparq-app/windows/flutter/generated_plugins.cmake

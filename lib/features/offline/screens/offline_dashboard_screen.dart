@@ -7,6 +7,7 @@ import '../services/nearby_service.dart';
 import '../services/offline_chat_database.dart';
 import '../services/offline_notification_service.dart';
 import '../providers/offline_unread_provider.dart';
+import '../providers/offline_friends_provider.dart';
 import '../../../l10n/app_localizations.dart';
 
 class OfflineAppShell extends ConsumerStatefulWidget {
@@ -16,12 +17,18 @@ class OfflineAppShell extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<OfflineAppShell> createState() => _OfflineAppShellState();
+
+  static void setCurrentChatPeerId(BuildContext context, String? peerId) {
+    final shell = context.findAncestorStateOfType<_OfflineAppShellState>();
+    shell?.setCurrentChatPeerId(peerId);
+  }
 }
 
 class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
   late StreamSubscription _connectionInitiatedSub;
   late StreamSubscription _connectionResultSub;
   late StreamSubscription _messageSub;
+  String? _currentChatPeerId; // Track current chat peer ID
 
   @override
   void initState() {
@@ -34,10 +41,10 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
     });
 
     // Listen for incoming connection requests (someone tapped "Add Peer")
-    _connectionInitiatedSub = NearbyService.instance.onConnectionInitiated
-        .listen((event) {
-          _handleIncomingConnection(event.endpointId, event.connectionInfo);
-        });
+    _connectionInitiatedSub =
+        NearbyService.instance.onConnectionInitiated.listen((event) {
+      _handleIncomingConnection(event.endpointId, event.connectionInfo);
+    });
 
     // Listen for results (accepted/rejected)
     _connectionResultSub = NearbyService.instance.onConnectionResult.listen((
@@ -46,20 +53,24 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
       if (event.status.name == 'CONNECTED') {
         // Find who this is by endpointId
         final l10n = mounted ? AppLocalizations.of(context) : null;
-        final peer =
-            NearbyService.instance.peers
+        final peer = NearbyService.instance.peers
                 .where((p) => p.endpointId == event.endpointId)
                 .firstOrNull ??
             NearbyPeer(
               endpointId: event.endpointId,
               userId: event.endpointId,
               isAnonymous: true,
+              publicKey: null,
               discoveredAt: DateTime.now(),
               displayName: l10n?.offlineUnknownPeer ?? 'Unknown Peer',
             );
 
-        // Automatically add them as a friend in DB if not already
-        OfflineChatDatabase.instance.addFriend(peer.userId, peer.displayName);
+        // Add through provider so UI updates immediately (includes publicKey)
+        ref.read(offlineFriendsProvider.notifier).addFriend(
+          peer.userId,
+          peer.displayName,
+          publicKey: peer.publicKey,
+        );
       }
     });
 
@@ -77,12 +88,14 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
   }
 
   void _showNotification(Map<String, dynamic> data) {
-    final location = GoRouterState.of(context).matchedLocation;
     final senderId = data['senderId'] as String;
     final text = data['text'] as String;
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    final isForeground =
+        lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
 
-    // Don't show if active in that chat
-    final bool inSpecificChat = location == '/offline/chat';
+    // Don't show if active in chat with this specific peer
+    final bool inSpecificChat = _currentChatPeerId == senderId;
 
     if (inSpecificChat) return;
 
@@ -92,10 +105,10 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
     final String senderName = (peer?.isAnonymous ?? false)
         ? AppLocalizations.of(context)!.offlineStayAnonymous
         : (peer?.displayName ??
-              AppLocalizations.of(context)!.offlineUnknownPeer);
+            AppLocalizations.of(context)!.offlineUnknownPeer);
 
-    // 1. Show Minimal In-app notification
-    if (mounted) {
+    // Show the in-app banner only while the app is actively on screen.
+    if (mounted && isForeground) {
       OfflineNotificationService.instance.showInAppNotification(
         context,
         title: senderName,
@@ -113,17 +126,26 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
       );
     }
 
-    // 2. Show System Notification (if backgrounded or just for backup)
-    OfflineNotificationService.instance.showSystemNotification(
-      title: senderName,
-      body: text,
-      payload: senderId,
-    );
+    if (!isForeground) {
+      OfflineNotificationService.instance.showSystemNotification(
+        title: senderName,
+        body: text,
+        payload: senderId,
+      );
+    }
+  }
+
+  void setCurrentChatPeerId(String? peerId) {
+    _currentChatPeerId = peerId;
   }
 
   void _handleIncomingConnection(String endpointId, dynamic info) async {
     String peerName = AppLocalizations.of(context)!.offlineUnknownPeer;
     String peerUserId = endpointId;
+    String? peerPublicKey;
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    final isForeground =
+        lifecycleState == null || lifecycleState == AppLifecycleState.resumed;
 
     try {
       final rawName = info.endpointName as String;
@@ -132,10 +154,20 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
       if (startIndex != -1 && endIndex != -1) {
         final jsonStr = rawName.substring(startIndex, endIndex + 1);
         final payload = json.decode(jsonStr);
+        final marker = '${payload['a'] ?? payload['app'] ?? ''}'.trim();
+        if (marker != 'xq1') {
+          debugPrint(
+            "Nearby Shell: Ignoring foreign app connection request -> '$marker'",
+          );
+          return;
+        }
         final l10n = mounted ? AppLocalizations.of(context) : null;
-        peerUserId = payload['id'] ?? endpointId;
-        peerName =
-            payload['name'] ?? l10n?.offlineUnknownPeer ?? 'Unknown Peer';
+        peerUserId = payload['i'] ?? payload['id'] ?? endpointId;
+        peerName = payload['n'] ??
+            payload['name'] ??
+            l10n?.offlineUnknownPeer ??
+            'Unknown Peer';
+        peerPublicKey = (payload['p'] ?? payload['pub']) as String?;
         if (peerName.isEmpty) {
           peerName = l10n?.offlineUnknownPeer ?? 'Unknown Peer';
         }
@@ -170,61 +202,46 @@ class _OfflineAppShellState extends ConsumerState<OfflineAppShell> {
 
     if (!mounted) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
-          title: Text(AppLocalizations.of(context)!.offlineConnectionRequest),
-          content: Text(
-            AppLocalizations.of(
-              context,
-            )!.offlineConnectionRequestDesc(peerName),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                NearbyService.instance.rejectConnection(endpointId);
-              },
-              child: Text(
-                AppLocalizations.of(context)!.offlineDecline,
-                style: const TextStyle(color: Colors.red),
+    if (mounted && isForeground) {
+      OfflineNotificationService.instance.showInAppNotification(
+        context,
+        title: AppLocalizations.of(context)!.offlineConnectionRequest,
+        body: AppLocalizations.of(context)!
+            .offlineConnectionRequestDesc(peerName),
+        onTap: () async {
+          // Accept connection
+          await NearbyService.instance.acceptConnection(endpointId);
+          // Add through provider so friends list UI updates immediately
+          await ref.read(offlineFriendsProvider.notifier).addFriend(
+            peerUserId,
+            peerName,
+            publicKey: peerPublicKey,
+          );
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    AppLocalizations.of(context)!.offlineAddedPeer(peerName)),
+                backgroundColor: Colors.green,
               ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                // Broadcast accept signal
-                await NearbyService.instance.acceptConnection(endpointId);
-
-                // Save to friend DB
-                await OfflineChatDatabase.instance.addFriend(
-                  peerUserId,
-                  peerName,
-                );
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        AppLocalizations.of(
-                          context,
-                        )!.offlineAddedPeer(peerName),
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: Text(AppLocalizations.of(context)!.offlineAccept),
-            ),
-          ],
-        );
-      },
-    );
+            );
+          }
+        },
+        onDismiss: () {
+          // Reject connection on dismiss
+          NearbyService.instance.rejectConnection(endpointId);
+        },
+      );
+    } else {
+      OfflineNotificationService.instance.showSystemNotification(
+        title: AppLocalizations.of(context)!.offlineConnectionRequest,
+        body: AppLocalizations.of(context)!.offlineConnectionRequestDesc(
+          peerName,
+        ),
+        payload: peerUserId,
+      );
+    }
   }
 
   @override

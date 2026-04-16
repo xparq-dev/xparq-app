@@ -1,6 +1,6 @@
-^C:\XPARQ\XPARQ_MOBILE\BUILD\WINDOWS\X64\CMAKEFILES\63C0DEB83021C07F4F69F2648E6E7C9B\GENERATE.STAMP.RULE
+^C:\XPARQ\XPARQ-APP\BUILD\WINDOWS\X64\CMAKEFILES\CF8AE8328BF523330A70554E24BAC968\GENERATE.STAMP.RULE
 setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/XPARQ/xparq_mobile/windows -BC:/XPARQ/xparq_mobile/build/windows/x64 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/XPARQ/xparq_mobile/build/windows/x64/xparq_mobile.sln
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/XPARQ/xparq-app/windows -BC:/XPARQ/xparq-app/build/windows/x64 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/XPARQ/xparq-app/build/windows/x64/xparq_mobile.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

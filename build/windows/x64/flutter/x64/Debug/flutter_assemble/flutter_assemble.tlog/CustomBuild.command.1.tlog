@@ -1,6 +1,6 @@
-^C:\XPARQ\XPARQ_MOBILE\BUILD\WINDOWS\X64\CMAKEFILES\27DD0FB47FC947A66E2AA8E45C1C4726\FLUTTER_WINDOWS.DLL.RULE
+^C:\XPARQ\XPARQ-APP\BUILD\WINDOWS\X64\CMAKEFILES\F5BD66C3930D87B87EFAEB1B4CF868C1\FLUTTER_WINDOWS.DLL.RULE
 setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\SDK\flutter PROJECT_DIR=C:\XPARQ\xparq_mobile FLUTTER_ROOT=C:\SDK\flutter FLUTTER_EPHEMERAL_DIR=C:\XPARQ\xparq_mobile\windows\flutter\ephemeral PROJECT_DIR=C:\XPARQ\xparq_mobile FLUTTER_TARGET=C:\XPARQ\xparq_mobile\lib\main.dart DART_DEFINES=RkxVVFRFUl9WRVJTSU9OPTMuNDEuMg==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049OTA2NzNhNGVlZg==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049NmMwYmFhZWJmNw==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMS4w DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=C:\XPARQ\xparq_mobile\.dart_tool\package_config.json C:/SDK/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\flutter PROJECT_DIR=C:\XPARQ\xparq-app FLUTTER_ROOT=C:\flutter FLUTTER_EPHEMERAL_DIR=C:\XPARQ\xparq-app\windows\flutter\ephemeral PROJECT_DIR=C:\XPARQ\xparq-app FLUTTER_TARGET=C:\XPARQ\xparq-app\lib\main.dart DART_DEFINES=RkxVVFRFUl9WRVJTSU9OPTMuNDEuMQ==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049NTgyYTBlN2M1NQ==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049MzQ1MmQ3MzViZA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMS4w DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=C:\XPARQ\xparq-app\.dart_tool\package_config.json C:/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
@@ -8,7 +8,7 @@ endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-^C:\XPARQ\XPARQ_MOBILE\BUILD\WINDOWS\X64\CMAKEFILES\805F15401BA2C312D8D621993FB7D5A4\FLUTTER_ASSEMBLE.RULE
+^C:\XPARQ\XPARQ-APP\BUILD\WINDOWS\X64\CMAKEFILES\CD8AA9BC09500509FBDAA438679C0332\FLUTTER_ASSEMBLE.RULE
 setlocal
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
@@ -16,9 +16,9 @@ endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
-^C:\XPARQ\XPARQ_MOBILE\WINDOWS\FLUTTER\CMAKELISTS.TXT
+^C:\XPARQ\XPARQ-APP\WINDOWS\FLUTTER\CMAKELISTS.TXT
 setlocal
-"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/XPARQ/xparq_mobile/windows -BC:/XPARQ/xparq_mobile/build/windows/x64 --check-stamp-file C:/XPARQ/xparq_mobile/build/windows/x64/flutter/CMakeFiles/generate.stamp
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/XPARQ/xparq-app/windows -BC:/XPARQ/xparq-app/build/windows/x64 --check-stamp-file C:/XPARQ/xparq-app/build/windows/x64/flutter/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

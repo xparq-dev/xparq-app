@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:xparq_app/features/offline/services/offline_mesh_encryption_service.dart';
 import 'package:xparq_app/features/offline/services/nearby_service.dart';
 
 class OfflineUserState {
@@ -35,14 +36,20 @@ class OfflineUserNotifier extends StateNotifier<OfflineUserState> {
     _loadFromPrefs();
   }
 
-  Future<void> _loadFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    String? userId = prefs.getString('offline_user_id');
-    if (userId == null) {
+  Future<String> _ensureUserId(SharedPreferences prefs) async {
+    var userId = prefs.getString('offline_user_id');
+    if (userId == null || userId.isEmpty) {
       userId = 'user_${DateTime.now().millisecondsSinceEpoch}';
       await prefs.setString('offline_user_id', userId);
     }
+    return userId;
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await OfflineMeshEncryptionService.instance.initializeIdentity();
+
+    final userId = await _ensureUserId(prefs);
 
     final name = prefs.getString('offline_display_name') ?? '';
     final anon = prefs.getBool('offline_is_anonymous') ?? false;
@@ -56,14 +63,18 @@ class OfflineUserNotifier extends StateNotifier<OfflineUserState> {
 
   Future<void> updateDisplayName(String name) async {
     final prefs = await SharedPreferences.getInstance();
+    await OfflineMeshEncryptionService.instance.initializeIdentity();
+    final userId = await _ensureUserId(prefs);
     await prefs.setString('offline_display_name', name);
-    state = state.copyWith(displayName: name);
+    state = state.copyWith(userId: userId, displayName: name, isLoaded: true);
   }
 
   Future<void> toggleAnonymous(bool value) async {
     final prefs = await SharedPreferences.getInstance();
+    await OfflineMeshEncryptionService.instance.initializeIdentity();
+    final userId = await _ensureUserId(prefs);
     await prefs.setBool('offline_is_anonymous', value);
-    state = state.copyWith(isAnonymous: value);
+    state = state.copyWith(userId: userId, isAnonymous: value, isLoaded: true);
   }
 
   Future<void> resetIdentity() async {
@@ -74,6 +85,7 @@ class OfflineUserNotifier extends StateNotifier<OfflineUserState> {
 
     // Explicitly reset mesh service state to kill any active advertisement/discovery
     await NearbyService.instance.resetAll();
+    await OfflineMeshEncryptionService.instance.resetIdentity();
 
     state = OfflineUserState(
       isLoaded: true,
@@ -83,5 +95,5 @@ class OfflineUserNotifier extends StateNotifier<OfflineUserState> {
 
 final offlineUserProvider =
     StateNotifierProvider<OfflineUserNotifier, OfflineUserState>((ref) {
-      return OfflineUserNotifier();
-    });
+  return OfflineUserNotifier();
+});

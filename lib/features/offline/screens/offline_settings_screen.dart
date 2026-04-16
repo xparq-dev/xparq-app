@@ -50,7 +50,7 @@ class OfflineSettingsScreen extends ConsumerWidget {
             activeThumbColor: Colors.blueAccent,
             onChanged: (val) => ref.read(themeProvider.notifier).toggleTheme(),
           ),
-          const SizedBox(height: 24),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: Colors.amber),
             title: Text(AppLocalizations.of(context)!.offlineClearCacheTitle),
@@ -154,4 +154,3 @@ class OfflineSettingsScreen extends ConsumerWidget {
     }
   }
 }
-

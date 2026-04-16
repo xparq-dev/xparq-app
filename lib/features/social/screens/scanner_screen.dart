@@ -22,7 +22,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _isScanned = false;
   bool _hasPermission = false;
   bool _isLoading = true;
-  final MobileScannerController _controller = MobileScannerController();
+  final MobileScannerController _controller = MobileScannerController(autoStart: false);
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -40,6 +40,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   Future<void> _checkPermission() async {
     final status = await Permission.camera.request();
     if (mounted) {
+      if (status.isGranted) {
+        try {
+          await _controller.start();
+        } catch (e) {
+          debugPrint('Mobile scanner start error: $e');
+        }
+      }
       setState(() {
         _hasPermission = status.isGranted;
         _isLoading = false;

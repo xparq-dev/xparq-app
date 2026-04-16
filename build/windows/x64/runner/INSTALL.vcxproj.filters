@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="C:\XPARQ\xparq_mobile\build\windows\x64\CMakeFiles\6e4207b022e702b2293d6c5d1da59934\INSTALL_force.rule">
+    <CustomBuild Include="C:\XPARQ\xparq-app\build\windows\x64\CMakeFiles\d21b699dfbfe126861c2dcde761b7f03\INSTALL_force.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{475920C0-72E1-3D4A-B500-0AB110951C63}</UniqueIdentifier>
+      <UniqueIdentifier>{A305678F-1177-397E-A88E-B536D76CE212}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -23,7 +23,8 @@ class OfflineChatDatabase {
       final docsDir = await getApplicationDocumentsDirectory();
       docsPath = docsDir.path;
     } catch (e) {
-      debugPrint('[OfflineDB] path_provider failed in isolate: $e. Falling back to SharedPreferences...');
+      debugPrint(
+          '[OfflineDB] path_provider failed in isolate: $e. Falling back to SharedPreferences...');
       try {
         final prefs = await SharedPreferences.getInstance();
         docsPath = prefs.getString('app_docs_path');
@@ -35,7 +36,7 @@ class OfflineChatDatabase {
     if (docsPath == null) {
       // LAST RESORT fallback: use sqflite's getDatabasesPath and guess
       final dbPath = await getDatabasesPath();
-      docsPath = join(dbPath, '..', 'app_flutter'); 
+      docsPath = join(dbPath, '..', 'app_flutter');
       debugPrint('[OfflineDB] Using extreme fallback path: $docsPath');
     }
 
@@ -44,7 +45,7 @@ class OfflineChatDatabase {
 
     return await openDatabase(
       path,
-      version: 10,
+      version: 12,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -95,6 +96,30 @@ class OfflineChatDatabase {
         );
       }
     }
+    if (oldVersion < 11) {
+      final hasPublicKey = await _hasColumn(
+        db,
+        tableName: 'offline_friends',
+        columnName: 'publicKey',
+      );
+      if (!hasPublicKey) {
+        await db.execute(
+          'ALTER TABLE offline_friends ADD COLUMN publicKey TEXT',
+        );
+      }
+    }
+    if (oldVersion < 12) {
+      final hasIsVerified = await _hasColumn(
+        db,
+        tableName: 'offline_friends',
+        columnName: 'isVerified',
+      );
+      if (!hasIsVerified) {
+        await db.execute(
+          'ALTER TABLE offline_friends ADD COLUMN isVerified INTEGER NOT NULL DEFAULT 0',
+        );
+      }
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -119,6 +144,8 @@ CREATE TABLE offline_messages (
 CREATE TABLE offline_friends (
   peerId TEXT PRIMARY KEY,
   displayName $textType,
+  publicKey TEXT,
+  isVerified INTEGER NOT NULL DEFAULT 0,
   addedAt $integerType
 )
 ''');
@@ -296,9 +323,8 @@ CREATE TABLE offline_friends (
   // Enforces the 3-day auto-purge rule
   Future<void> purgeOldMessages() async {
     final db = await instance.database;
-    final threeDaysAgo = DateTime.now()
-        .subtract(const Duration(days: 3))
-        .millisecondsSinceEpoch;
+    final threeDaysAgo =
+        DateTime.now().subtract(const Duration(days: 3)).millisecondsSinceEpoch;
 
     await db.delete(
       'offline_messages',
@@ -352,20 +378,24 @@ CREATE TABLE offline_friends (
 
   // --- SIGNAL MESSAGE CACHE ---
 
-  Future<void> cacheSignalMessage(String messageId, String plaintext, String ciphertext) async {
+  Future<void> cacheSignalMessage(
+      String messageId, String plaintext, String ciphertext) async {
     // SECURITY GUARD: Never cache placeholders or systemic error strings.
-    if (plaintext.isEmpty || 
-        plaintext.startsWith('🔒') || 
+    if (plaintext.isEmpty ||
+        plaintext.startsWith('🔒') ||
         plaintext == 'Encrypted message (Decryption Failed)') {
       return;
     }
 
     final db = await instance.database;
-    await db.insert('signal_message_cache', {
-      'messageId': messageId,
-      'plaintext': plaintext,
-      'ciphertext': ciphertext,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+        'signal_message_cache',
+        {
+          'messageId': messageId,
+          'plaintext': plaintext,
+          'ciphertext': ciphertext,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Removes a specific cached plaintext to force re-decryption.
@@ -382,7 +412,7 @@ CREATE TABLE offline_friends (
   /// Used for "Repair Discussion" to force re-decryption.
   Future<void> clearSignalMessageCacheByChatId(String chatId) async {
     final db = await instance.database;
-    // We don't have chatId directly in signal_message_cache, 
+    // We don't have chatId directly in signal_message_cache,
     // but we can join with offline_messages.
     // Note: In our system, messageId is the same in both tables.
     await db.rawDelete('''
@@ -423,13 +453,77 @@ CREATE TABLE offline_friends (
 
   // --- FRIENDSHIP MANAGEMENT ---
 
-  Future<void> addFriend(String peerId, String displayName) async {
+  Future<void> addFriend(
+    String peerId,
+    String displayName, {
+    String? publicKey,
+  }) async {
     final db = await instance.database;
-    await db.insert('offline_friends', {
-      'peerId': peerId,
-      'displayName': displayName,
-      'addedAt': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final existing = await db.query(
+      'offline_friends',
+      columns: ['publicKey', 'isVerified'],
+      where: 'peerId = ?',
+      whereArgs: [peerId],
+      limit: 1,
+    );
+    final previousPublicKey =
+        existing.isNotEmpty ? existing.first['publicKey'] as String? : null;
+    final wasVerified = existing.isNotEmpty
+        ? (existing.first['isVerified'] as int? ?? 0) == 1
+        : false;
+    final nextVerified = previousPublicKey != null &&
+            previousPublicKey.isNotEmpty &&
+            previousPublicKey == publicKey &&
+            wasVerified
+        ? 1
+        : 0;
+
+    await db.insert(
+        'offline_friends',
+        {
+          'peerId': peerId,
+          'displayName': displayName,
+          'publicKey': publicKey,
+          'isVerified': nextVerified,
+          'addedAt': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<String?> getFriendPublicKey(String peerId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'offline_friends',
+      columns: ['publicKey'],
+      where: 'peerId = ?',
+      whereArgs: [peerId],
+      limit: 1,
+    );
+    if (result.isEmpty) return null;
+    return result.first['publicKey'] as String?;
+  }
+
+  Future<bool> isFriendVerified(String peerId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'offline_friends',
+      columns: ['isVerified'],
+      where: 'peerId = ?',
+      whereArgs: [peerId],
+      limit: 1,
+    );
+    if (result.isEmpty) return false;
+    return (result.first['isVerified'] as int? ?? 0) == 1;
+  }
+
+  Future<void> setFriendVerification(String peerId, bool isVerified) async {
+    final db = await instance.database;
+    await db.update(
+      'offline_friends',
+      {'isVerified': isVerified ? 1 : 0},
+      where: 'peerId = ?',
+      whereArgs: [peerId],
+    );
   }
 
   Future<bool> isFriend(String peerId) async {
@@ -462,11 +556,14 @@ CREATE TABLE offline_friends (
   Future<void> upsertProfileCache(String uid, Map<String, dynamic> data) async {
     final db = await instance.database;
     final jsonStr = jsonEncode(data);
-    await db.insert('profile_cache', {
-      'uid': uid,
-      'data_json': jsonStr,
-      'updated_at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+        'profile_cache',
+        {
+          'uid': uid,
+          'data_json': jsonStr,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<Map<String, dynamic>?> getProfileCache(String uid) async {

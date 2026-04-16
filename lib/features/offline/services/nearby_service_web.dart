@@ -5,6 +5,7 @@ class NearbyPeer {
   final String userId;
   final String displayName;
   final bool isAnonymous;
+  final String? publicKey;
   final DateTime discoveredAt;
 
   NearbyPeer({
@@ -12,6 +13,7 @@ class NearbyPeer {
     required this.userId,
     required this.displayName,
     required this.isAnonymous,
+    this.publicKey,
     required this.discoveredAt,
   });
 }
@@ -59,14 +61,22 @@ class NearbyService {
   Set<String> get connectedEndpoints => {};
   bool get isAdvertising => false;
   bool get isDiscovering => false;
+  bool get isMeshActive => false;
 
-  void setCurrentUser(String userId, String effectiveName, bool isAnonymous) {}
+  void setCurrentUser(
+    String userId,
+    String effectiveName,
+    bool isAnonymous, {
+    String? publicKey,
+  }) {}
 
   Future<bool> startAdvertising() async => false;
   Future<void> stopAdvertising() async {}
 
   Future<bool> startDiscovery() async => false;
   Future<void> stopDiscovery() async {}
+  Future<bool> startMesh() async => false;
+  Future<bool> restartMesh() async => false;
 
   Future<void> requestConnection(String endpointId) async {}
   Future<void> acceptConnection(String endpointId) async {}

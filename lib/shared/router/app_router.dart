@@ -1,4 +1,4 @@
-﻿// lib/core/router/app_router.dart
+// lib/core/router/app_router.dart
 //
 // GoRouter configuration for XPARQ.
 //
@@ -211,7 +211,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ];
       final isOnOnboarding =
           (onboarding.any((r) => state.matchedLocation.startsWith(r)) ||
-          state.matchedLocation.startsWith(AppRoutes.planetCreateBase));
+              state.matchedLocation.startsWith(AppRoutes.planetCreateBase));
 
       if (!isLoggedIn) {
         if (state.matchedLocation == '/') return null;
@@ -267,8 +267,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           !state.matchedLocation.startsWith('/profile/view') &&
           !state.matchedLocation.startsWith('/profile/edit') &&
           !state.matchedLocation.startsWith('/profile/orbit-list')) {
-        final uid =
-            state.pathParameters['uid'] ??
+        final uid = state.pathParameters['uid'] ??
             state.matchedLocation.split('/').last;
         if (uid.isNotEmpty && uid != 'profile') {
           debugPrint(
@@ -346,7 +345,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'auth/email',
             pageBuilder: (context, state) {
-              final isLogin = (state.extra is bool) ? state.extra as bool : true;
+              final isLogin =
+                  (state.extra is bool) ? state.extra as bool : true;
               return fadeSlidePage(
                 key: state.pageKey,
                 child: EmailAuthScreen(isLogin: isLogin),
@@ -356,7 +356,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'auth/phone',
             pageBuilder: (context, state) {
-              final isLogin = (state.extra is bool) ? state.extra as bool : true;
+              final isLogin =
+                  (state.extra is bool) ? state.extra as bool : true;
               return fadeSlidePage(
                 key: state.pageKey,
                 child: PhoneAuthScreen(isLogin: isLogin),
@@ -517,14 +518,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          GoRoute(path: 'blocked', builder: (__, _) => const BlockedUsersScreen()),
-          GoRoute(path: 'privacy-safety', builder: (__, _) => const PrivacySafetyScreen()),
-          GoRoute(path: 'quick-login', builder: (__, _) => const QuickLoginSettingsScreen()),
-          GoRoute(path: 'notifications', builder: (__, _) => const NotificationsScreen()),
-          GoRoute(path: 'content-display', builder: (__, _) => const ContentDisplayScreen()),
+          GoRoute(
+              path: 'blocked', builder: (__, _) => const BlockedUsersScreen()),
+          GoRoute(
+              path: 'privacy-safety',
+              builder: (__, _) => const PrivacySafetyScreen()),
+          GoRoute(
+              path: 'quick-login',
+              builder: (__, _) => const QuickLoginSettingsScreen()),
+          GoRoute(
+              path: 'notifications',
+              builder: (__, _) => const NotificationsScreen()),
+          GoRoute(
+              path: 'content-display',
+              builder: (__, _) => const ContentDisplayScreen()),
           GoRoute(path: 'media', builder: (__, _) => const MediaScreen()),
-          GoRoute(path: 'family-center', builder: (__, _) => const FamilyCenterScreen()),
-          GoRoute(path: 'help-support', builder: (__, _) => const HelpSupportScreen()),
+          GoRoute(
+              path: 'family-center',
+              builder: (__, _) => const FamilyCenterScreen()),
+          GoRoute(
+              path: 'help-support',
+              builder: (__, _) => const HelpSupportScreen()),
         ],
       ),
       GoRoute(
@@ -586,7 +600,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         child: Text(
           'ðŸŒŒ Route not found\n${state.error}',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
             backgroundColor:
                 Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
           ),
@@ -618,4 +633,3 @@ class _AuthListenable extends ChangeNotifier {
     ref.listen(offlineUserProvider, (__, _) => notifyListeners());
   }
 }
-

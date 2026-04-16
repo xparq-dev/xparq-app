@@ -1,6 +1,6 @@
 /// The entry point of the XPARQ application.
-/// 
-/// This file initializes core services including Firebase, Supabase, 
+///
+/// This file initializes core services including Firebase, Supabase,
 /// and background services, sets up the application theme and localization,
 /// and handles the top-level app lifecycle and security locking.
 library;
@@ -38,13 +38,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:xparq_app/shared/utils/isolate_logger.dart';
 
 /// Global flag to catch the initial password recovery event from Supabase.
-/// 
-/// This is used to trigger password recovery UI if the app was launched via 
+///
+/// This is used to trigger password recovery UI if the app was launched via
 /// a recovery link.
 bool initialPasswordRecoveryEvent = false;
 
 /// Main entry point function for the Flutter application.
-/// 
+///
 /// It performs critical initialization:
 /// 1. Sets up global error handling.
 /// 2. Configures image cache limits.
@@ -157,8 +157,8 @@ void main() async {
 }
 
 /// The root widget of the XPARQ application.
-/// 
-/// It manages the high-level application state, including authentication 
+///
+/// It manages the high-level application state, including authentication
 /// listeners, background services, and the security lock screen.
 class XparqApp extends ConsumerStatefulWidget {
   final String? initialError;
@@ -184,7 +184,7 @@ class _XparqAppState extends ConsumerState<XparqApp>
   }
 
   /// Handles the secondary startup phase after [runApp] is called.
-  /// 
+  ///
   /// This includes:
   /// - Initializing Signal and Post-Quantum cryptography.
   /// - Setting up authentication change listeners.
@@ -232,11 +232,11 @@ class _XparqAppState extends ConsumerState<XparqApp>
         if (userId != null) {
           if (data.event == AuthChangeEvent.signedIn) {
             SignalSessionManager.instance.initialize().catchError(
-              (e) => debugPrint('Error init Signal: $e'),
-            );
+                  (e) => debugPrint('Error init Signal: $e'),
+                );
             KyberKeyService.instance.initializeKeys().catchError(
-              (e) => debugPrint('Error init Kyber: $e'),
-            );
+                  (e) => debugPrint('Error init Kyber: $e'),
+                );
           }
           if (!kIsWeb) {
             debugPrint(
@@ -257,8 +257,8 @@ class _XparqAppState extends ConsumerState<XparqApp>
       // 5. Purge old data
       if (!kIsWeb) {
         await OfflineChatDatabase.instance.purgeOldMessages().catchError(
-          (e) => debugPrint('Purge error: $e'),
-        );
+              (e) => debugPrint('Purge error: $e'),
+            );
       }
 
       // 6. Initialize Background Service (Delayed for stability)
@@ -294,11 +294,11 @@ class _XparqAppState extends ConsumerState<XparqApp>
 
       if (mounted) {
         setState(() => _initialized = true);
-        
+
         // Remove splash screen now that Flutter UI is ready to take over.
         // This ensures the black screen issue is resolved for all routes (Welcome, AuthGate, etc.)
         FlutterNativeSplash.remove();
-        
+
         _checkInitialLock();
         _startHeartbeat();
         _setupNotifications(firebaseReady);
@@ -322,8 +322,8 @@ class _XparqAppState extends ConsumerState<XparqApp>
     NotificationService.instance
         .initialize(activeChatIdGetter: () => ref.read(activeChatIdProvider))
         .catchError((e) {
-          debugPrint('Failed to initialize NotificationService: $e');
-        });
+      debugPrint('Failed to initialize NotificationService: $e');
+    });
 
     NotificationActionHandler.instance.handleFcmTap(
       onNavigate: (chatId, otherUid) {
@@ -533,7 +533,9 @@ class _XparqAppState extends ConsumerState<XparqApp>
         return GalacticBackground(
           child: Stack(
             children: [
-              RepaintBoundary(child: child),
+              RepaintBoundary(
+                child: child,
+              ),
               if (_isLocked) Positioned.fill(child: overlay),
             ],
           ),

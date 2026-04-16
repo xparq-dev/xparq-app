@@ -4,6 +4,7 @@ import 'dart:async';
 import '../services/nearby_service.dart';
 import '../services/offline_chat_database.dart';
 import '../providers/offline_unread_provider.dart';
+import '../screens/offline_dashboard_screen.dart';
 import '../../../l10n/app_localizations.dart';
 
 class OfflineChatScreen extends ConsumerStatefulWidget {
@@ -27,10 +28,12 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
   final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> _messages = [];
   bool _isSending = false;
+  bool _isConnecting = false;
   late StreamSubscription _messageSubscription;
   late StreamSubscription _handshakeSubscription;
   late StreamSubscription _disconnectSubscription;
   String? _effectiveEndpointId;
+  Completer<void>? _pendingConnectionCompleter;
 
   @override
   void initState() {
@@ -38,6 +41,12 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
     _effectiveEndpointId = widget.endpointId;
     _markRead();
     _loadMessages();
+
+    // Update shell with current chat peer ID to prevent notifications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OfflineAppShell.setCurrentChatPeerId(context, widget.peerId);
+      _attemptAutoConnect();
+    });
 
     // 1. New Messages
     _messageSubscription = NearbyService.instance.incomingMessageStream.listen((
@@ -58,9 +67,12 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
           .where((p) => p.userId == widget.peerId)
           .firstOrNull;
       if (activePeer != null && activePeer.endpointId == eid) {
+        _pendingConnectionCompleter?.complete();
+        _pendingConnectionCompleter = null;
         if (mounted) {
           setState(() {
             _effectiveEndpointId = eid;
+            _isConnecting = false;
             _isSending = false;
           });
         }
@@ -72,7 +84,14 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
       eid,
     ) {
       if (eid == _effectiveEndpointId) {
-        if (mounted) setState(() {});
+        _pendingConnectionCompleter?.complete();
+        _pendingConnectionCompleter = null;
+        if (mounted) {
+          setState(() {
+            _isConnecting = false;
+            _isSending = false;
+          });
+        }
       }
     });
   }
@@ -84,6 +103,12 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
     _disconnectSubscription.cancel();
     _messageController.dispose();
     _scrollController.dispose();
+
+    // Clear current chat peer ID to allow notifications again
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OfflineAppShell.setCurrentChatPeerId(context, null);
+    });
+
     super.dispose();
   }
 
@@ -101,36 +126,12 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty || _isSending) return;
+    if (text.isEmpty || _isSending || _isConnecting) return;
 
-    final isConnected = NearbyService.instance.connectedEndpoints.contains(
-      _effectiveEndpointId,
-    );
-
+    final isConnected = await _ensureConnected(showOfflineNotice: true);
     if (!isConnected) {
-      // Try to find them on Radar to re-connect
-      final activePeer = NearbyService.instance.peers
-          .where((p) => p.userId == widget.peerId)
-          .firstOrNull;
-      if (activePeer != null) {
-        setState(() => _isSending = true);
-        debugPrint(
-          "Chat: Attempting to re-connect to ${activePeer.displayName}",
-        );
-        _effectiveEndpointId = activePeer.endpointId;
-        await NearbyService.instance.requestConnection(activePeer.endpointId);
-        // Handshake subscription in initState will clear _isSending and allow retry
-        return;
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.offlinePeerOffline),
-            ),
-          );
-        }
-        return;
-      }
+      if (mounted) setState(() => _isSending = false);
+      return;
     }
 
     setState(() => _isSending = true);
@@ -157,11 +158,90 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
     }
   }
 
+  Future<void> _attemptAutoConnect() async {
+    await _ensureConnected(showOfflineNotice: false);
+  }
+
+  Future<bool> _ensureConnected({required bool showOfflineNotice}) async {
+    if (_effectiveEndpointId != null &&
+        NearbyService.instance.connectedEndpoints.contains(
+          _effectiveEndpointId,
+        )) {
+      return true;
+    }
+
+    final activePeer = NearbyService.instance.peers
+        .where((p) => p.userId == widget.peerId)
+        .firstOrNull;
+
+    if (activePeer == null) {
+      if (showOfflineNotice && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.offlinePeerOffline),
+          ),
+        );
+      }
+      return false;
+    }
+
+    _effectiveEndpointId = activePeer.endpointId;
+
+    if (_pendingConnectionCompleter != null) {
+      try {
+        await _pendingConnectionCompleter!.future.timeout(
+          const Duration(seconds: 4),
+        );
+      } catch (_) {}
+      return NearbyService.instance.connectedEndpoints.contains(
+        _effectiveEndpointId,
+      );
+    }
+
+    _pendingConnectionCompleter = Completer<void>();
+    if (mounted) {
+      setState(() {
+        _isConnecting = true;
+      });
+    }
+
+    debugPrint("Chat: Attempting to connect to ${activePeer.displayName}");
+    await NearbyService.instance.requestConnection(activePeer.endpointId);
+
+    try {
+      await _pendingConnectionCompleter!.future.timeout(
+        const Duration(seconds: 4),
+      );
+    } catch (_) {
+      _pendingConnectionCompleter = null;
+    }
+
+    final connected = NearbyService.instance.connectedEndpoints.contains(
+      _effectiveEndpointId,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isConnecting = false;
+      });
+    }
+
+    return connected;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final isConnected = NearbyService.instance.connectedEndpoints.contains(
       _effectiveEndpointId,
     );
+    final statusColor = isConnected
+        ? (Theme.of(context).brightness == Brightness.dark
+            ? Colors.greenAccent
+            : Colors.green.shade700)
+        : (Theme.of(context).brightness == Brightness.dark
+            ? Colors.orangeAccent
+            : Colors.orange.shade800);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -176,7 +256,7 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
                   : AppLocalizations.of(context)!.offlineDisconnected,
               style: TextStyle(
                 fontSize: 10,
-                color: isConnected ? Colors.greenAccent : Colors.orangeAccent,
+                color: statusColor,
               ),
             ),
           ],
@@ -242,16 +322,24 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      style: TextStyle(
+                        color: scheme.onSurface,
+                      ),
+                      cursorColor: scheme.primary,
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(
                           context,
-                        )!.offlineTypeMessage,
+                        )!
+                            .offlineTypeMessage,
+                        hintStyle: TextStyle(
+                          color: scheme.onSurface.withValues(alpha: 0.55),
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(25),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).cardColor,
+                        fillColor: scheme.surfaceContainerHighest,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 10,
@@ -261,8 +349,9 @@ class _OfflineChatScreenState extends ConsumerState<OfflineChatScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    onPressed: _isSending ? null : _sendMessage,
-                    icon: _isSending
+                    onPressed:
+                        (_isSending || _isConnecting) ? null : _sendMessage,
+                    icon: (_isSending || _isConnecting)
                         ? const SizedBox(
                             width: 20,
                             height: 20,

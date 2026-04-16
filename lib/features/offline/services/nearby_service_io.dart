@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:nearby_connections/nearby_connections.dart';
 import 'offline_chat_database.dart';
+import 'offline_mesh_encryption_service.dart';
 
 class NearbyPeer {
   final String endpointId;
   final String userId;
   final String displayName;
   final bool isAnonymous;
+  final String? publicKey;
   final DateTime discoveredAt;
 
   NearbyPeer({
@@ -16,6 +18,7 @@ class NearbyPeer {
     required this.userId,
     required this.displayName,
     required this.isAnonymous,
+    this.publicKey,
     required this.discoveredAt,
   });
 }
@@ -33,6 +36,10 @@ class ConnectionResultEvent {
 }
 
 class NearbyService {
+  static const String _appMarker = 'xq1';
+  static const int _maxRelayHops = 3;
+  static const Duration _seenMessageRetention = Duration(minutes: 10);
+
   // Singleton instance
   static final NearbyService _instance = NearbyService._internal();
   static NearbyService get instance => _instance;
@@ -49,6 +56,7 @@ class NearbyService {
   String? _currentUserId;
   String? _effectiveName;
   bool _isAnonymous = false;
+  String? _currentPublicKey;
 
   // Streams for UI
   final _peersController = StreamController<List<NearbyPeer>>.broadcast();
@@ -91,11 +99,13 @@ class NearbyService {
   final Map<String, NearbyPeer> _discoveredPeers =
       {}; // userId -> NearbyPeer (Updated to index by userId)
   final Set<String> _connectedEndpoints = {};
+  final Map<String, DateTime> _seenMessageIds = {};
 
   List<NearbyPeer> get peers => _discoveredPeers.values.toList();
   Set<String> get connectedEndpoints => _connectedEndpoints;
   bool get isAdvertising => _isAdvertising;
   bool get isDiscovering => _isDiscovering;
+  bool get isMeshActive => _isAdvertising && _isDiscovering;
 
   /// Returns true if the specific [userId] (UUID) is currently connected
   /// via any of our active endpoints.
@@ -108,27 +118,36 @@ class NearbyService {
   /// Prepares the payload to be broadcasted as our 'Endpoint Name'
   String _buildEndpointInfo() {
     final payload = {
-      'id': _currentUserId ?? 'unknown',
-      'name': _isAnonymous
+      'a': _appMarker,
+      'i': _currentUserId ?? 'unknown',
+      'n': _isAnonymous
           ? 'Anonymous'
           : (_effectiveName != null && _effectiveName!.isNotEmpty
-                ? _effectiveName
-                : 'Explorer'),
-      'anon': _isAnonymous,
+              ? _effectiveName
+              : 'Explorer'),
+      'o': _isAnonymous ? 1 : 0,
+      'p': _currentPublicKey ?? '',
     };
     return jsonEncode(payload);
   }
 
-  void setCurrentUser(String userId, String effectiveName, bool isAnonymous) {
+  void setCurrentUser(
+    String userId,
+    String effectiveName,
+    bool isAnonymous, {
+    String? publicKey,
+  }) {
     if (_currentUserId == userId &&
         _effectiveName == effectiveName &&
-        _isAnonymous == isAnonymous) {
+        _isAnonymous == isAnonymous &&
+        _currentPublicKey == publicKey) {
       return;
     }
 
     _currentUserId = userId;
     _effectiveName = effectiveName;
     _isAnonymous = isAnonymous;
+    _currentPublicKey = publicKey;
     debugPrint(
       "Nearby: User context updated -> ID: $userId, Name: $effectiveName, Anon: $isAnonymous",
     );
@@ -136,11 +155,36 @@ class NearbyService {
     // If we were already running, we need to restart to update the air-broadcast info
     if (_isAdvertising || _isDiscovering) {
       debugPrint("Nearby: Restarting services to reflect user changes...");
-      resetAll().then((_) {
-        startDiscovery();
-        startAdvertising();
+      restartMesh().then((success) {
+        debugPrint("Nearby: Restart after user update -> $success");
       });
     }
+  }
+
+  Future<void> _stopRuntimeState() async {
+    await stopDiscovery();
+    await stopAdvertising();
+    await disconnectAll();
+    _discoveredPeers.clear();
+    _connectedEndpoints.clear();
+    _seenMessageIds.clear();
+    _emitPeers();
+  }
+
+  Future<bool> startMesh() async {
+    if (_currentUserId == null || _currentUserId!.isEmpty) {
+      debugPrint("Nearby: Cannot start mesh, missing current user id");
+      return false;
+    }
+
+    final discoveryOk = await startDiscovery();
+    final advertisingOk = await startAdvertising();
+    return discoveryOk && advertisingOk;
+  }
+
+  Future<bool> restartMesh() async {
+    await _stopRuntimeState();
+    return startMesh();
   }
 
   /// Starts Broadcasting our presence to others.
@@ -171,6 +215,11 @@ class NearbyService {
       );
       return success;
     } catch (e) {
+      if (e.toString().contains('STATUS_ALREADY_ADVERTISING')) {
+        _isAdvertising = true;
+        debugPrint("Nearby: Advertising already active.");
+        return true;
+      }
       debugPrint("Nearby: Advertising Exception: $e");
       _isAdvertising = false;
       return false;
@@ -215,6 +264,11 @@ class NearbyService {
       debugPrint("Nearby: Discovery status: ${success ? 'ACTIVE' : 'FAILED'}");
       return success;
     } catch (e) {
+      if (e.toString().contains('STATUS_ALREADY_DISCOVERING')) {
+        _isDiscovering = true;
+        debugPrint("Nearby: Discovery already active.");
+        return true;
+      }
       debugPrint("Nearby: Discovery Exception: $e");
       _isDiscovering = false;
       return false;
@@ -245,9 +299,20 @@ class NearbyService {
       debugPrint("Nearby: Extracted JSON: '$jsonStr'");
 
       final payload = jsonDecode(jsonStr);
-      final userId = payload['id'] as String? ?? '';
-      String name = payload['name'] as String? ?? 'Explorer';
-      final isAnonymous = payload['anon'] as bool? ?? false;
+      final marker = '${payload['a'] ?? payload['app'] ?? ''}'.trim();
+      if (marker != _appMarker) {
+        debugPrint(
+          "Nearby: [SKIP] Foreign app marker from $endpointId -> '$marker'",
+        );
+        return;
+      }
+      final userId = (payload['i'] ?? payload['id']) as String? ?? '';
+      String name = (payload['n'] ?? payload['name']) as String? ?? 'Explorer';
+      final anonValue = payload['o'] ?? payload['anon'];
+      final isAnonymous = anonValue is bool
+          ? anonValue
+          : (anonValue is num ? anonValue != 0 : false);
+      final publicKey = (payload['p'] ?? payload['pub']) as String?;
 
       if (isAnonymous) {
         name = 'Anonymous';
@@ -259,8 +324,7 @@ class NearbyService {
 
       // Don't discover ourselves if MAC rotation accidentally surfaces our own ID.
       // We check if BOTH are non-empty to avoid accidental rejection during setup.
-      bool isSelf =
-          userId.isNotEmpty &&
+      bool isSelf = userId.isNotEmpty &&
           _currentUserId != null &&
           _currentUserId!.isNotEmpty &&
           userId == _currentUserId;
@@ -275,6 +339,7 @@ class NearbyService {
         userId: userId,
         displayName: name,
         isAnonymous: isAnonymous,
+        publicKey: publicKey,
         discoveredAt: DateTime.now(),
       );
 
@@ -333,8 +398,15 @@ class NearbyService {
       if (startIndex != -1 && endIndex != -1) {
         final jsonStr = rawName.substring(startIndex, endIndex + 1);
         final payload = jsonDecode(jsonStr);
-        final senderId = payload['id'] as String;
-        final senderName = payload['name'] as String;
+        final marker = '${payload['a'] ?? payload['app'] ?? ''}'.trim();
+        if (marker != _appMarker) {
+          debugPrint(
+            "Nearby: [SKIP] Incoming connection from foreign app -> '$marker'",
+          );
+          return;
+        }
+        final senderId = (payload['i'] ?? payload['id']) as String;
+        final senderName = (payload['n'] ?? payload['name']) as String;
 
         _handshakeRequestController.add({
           'endpointId': endpointId,
@@ -396,13 +468,37 @@ class NearbyService {
     }
 
     try {
+      final recipientId = _discoveredPeers.values
+          .where((peer) => peer.endpointId == endpointId)
+          .firstOrNull
+          ?.userId;
+      final recipientPublicKey = _discoveredPeers.values
+          .where((peer) => peer.endpointId == endpointId)
+          .firstOrNull
+          ?.publicKey;
+      if (recipientPublicKey == null || recipientPublicKey.isEmpty) {
+        throw Exception('Missing recipient public key for offline mesh chat');
+      }
+      final messageId = _buildMessageId();
+      final encryptedPayload =
+          await OfflineMeshEncryptionService.instance.encryptForRecipient(
+        plaintext: text,
+        recipientPublicKeyBase64: recipientPublicKey,
+      );
       final payload = {
         'type': 'chat',
+        'messageId': messageId,
         'senderId': _currentUserId,
-        'text': text,
+        'senderPublicKey': encryptedPayload['senderPublicKey'],
+        'recipientId': recipientId,
+        'ciphertext': encryptedPayload['ciphertext'],
+        'mac': encryptedPayload['mac'],
+        'nonce': encryptedPayload['nonce'],
         'timestamp': DateTime.now().toIso8601String(),
+        'remainingHops': _maxRelayHops,
       };
 
+      _markMessageSeen(messageId);
       final bytes = Uint8List.fromList(utf8.encode(jsonEncode(payload)));
       await Nearby().sendBytesPayload(endpointId, bytes);
     } catch (e) {
@@ -419,8 +515,51 @@ class NearbyService {
         final data = jsonDecode(jsonString);
 
         if (data['type'] == 'chat') {
+          final messageId = data['messageId'] as String? ??
+              '${data['senderId']}_${data['timestamp']}';
           final senderId = data['senderId'] as String;
-          final text = data['text'] as String;
+          final senderPublicKey = data['senderPublicKey'] as String? ?? '';
+          final recipientId = data['recipientId'] as String?;
+          final remainingHops = (data['remainingHops'] as int?) ?? 0;
+
+          if (_hasSeenMessage(messageId)) {
+            debugPrint("Nearby: Skipping duplicate message $messageId");
+            return;
+          }
+
+          _markMessageSeen(messageId);
+
+          final isForCurrentUser = recipientId == null ||
+              recipientId.isEmpty ||
+              recipientId == _currentUserId;
+
+          if (!isForCurrentUser) {
+            await _relayMessage(
+              sourceEndpointId: endpointId,
+              data: data,
+              remainingHops: remainingHops,
+            );
+            return;
+          }
+
+          final trustedPublicKey =
+              await OfflineChatDatabase.instance.getFriendPublicKey(senderId);
+          if (trustedPublicKey != null &&
+              trustedPublicKey.isNotEmpty &&
+              trustedPublicKey != senderPublicKey) {
+            debugPrint(
+              'Nearby: Sender public key mismatch for trusted peer $senderId',
+            );
+            return;
+          }
+
+          final text =
+              await OfflineMeshEncryptionService.instance.decryptFromSender(
+            ciphertextBase64: data['ciphertext'] as String? ?? '',
+            macBase64: data['mac'] as String? ?? '',
+            nonceBase64: data['nonce'] as String? ?? '',
+            senderPublicKeyBase64: senderPublicKey,
+          );
 
           // 1. Persist to Database immediately
           final peer = _discoveredPeers[senderId];
@@ -438,6 +577,7 @@ class NearbyService {
           // 2. Pass to UI Stream
           _messageController.add({
             'endpointId': endpointId,
+            'messageId': messageId,
             'senderId': senderId,
             'text': text,
             'timestamp': data['timestamp'],
@@ -456,20 +596,64 @@ class NearbyService {
     // Useful for tracking file upload/download progress later
   }
 
+  Future<void> _relayMessage({
+    required String sourceEndpointId,
+    required Map<String, dynamic> data,
+    required int remainingHops,
+  }) async {
+    if (remainingHops <= 0) {
+      debugPrint("Nearby: Relay hop budget exhausted for ${data['messageId']}");
+      return;
+    }
+
+    final nextPayload = Map<String, dynamic>.from(data)
+      ..['remainingHops'] = remainingHops - 1;
+
+    final bytes = Uint8List.fromList(utf8.encode(jsonEncode(nextPayload)));
+    final targetEndpoints = _connectedEndpoints
+        .where((endpointId) => endpointId != sourceEndpointId)
+        .toList();
+
+    for (final endpointId in targetEndpoints) {
+      try {
+        await Nearby().sendBytesPayload(endpointId, bytes);
+      } catch (e) {
+        debugPrint("Nearby: Relay error to $endpointId: $e");
+      }
+    }
+  }
+
+  bool _hasSeenMessage(String messageId) {
+    _purgeSeenMessages();
+    return _seenMessageIds.containsKey(messageId);
+  }
+
+  void _markMessageSeen(String messageId) {
+    _purgeSeenMessages();
+    _seenMessageIds[messageId] = DateTime.now();
+  }
+
+  void _purgeSeenMessages() {
+    final cutoff = DateTime.now().subtract(_seenMessageRetention);
+    _seenMessageIds.removeWhere((_, seenAt) => seenAt.isBefore(cutoff));
+  }
+
+  String _buildMessageId() {
+    final senderId = _currentUserId ?? 'unknown';
+    return '$senderId-${DateTime.now().microsecondsSinceEpoch}';
+  }
+
   Future<void> disconnectAll() async {
     await Nearby().stopAllEndpoints();
     _connectedEndpoints.clear();
   }
 
   Future<void> resetAll() async {
-    await stopDiscovery();
-    await stopAdvertising();
-    await disconnectAll();
-    _discoveredPeers.clear();
+    await _stopRuntimeState();
     _currentUserId = null;
     _effectiveName = null;
     _isAnonymous = false;
-    _emitPeers();
+    _currentPublicKey = null;
     // Auto-purge old messages (3-day rule)
     await OfflineChatDatabase.instance.purgeOldMessages();
   }

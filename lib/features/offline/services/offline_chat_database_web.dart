@@ -42,9 +42,20 @@ class OfflineChatDatabase {
 
   Future<Map<String, String>> getSignalMessageCache(
     List<String> messageIds,
-  ) async => {};
+  ) async =>
+      {};
 
-  Future<void> addFriend(String peerId, String displayName) async {}
+  Future<void> addFriend(
+    String peerId,
+    String displayName, {
+    String? publicKey,
+  }) async {}
+
+  Future<String?> getFriendPublicKey(String peerId) async => null;
+
+  Future<bool> isFriendVerified(String peerId) async => false;
+
+  Future<void> setFriendVerification(String peerId, bool isVerified) async {}
 
   Future<bool> isFriend(String peerId) async => false;
 

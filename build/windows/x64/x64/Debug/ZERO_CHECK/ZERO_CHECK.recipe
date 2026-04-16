@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\XPARQ\xparq_mobile\build\windows\x64\x64\Debug\ZERO_CHECK</FullPath>
+      <FullPath>C:\XPARQ\xparq-app\build\windows\x64\x64\Debug\ZERO_CHECK</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

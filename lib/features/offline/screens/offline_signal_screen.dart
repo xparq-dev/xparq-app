@@ -20,6 +20,7 @@ class _OfflineSignalScreenState extends ConsumerState<OfflineSignalScreen> {
   bool _isLoading = true;
   StreamSubscription? _peersSubscription;
   StreamSubscription? _msgSubscription;
+  bool _routeIsActive = false;
 
   @override
   void initState() {
@@ -35,6 +36,18 @@ class _OfflineSignalScreenState extends ConsumerState<OfflineSignalScreen> {
     _msgSubscription = NearbyService.instance.incomingMessageStream.listen((_) {
       _refreshChats();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh whenever this screen becomes the top route (e.g. after returning from chat)
+    final route = ModalRoute.of(context);
+    final nowActive = route?.isCurrent ?? false;
+    if (nowActive && !_routeIsActive) {
+      _refreshChats();
+    }
+    _routeIsActive = nowActive;
   }
 
   @override

@@ -1,0 +1,2 @@
+[functions.account-lifecycle]
+verify_jwt = false

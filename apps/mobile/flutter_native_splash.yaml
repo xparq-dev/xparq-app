@@ -1,0 +1,19 @@
+flutter_native_splash:
+  # General settings
+  color: "#000000" # Pure Black
+  image: assets/images/perfect_splash_logo.png
+  
+  # Android specific
+  android_12:
+    color: "#000000"
+    image: assets/images/perfect_splash_logo.png
+  
+  # iOS specific (if built for iOS)
+  ios: true
+  
+  # Enable fullscreen splash
+  fullscreen: true
+
+
+
+

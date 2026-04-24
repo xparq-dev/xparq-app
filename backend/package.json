@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "openai": "^6.33.0"
+  },
+  "name": "xparq_mobile",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "devDependencies": {
+    "supabase": "^2.92.1"
+  },
+  "scripts": {
+    "account:purge-user": "node scripts/account-lifecycle.js purge-user",
+    "account:purge-pending": "node scripts/account-lifecycle.js purge-pending",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xparq-dev/xparq-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/xparq-dev/xparq-app/issues"
+  },
+  "homepage": "https://github.com/xparq-dev/xparq-app#readme"
+}

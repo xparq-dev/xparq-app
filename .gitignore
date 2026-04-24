@@ -1,6 +1,67 @@
-node_modules
-build/
-.dart_tool/
-android/.kotlin/
-ios/Pods/
-*.log
+# Flutter/Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.packages
+**/lib/generated/
+**/pubspec.lock
+**/*.log
+!logs/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Android
+**/android/*.iml
+**/android/local.properties
+**/android/.gradle/
+**/android/.kotlin/
+**/android/app/src/main/res/drawable-*/
+**/android/app/src/main/res/mipmap-*/
+
+# iOS
+**/ios/Pods/
+**/ios/.ls-cache/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.[mh]
+
+# Firebase
+**/firebase-debug.log
+**/firestore-debug.log
+**/ui-debug.log
+**/.firebase/
+**/.fusebox/
+**/*firebase-adminsdk-*.json
+**/service-account*.json
+**/*service-account*.json
+**/*.service-account.json
+**/*credentials*.json
+**/firebase-admin*.json
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Project Docs/Artifacts (Optional: if user wants to keep them in git)
+# docs/data/
+# docs/screenshots/
+# docs/dumps/

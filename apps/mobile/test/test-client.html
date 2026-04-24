@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test WebRTC</title>
+</head>
+<body>
+
+<h2>Test WebRTC</h2>
+
+<input id="email" placeholder="email" />
+<input id="password" placeholder="password" type="password" />
+
+<br><br>
+
+<button onclick="login()">Login</button>
+<button onclick="connectSocket()">Connect Socket</button>
+<button onclick="joinRoom()">Join Room</button>
+<button onclick="callInvite()">Call Invite</button>
+<button onclick="callAccept()">Call Accept</button>
+<button onclick="callReject()">Call Reject</button>
+<button onclick="startMedia()">Start Media</button>
+<button onclick="stopMedia()">Stop Media</button>
+
+<br><br>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+let pc = null;
+let localStream = null;
+let token = null;
+let socket = null;
+
+// ✅ LOGIN
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch("https://fidmehpoyvwdawcldvie.supabase.co/auth/v1/token?grant_type=password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpZG1laHBveXZ3ZGF3Y2xkdmllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwODkwMDMsImV4cCI6MjA4NzY2NTAwM30.t_jJN5HfcSETflbmqIjvELLQ-3tJedklTYA35ZzDtlU"
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  console.log("LOGIN DATA:", data);
+
+  if (data.access_token) {
+    token = data.access_token;
+    console.log("TOKEN:", token);
+    alert("Login success");
+  } else {
+    alert("Login failed");
+  }
+}
+
+// ✅ CONNECT SOCKET
+
+function connectSocket() {
+  socket = io("https://api.xparq.me", {
+    path: "/socket.io",
+    transports: ["websocket"],
+    auth: { token }
+  });
+
+  socket.on("connect", () => {
+    console.log("CONNECTED ✅");
+  });
+
+  socket.on("connect_error", (err) => {
+    console.log("ERROR ❌", err.message);
+  });
+
+  socket.on("joined", (data) => {
+    console.log("JOINED ROOM:", data);
+  });
+
+  // 🔥 รับ OFFER
+  socket.on("offer", async (offer) => {
+    createPeer();
+
+    await pc.setRemoteDescription(offer);
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    socket.emit("answer", answer);
+
+    console.log("ANSWER SENT");
+  });
+
+  // 🔥 รับ ANSWER
+  socket.on("answer", async (answer) => {
+    await pc.setRemoteDescription(answer);
+    console.log("CALL CONNECTED 🎉");
+  });
+
+  // 🔥 รับ ICE
+  socket.on("ice", async (candidate) => {
+    try {
+      await pc.addIceCandidate(candidate);
+    } catch (e) {
+      console.log("ICE ERROR", e);
+    }
+  });
+}
+
+// ✅ JOIN ROOM
+function joinRoom() {
+  if (!socket) {
+    console.log("❌ SOCKET NOT CONNECTED");
+    return;
+  }
+
+  console.log("JOIN ROOM CLICKED");
+
+  socket.emit("joinRoom", {
+    callId: "test123",
+    roomId: "room_test123"
+  }, (res) => {
+    console.log("JOIN RESPONSE:", res);
+  });
+}
+
+// ✅ MEDIA
+async function startMedia() {
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  });
+
+  const video = document.createElement("video");
+  video.srcObject = localStream;
+  video.autoplay = true;
+  video.muted = true;
+  document.body.appendChild(video);
+
+  console.log("MEDIA READY");
+}
+
+// ✅ PEER
+function createPeer() {
+  pc = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice", event.candidate);
+    }
+  };
+
+  pc.ontrack = (event) => {
+    const video = document.createElement("video");
+    video.srcObject = event.streams[0];
+    video.autoplay = true;
+    document.body.appendChild(video);
+  };
+
+  localStream.getTracks().forEach(track => {
+    pc.addTrack(track, localStream);
+  });
+}
+
+// ✅ CALL (Caller)
+async function callInvite() {
+  createPeer();
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  socket.emit("offer", offer);
+
+  console.log("OFFER SENT");
+}
+
+// 🔧 กัน error
+function callAccept() {}
+function callReject() {}
+</script>
+
+</body>
+</html>

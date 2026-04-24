@@ -1,0 +1,56 @@
+groups:
+  - name: xparq-webrtc
+    rules:
+      - alert: XparqHighNodeCpu
+        expr: max_over_time(xparq_node_cpu_percent[5m]) > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Signaling CPU is above the production threshold
+          description: One or more signaling nodes have sustained CPU above 85% for 5 minutes.
+
+      - alert: XparqHighPacketLoss
+        expr: avg_over_time(xparq_transport_packet_loss_ratio[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: Client packet loss is elevated
+          description: Rolling packet loss across active clients is above 5%.
+
+      - alert: XparqRedisLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(xparq_redis_command_latency_ms_bucket[5m])) by (le, operation)) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Redis latency is above the expected control-plane threshold
+          description: P95 Redis command latency is above 50 ms for at least 5 minutes.
+
+      - alert: XparqTurnUsageSpike
+        expr: increase(xparq_turn_policy_requests_total{outcome="issued"}[5m]) > 200
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: TURN issuance spike detected
+          description: TURN credential issuance is spiking above the expected 5-minute baseline.
+
+      - alert: XparqProtectionModeEnabled
+        expr: max_over_time(xparq_protection_mode[2m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: The platform entered protection mode
+          description: New sessions are being blocked to preserve existing calls.
+
+      - alert: XparqNodeHeartbeatLagging
+        expr: max(xparq_node_heartbeat_age_ms) > 30000
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Node heartbeat is stale
+          description: A signaling node heartbeat has not been refreshed for more than 30 seconds.

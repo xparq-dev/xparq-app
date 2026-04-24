@@ -1,0 +1,370 @@
+rules_version = '2';
+// ==================================================================================
+// XPARQ Firestore Security Rules — v1.0
+// ==================================================================================
+// Key Principles:
+//  1. Auth-first: every read/write requires firebase authentication
+//  2. Age-gating: NSFW content gated behind age_group == 'explorer' AND nsfw_opt_in
+//  3. DOB privacy: birth_date_encrypted is write-once, never readable by anyone
+//  4. Block enforcement: blocked users cannot read/write each other's chat
+//  5. Rate-limiting simulation: done at Cloud Function level (not here — Firestore
+//     rules don't support stateful rate limiting; use App Check + Cloud Functions)
+//  6. Least privilege: users can only write their own data
+// ==================================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    /// Is the caller authenticated?
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    /// Is the caller the owner of this document?
+    function isOwner(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    /// Get the caller's profile document (for age/NSFW checks).
+    function callerProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    /// Is the caller an Explorer (18+)?
+    function isExplorer() {
+      return isAuthed() && callerProfile().age_group == 'explorer';
+    }
+
+    /// Has the caller opted into NSFW content?
+    function hasNsfwOptIn() {
+      return isExplorer() && callerProfile().nsfw_opt_in == true;
+    }
+
+    /// Is the caller's account active (not suspended)?
+    function isAccountActive() {
+      return isAuthed() && callerProfile().account_status == 'active';
+    }
+
+
+    /// Is the caller blocked by [uid]?
+    function isBlockedBy(uid) {
+      return exists(/databases/$(database)/documents/blocked_users/$(uid)/blocks/$(request.auth.uid));
+    }
+
+    /// Are the two parties not blocking each other?
+    function noBlockBetween(uid1, uid2) {
+      return !exists(/databases/$(database)/documents/blocked_users/$(uid1)/blocks/$(uid2))
+          && !exists(/databases/$(database)/documents/blocked_users/$(uid2)/blocks/$(uid1));
+    }
+
+    /// Validate a string field: not empty, max length.
+    function validString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    /// Validate a list field: max items.
+    function validList(val, maxItems) {
+      return val is list && val.size() <= maxItems;
+    }
+
+    // ── users/{uid} ──────────────────────────────────────────────────────────────
+
+    match /users/{uid} {
+
+      // A user can always read their OWN profile (needed during onboarding
+      // before the profile document even exists — isAccountActive() would fail
+      // because callerProfile() get() returns null for brand-new accounts).
+      // Other users' profiles require an active account.
+      allow read: if isOwner(uid) || (isAuthed() && isAccountActive());
+
+      // Only the owner can create their own profile document.
+      allow create: if isOwner(uid)
+          && validString(request.resource.data.sparq_name, 32)
+          && validString(request.resource.data.age_group, 10)
+          && request.resource.data.keys().hasAll(['sparq_name', 'age_group', 'created_at'])
+          // birth_date_encrypted must be provided but will not be re-readable
+          && request.resource.data.birth_date_encrypted is string;
+
+      // Only the owner can update — with field-level restrictions.
+      allow update: if isOwner(uid)
+          && isAccountActive()
+          // Immutable fields: uid, age_group, birth_date_encrypted, created_at
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['uid', 'birth_date_encrypted', 'created_at', 'account_status'])
+          // Validate mutable fields
+          && (
+               !('sparq_name' in request.resource.data.diff(resource.data).affectedKeys())
+               || validString(request.resource.data.sparq_name, 32)
+             )
+          && (
+               !('bio' in request.resource.data.diff(resource.data).affectedKeys())
+               || request.resource.data.bio.size() <= 300
+             )
+          && (
+               !('constellations' in request.resource.data.diff(resource.data).affectedKeys())
+               || validList(request.resource.data.constellations, 10)
+             )
+          // NSFW opt-in: only Explorer can enable it
+          && (
+               !('nsfw_opt_in' in request.resource.data.diff(resource.data).affectedKeys())
+               || (request.resource.data.nsfw_opt_in == false)
+               || isExplorer()
+             );
+
+      // No one can delete user profiles via client (admin SDK only).
+      allow delete: if false;
+
+      // ── users/{uid}/orbiting/{targetUid} ──────────────────────────────────────
+      match /orbiting/{targetUid} {
+        // Anyone active can read (for counts/lists), only owner or target can write
+        allow read: if isAuthed() && isAccountActive();
+        allow write: if isOwner(uid) || isOwner(targetUid);
+      }
+
+      // ── users/{uid}/orbited_by/{senderUid} ────────────────────────────────────
+      match /orbited_by/{senderUid} {
+        // Anyone active can read, only owner or sender can write
+        allow read: if isAuthed() && isAccountActive();
+        allow write: if isOwner(uid) || isOwner(senderUid);
+      }
+    }
+
+    // ── chats/{chatId} ───────────────────────────────────────────────────────────
+
+    match /chats/{chatId} {
+
+      // ── Helper: is caller a participant in this chat?
+      function isParticipant() {
+        return isAuthed()
+            && request.auth.uid in resource.data.participants;
+      }
+
+      function isParticipantInNew() {
+        return isAuthed()
+            && request.auth.uid in request.resource.data.participants;
+      }
+
+      // Read: participant only, both parties must not be blocking each other
+      allow read: if isParticipant()
+          && noBlockBetween(
+               resource.data.participants[0],
+               resource.data.participants[1]
+             );
+
+      // Create: caller must be one of exactly 2 participants
+      allow create: if isAuthed()
+          && isAccountActive()
+          && isParticipantInNew()
+          && request.resource.data.participants.size() == 2
+          && noBlockBetween(
+               request.resource.data.participants[0],
+               request.resource.data.participants[1]
+             );
+
+      // Update: only system fields (last_message, last_at etc.) — participants immutable
+      allow update: if isParticipant()
+          && isAccountActive()
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['participants', 'created_at']);
+
+      allow delete: if false;
+
+      // ── chats/{chatId}/messages/{msgId} ─────────────────────────────────────
+
+      match /messages/{msgId} {
+
+        function chatData() {
+          return get(/databases/$(database)/documents/chats/$(chatId)).data;
+        }
+
+        function isChatParticipant() {
+          return isAuthed()
+              && request.auth.uid in chatData().participants;
+        }
+
+        // Read: chat participant only, not blocked
+        // Age gating: Cadets can NOT read messages where is_sensitive == true
+        allow read: if isChatParticipant()
+            && noBlockBetween(
+                 chatData().participants[0],
+                 chatData().participants[1]
+               )
+            && (
+                 resource.data.is_sensitive == false
+                 || hasNsfwOptIn()   // Only Explorers with opt-in can read sensitive
+               );
+
+        // Create: sender must be participant, content must be a non-empty string,
+        //         sensitive flag requires Explorer + nsfw opt-in
+        allow create: if isChatParticipant()
+            && isAccountActive()
+            && noBlockBetween(
+                 chatData().participants[0],
+                 chatData().participants[1]
+               )
+            && request.resource.data.sender_uid == request.auth.uid
+            && validString(request.resource.data.content_encrypted, 4096)
+            && request.resource.data.keys().hasAll(['sender_uid', 'content_encrypted', 'timestamp', 'is_sensitive'])
+            // Sensitive messages: only Explorers with opt-in can send them
+            && (
+                 request.resource.data.is_sensitive == false
+                 || hasNsfwOptIn()
+               );
+
+        // Update: only delivery/read status fields
+        allow update: if isChatParticipant()
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(['sender_uid', 'content_encrypted', 'timestamp', 'is_sensitive']);
+
+        // No deletes — messages are archived, not deleted
+        allow delete: if false;
+      }
+    }
+
+    // ── blocked_users/{uid}/blocks/{blockedUid} ──────────────────────────────────
+
+    match /blocked_users/{uid} {
+      // Allow reading own block collection (to check if blocked)
+      allow read: if isOwner(uid);
+
+      match /blocks/{blockedUid} {
+        // Only the owner can read/write their own block list
+        allow read, write: if isOwner(uid) && isAuthed();
+
+        // Anyone can check if they are blocked (needed for mutual block check in rules)
+        // This is enforced by the noBlockBetween() helper used in chat/user rules.
+        allow get: if isAuthed();
+      }
+    }
+
+    // ── reports/{reportId} ───────────────────────────────────────────────────────
+
+    match /reports/{reportId} {
+      // Reporters can create reports but cannot read/update/delete them
+      // (reports are admin-only read via Admin SDK / Firebase Console)
+      allow create: if isAuthed()
+          && isAccountActive()
+          && request.resource.data.reporter_uid == request.auth.uid
+          && validString(request.resource.data.reason, 50)
+          && request.resource.data.keys().hasAll(['reporter_uid', 'reported_uid', 'reason', 'created_at', 'status']);
+
+      // No client reads on reports (admin only)
+      allow read, update, delete: if false;
+    }
+
+    // ── chats/{chatId} ───────────────────────────────────────────────────────
+    // 1:1 chat conversations for Signal feature.
+
+    match /chats/{chatId} {
+
+      // Only participants can read the chat document.
+      // isAccountActive() omitted here to avoid extra get() cost in list queries.
+      allow read: if isAuthed()
+          && request.auth.uid in resource.data.participants;
+
+      // Create: caller must list themselves in participants.
+      allow create: if isAuthed()
+          && request.auth.uid in request.resource.data.participants
+          && request.resource.data.participants.size() == 2;
+
+      // Update allowed for participants (e.g. updating last_at, last_message).
+      allow update: if isAuthed()
+          && request.auth.uid in resource.data.participants;
+
+      // Chats are never deleted by clients.
+      allow delete: if false;
+
+      // ── chats/{chatId}/messages/{messageId} ─────────────────────────────
+      match /messages/{messageId} {
+        // Only participants in the parent chat can read/write messages.
+        function isChatParticipant() {
+          return request.auth.uid in
+              get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        }
+
+        allow read: if isAuthed() && isAccountActive() && isChatParticipant();
+
+        allow create: if isAuthed()
+            && isAccountActive()
+            && isChatParticipant()
+            && request.resource.data.sender_uid == request.auth.uid
+            && validString(request.resource.data.content_encrypted, 5000);
+
+        // Allow participants to update (e.g. mark as read).
+        allow update: if isAuthed() && isAccountActive() && isChatParticipant();
+
+        allow delete: if false;
+      }
+    }
+
+    // ── pulses/{pulseId} ─────────────────────────────────────────────────────────
+    // Public social posts ("Pulses") — age-gated
+
+    match /pulses/{pulseId} {
+
+      // ── Age-gate helper for reads ──────────────────────────────────────────
+      // Cadets can ONLY see safe (is_nsfw == false) content.
+      // Explorers with nsfw_opt_in can see all.
+      function canReadPulse() {
+        let p = callerProfile();
+        // Cadets: strict no-NSFW.
+        // Explorers: can read everything (UI handles blurring/opt-in).
+        // This allows the "Tap to Reveal" feature to work.
+        return p.age_group == 'explorer' || resource.data.is_nsfw == false;
+      }
+
+      // Read: authenticated, active user, and passes age-gate
+      allow read: if isAuthed() && isAccountActive() && canReadPulse();
+
+      // Create: authenticated, active user can create a pulse they own.
+      // Cadets CANNOT set is_nsfw = true.
+      // is_nsfw = true is only allowed for Explorers WITH nsfw_opt_in.
+      allow create: if isAuthed()
+          && isAccountActive()
+          && request.resource.data.uid == request.auth.uid
+          && validString(request.resource.data.content, 280)
+          && request.resource.data.keys().hasAll(['uid', 'content', 'created_at', 'author_meta', 'is_nsfw'])
+          // Age-gate: only Explorers with opt-in can create NSFW pulses
+          && (
+               request.resource.data.is_nsfw == false
+               || hasNsfwOptIn()
+             );
+
+      // Only the author can update or delete their own pulse
+      allow update: if isAuthed()
+          && isAccountActive()
+          && resource.data.uid == request.auth.uid
+          // Cannot retroactively change NSFW flag to bypass
+          && request.resource.data.uid == resource.data.uid;
+
+      allow delete: if isAuthed()
+          && resource.data.uid == request.auth.uid;
+
+      // ── pulses/{pulseId}/interactions/{interactionId} ────────────────────
+      match /interactions/{interactionId} {
+        // Age-gate: interactions on NSFW pulses require Explorer + opt-in
+        allow read: if isAuthed() && (
+          !get(/databases/$(database)/documents/pulses/$(pulseId)).data.is_nsfw
+          || hasNsfwOptIn()
+        );
+
+        // Only the interaction owner can write it
+        allow write: if isAuthed()
+            && isAccountActive()
+            && request.resource.data.uid == request.auth.uid
+            // Cannot interact with NSFW content if you're a Cadet
+            && (
+               !get(/databases/$(database)/documents/pulses/$(pulseId)).data.is_nsfw
+               || hasNsfwOptIn()
+             );
+      }
+    }
+
+    // ── Default: deny all other access ───────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

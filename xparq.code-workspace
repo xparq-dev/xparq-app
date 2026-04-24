@@ -1,0 +1,31 @@
+{
+	"folders": [
+		{
+			"name": "📱 Mobile App",
+			"path": "apps/mobile"
+		},
+		{
+			"name": "⚙️ Backend",
+			"path": "backend"
+		},
+		{
+			"name": "🛠️ Root & Tooling",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"apps": true,
+			"backend": true,
+			"config": true,
+			"logs": true,
+			"analysis": true,
+			"docs": true,
+			"scripts": true,
+			"**/node_modules": true,
+			"**/.dart_tool": true,
+			"**/build": true
+		},
+		"liveServer.settings.multiRootWorkspaceName": "📱 Mobile App"
+	}
+}

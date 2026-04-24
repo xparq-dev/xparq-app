@@ -1,0 +1,19 @@
+{
+  "name": "@xparq/sfu-mediasoup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone mediasoup audio SFU module for XPARQ",
+  "type": "commonjs",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "dotenv": "^17.4.2",
+    "mediasoup": "^3.14.14"
+  }
+}

@@ -29,15 +29,21 @@ class ChatInputBar extends ConsumerWidget {
     final state = ref.watch(signalChatControllerProvider(chatId));
     final controller = ref.read(signalChatControllerProvider(chatId).notifier);
     final settingsMap = ref.watch(chatSettingsProvider).valueOrNull ?? {};
-    final isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final bottomPadding =
+        keyboardVisible ? 8.0 : MediaQuery.viewPaddingOf(context).bottom + 8.0;
 
     return RepaintBoundary(
-      child: Padding(
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
         padding: EdgeInsets.fromLTRB(
-          16, 
-          0, 
-          16, 
-          state.isKeyboardWarped ? 8 : (MediaQuery.viewPaddingOf(context).bottom + 8)
+          16,
+          0,
+          16,
+          bottomPadding,
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(32),
@@ -57,7 +63,10 @@ class ChatInputBar extends ConsumerWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.08),
+                    color: Colors.black.withValues(
+                        alpha: Theme.of(context).brightness == Brightness.dark
+                            ? 0.3
+                            : 0.08),
                     blurRadius: 25,
                     spreadRadius: -5,
                     offset: const Offset(0, 10),
@@ -82,14 +91,18 @@ class ChatInputBar extends ConsumerWidget {
                               ? Icons.notifications_off
                               : Icons.notifications_none,
                           label: 'Silent',
-                          isActive: settingsMap[chatId]?['silenced_until'] != null,
+                          isActive:
+                              settingsMap[chatId]?['silenced_until'] != null,
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            final isMuted = settingsMap[chatId]?['silenced_until'] != null;
+                            final isMuted =
+                                settingsMap[chatId]?['silenced_until'] != null;
                             if (isMuted) {
                               controller.toggleMute(duration: null); // Unmute
                             } else {
-                              controller.toggleMute(duration: const Duration(hours: 1)); // Default 1h
+                              controller.toggleMute(
+                                  duration:
+                                      const Duration(hours: 1)); // Default 1h
                             }
                           },
                           onLongPress: () {
@@ -125,13 +138,17 @@ class ChatInputBar extends ConsumerWidget {
                   // Editing Indicator
                   if (state.editingMessage != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       child: Row(
                         children: [
                           Icon(
                             Icons.edit_outlined,
                             size: 14,
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -139,7 +156,10 @@ class ChatInputBar extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.7),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -153,7 +173,10 @@ class ChatInputBar extends ConsumerWidget {
                             child: Icon(
                               Icons.close_rounded,
                               size: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.4),
                             ),
                           ),
                         ],
@@ -168,20 +191,59 @@ class ChatInputBar extends ConsumerWidget {
                             Icons.do_not_disturb_on,
                             color: state.isSensitive
                                 ? const Color(0xFF7C4DFF)
-                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.38),
                             size: isLandscape ? 20 : 22,
                           ),
                           tooltip: 'Flag as sensitive (Black Hole Zone)',
-                          onPressed: () => controller.toggleSensitive(!state.isSensitive),
+                          onPressed: () =>
+                              controller.toggleSensitive(!state.isSensitive),
                         ),
                       IconButton(
                         icon: Icon(
                           Icons.image_outlined,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
                           size: isLandscape ? 20 : 22,
                         ),
                         tooltip: 'Attach Image',
-                        onPressed: state.isUploadingMedia ? null : () => controller.pickAndSendImage(otherUid),
+                        onPressed: state.isUploadingMedia
+                            ? null
+                            : () => controller.pickAndSendImage(otherUid),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.location_on_outlined,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                          size: isLandscape ? 20 : 22,
+                        ),
+                        tooltip: 'Share Location',
+                        onPressed: state.isUploadingMedia
+                            ? null
+                            : () async {
+                                HapticFeedback.lightImpact();
+                                final error =
+                                    await controller.sendLocation(otherUid);
+                                if (!context.mounted) {
+                                  return;
+                                }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      error ??
+                                          'Location shared with your friend.',
+                                    ),
+                                  ),
+                                );
+                              },
                       ),
                       Expanded(
                         child: TextField(
@@ -193,15 +255,21 @@ class ChatInputBar extends ConsumerWidget {
                           maxLines: isLandscape ? 2 : null,
                           keyboardType: TextInputType.multiline,
                           decoration: InputDecoration(
-                            hintText: state.editingMessage != null ? 'Recraft your signal…' : 'Transmit a signal…',
+                            hintText: state.editingMessage != null
+                                ? 'Recraft your signal…'
+                                : 'Transmit a signal…',
                             hintStyle: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.38),
                               fontSize: isLandscape ? 13 : 15,
                             ),
                             filled: true,
-                            fillColor: (Theme.of(context).brightness == Brightness.dark 
-                                ? Colors.white.withValues(alpha: 0.05) 
-                                : Colors.black.withValues(alpha: 0.02)),
+                            fillColor:
+                                (Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.black.withValues(alpha: 0.02)),
                             isDense: isLandscape,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -212,14 +280,16 @@ class ChatInputBar extends ConsumerWidget {
                               borderSide: BorderSide.none,
                             ),
                           ),
-                          onSubmitted: (_) => controller.sendMessage(textController.text, otherUid, textController),
+                          onSubmitted: (_) => controller.sendMessage(
+                              textController.text, otherUid, textController),
                         ),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          controller.sendMessage(textController.text, otherUid, textController);
+                          controller.sendMessage(
+                              textController.text, otherUid, textController);
                         },
                         child: Container(
                           width: isLandscape ? 36 : 44,
@@ -231,7 +301,10 @@ class ChatInputBar extends ConsumerWidget {
                                 : const Color(0xFF4FC3F7),
                             boxShadow: [
                               BoxShadow(
-                                color: (state.isSensitive ? const Color(0xFF7C4DFF) : const Color(0xFF4FC3F7)).withValues(alpha: 0.45),
+                                color: (state.isSensitive
+                                        ? const Color(0xFF7C4DFF)
+                                        : const Color(0xFF4FC3F7))
+                                    .withValues(alpha: 0.45),
                                 blurRadius: 12,
                                 spreadRadius: -2,
                                 offset: const Offset(0, 2),
@@ -248,7 +321,9 @@ class ChatInputBar extends ConsumerWidget {
                                   ),
                                 )
                               : Icon(
-                                  state.editingMessage != null ? Icons.check_rounded : Icons.send_rounded,
+                                  state.editingMessage != null
+                                      ? Icons.check_rounded
+                                      : Icons.send_rounded,
                                   color: Colors.white,
                                   size: 20,
                                 ),
@@ -310,9 +385,8 @@ class _QuickActionButton extends StatelessWidget {
               size: 20,
               color: isActive
                   ? const Color(0xFF4FC3F7)
-                  : theme.colorScheme.onSurface.withValues(alpha: 
-                      theme.brightness == Brightness.dark ? 0.6 : 0.8
-                    ),
+                  : theme.colorScheme.onSurface.withValues(
+                      alpha: theme.brightness == Brightness.dark ? 0.6 : 0.8),
             ),
             const SizedBox(height: 4),
             Text(
@@ -322,9 +396,8 @@ class _QuickActionButton extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: isActive
                     ? const Color(0xFF4FC3F7)
-                    : theme.colorScheme.onSurface.withValues(alpha: 
-                        theme.brightness == Brightness.dark ? 0.6 : 0.8
-                      ),
+                    : theme.colorScheme.onSurface.withValues(
+                        alpha: theme.brightness == Brightness.dark ? 0.6 : 0.8),
               ),
             ),
           ],
@@ -388,7 +461,8 @@ void _showMuteOptions(BuildContext context, SignalChatController controller) {
             icon: Icons.notifications_off_outlined,
             title: 'Always',
             onTap: () {
-              controller.toggleMute(duration: const Duration(days: 3650)); // ~10 years
+              controller.toggleMute(
+                  duration: const Duration(days: 3650)); // ~10 years
               Navigator.pop(context);
             },
           ),
@@ -403,7 +477,8 @@ class _MuteOption extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
 
-  const _MuteOption({required this.icon, required this.title, required this.onTap});
+  const _MuteOption(
+      {required this.icon, required this.title, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -417,12 +492,28 @@ class _MuteOption extends StatelessWidget {
 
 void _showStickerPicker(BuildContext context, SignalChatController controller) {
   final stickers = [
-    '✨', '🔥', '❤️', '👍', '😂', 
-    '⚡', '🎉', '💡', '💯', '🚀',
-    '😍', '🙌', '🌟', '💎', '🫠',
-    '👻', '👽', '👾', '🌈', '🍭'
+    '✨',
+    '🔥',
+    '❤️',
+    '👍',
+    '😂',
+    '⚡',
+    '🎉',
+    '💡',
+    '💯',
+    '🚀',
+    '😍',
+    '🙌',
+    '🌟',
+    '💎',
+    '🫠',
+    '👻',
+    '👽',
+    '👾',
+    '🌈',
+    '🍭'
   ];
-  
+
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
@@ -472,8 +563,8 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: (Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.white.withValues(alpha: 0.08) 
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.08)
                       : Colors.white.withValues(alpha: 0.92)),
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
@@ -491,7 +582,7 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark 
+                        color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white.withValues(alpha: 0.2)
                             : Colors.black.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(2),
@@ -511,7 +602,8 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                       child: GridView.builder(
                         shrinkWrap: true,
                         physics: const BouncingScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 5,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
@@ -519,7 +611,8 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                         itemCount: stickers.length,
                         itemBuilder: (context, index) {
                           return TweenAnimationBuilder<double>(
-                            duration: Duration(milliseconds: 150 + (index * 15)),
+                            duration:
+                                Duration(milliseconds: 150 + (index * 15)),
                             curve: Curves.easeOutBack,
                             tween: Tween(begin: 0.0, end: 1.0),
                             builder: (context, anim, child) => Transform.scale(
@@ -537,7 +630,8 @@ void _showStickerPicker(BuildContext context, SignalChatController controller) {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 8,
                                       offset: const Offset(0, 4),
                                     ),

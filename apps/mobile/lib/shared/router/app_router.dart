@@ -35,6 +35,7 @@ import 'package:xparq_app/features/chat/presentation/screens/chat_list_screen.da
 import 'package:xparq_app/features/chat/presentation/screens/create_group_screen.dart';
 import 'package:xparq_app/features/chat/presentation/screens/signal_chat_screen.dart';
 import 'package:xparq_app/features/chat/presentation/screens/archived_list_screen.dart';
+import 'package:xparq_app/features/call/presentation/screens/call_diagnostics_screen.dart';
 import 'package:xparq_app/features/call/presentation/screens/call_session_screen.dart';
 import 'package:xparq_app/features/profile/screens/edit_profile_screen.dart';
 import 'package:xparq_app/features/profile/screens/settings_screen.dart';
@@ -104,6 +105,7 @@ class AppRoutes {
   static const mediaSettings = '/settings/media';
   static const familyCenter = '/settings/family-center';
   static const helpSupport = '/settings/help-support';
+  static const callDiagnostics = '/settings/call-diagnostics';
   static const qrScanner = '/social/scan';
   static const resetPassword = '/reset-password';
   static const camera = '/social/camera';
@@ -574,6 +576,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
               path: 'help-support',
               builder: (__, _) => const HelpSupportScreen()),
+          GoRoute(
+              path: 'call-diagnostics',
+              builder: (__, _) => const CallDiagnosticsScreen()),
         ],
       ),
       GoRoute(

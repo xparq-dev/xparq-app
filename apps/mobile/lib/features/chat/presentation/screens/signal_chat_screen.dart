@@ -41,7 +41,7 @@ class SignalChatScreen extends ConsumerStatefulWidget {
   ConsumerState<SignalChatScreen> createState() => _SignalChatScreenState();
 }
 
-class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with WidgetsBindingObserver {
+class _SignalChatScreenState extends ConsumerState<SignalChatScreen> {
   late final TextEditingController _textController;
   late final ScrollController _scrollController;
   Timer? _vanishingTicker;
@@ -56,7 +56,6 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     super.initState();
     _textController = TextEditingController();
     _scrollController = ScrollController();
-    WidgetsBinding.instance.addObserver(this);
 
     // Initial setup
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,6 +67,39 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     });
   }
 
+  void _listenForNewMessages() {
+    // Watch for new messages and mark as read if the screen is focused
+    ref.listen(messagesProvider(widget.chatId), (previous, next) {
+      if (!mounted) return;
+
+      if (next.hasValue && next.value!.isNotEmpty) {
+        final lastMsg = next.value!.last;
+        final myUid = ref.read(authRepositoryProvider).currentUser?.id ?? '';
+
+        // Only mark as read if it's from the other peer and currently unread
+        if (lastMsg.senderUid != myUid && !lastMsg.read) {
+          _markAsRead();
+        }
+      }
+    });
+  }
+
+  Future<void> _markAsRead() async {
+    if (!mounted) return;
+
+    final myUid = ref.read(authRepositoryProvider).currentUser?.id ?? '';
+    if (myUid.isNotEmpty) {
+      try {
+        await ref.read(chatRepositoryProvider).markAsRead(widget.chatId, myUid);
+        if (mounted) {
+          ref.invalidate(unreadCountsProvider);
+        }
+      } catch (e) {
+        debugPrint('SIGNAL_CHAT: Failed to mark as read: $e');
+      }
+    }
+  }
+
   void _initializeChat() {
     final myUid = ref.read(authRepositoryProvider).currentUser?.id ?? '';
     if (myUid.isNotEmpty) {
@@ -76,28 +108,8 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     ref.read(activeChatIdProvider.notifier).state = widget.chatId;
   }
 
-  Future<void> _markAsRead() async {
-    final myUid = ref.read(authRepositoryProvider).currentUser?.id ?? '';
-    if (myUid.isNotEmpty) {
-      await ref.read(chatRepositoryProvider).markAsRead(widget.chatId, myUid);
-      ref.invalidate(unreadCountsProvider);
-    }
-  }
-
-  @override
-  void didChangeMetrics() {
-    super.didChangeMetrics();
-    final view = View.of(context);
-    final bottomInset = view.viewInsets.bottom / view.devicePixelRatio;
-    ref.read(signalChatControllerProvider(widget.chatId).notifier).setKeyboardWarped(
-      bottomInset > 50,
-      height: bottomInset > 50 ? bottomInset : null,
-    );
-  }
-
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _vanishingTicker?.cancel();
     _textController.dispose();
     _scrollController.dispose();
@@ -109,17 +121,24 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
   Widget build(BuildContext context) {
     final myUid = ref.watch(authRepositoryProvider).currentUser?.id ?? '';
     final ageGroupValue = ref.watch(currentAgeGroupProvider);
-    final ageGroup = ageGroupValue; // Remove ?? AgeGroup.cadet as Provider already provides a default (Safe)
+    final ageGroup =
+        ageGroupValue; // Remove ?? AgeGroup.cadet as Provider already provides a default (Safe)
     final isGroup = widget.otherUid == 'group';
-    
-    final chatsAsync = ref.watch(myChatsProvider);
-    final chat = chatsAsync.whenOrNull(data: (list) => list.any((c) => c.chatId == widget.chatId) 
-        ? list.firstWhere((c) => c.chatId == widget.chatId)
-        : null);
 
-    final isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+    final chatsAsync = ref.watch(myChatsProvider);
+    final chat = chatsAsync.whenOrNull(
+        data: (list) => list.any((c) => c.chatId == widget.chatId)
+            ? list.firstWhere((c) => c.chatId == widget.chatId)
+            : null);
+
+    _listenForNewMessages();
+
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       extendBody: true,
       extendBodyBehindAppBar: true,
       appBar: SignalChatAppBar(
@@ -130,7 +149,8 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
         onVanishingDialog: () => _showVanishingDialog(context, chat),
         onDeleteChat: () => _confirmDeleteChat(context, chat),
         onRepairSession: () => _repairSignalSession(),
-        onGroupAction: (action, chatObj) => _handleGroupAction(context, action, chatObj),
+        onGroupAction: (action, chatObj) =>
+            _handleGroupAction(context, action, chatObj),
       ),
       body: ReactionOverlayLayer(
         child: Stack(
@@ -142,50 +162,70 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
                     myUid: myUid,
                   ),
                 Expanded(
-                  child: Column(
-                    children: [
-                      if (isGroup) PinnedMessagesBar(chatId: widget.chatId),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            MessageListView(
-                              chatId: widget.chatId,
-                              myUid: myUid,
-                              otherUid: widget.otherUid,
-                              ageGroup: ageGroup,
-                              chat: chat,
-                              scrollController: _scrollController,
-                              onReply: (msg) => ref.read(signalChatControllerProvider(widget.chatId).notifier).setReplyingTo(msg),
-                              onLongPress: (pos, msg) => _showFocusedOverlay(pos, msg),
-                              onTap: () {
-                                final controller = ref.read(signalChatControllerProvider(widget.chatId).notifier);
-                                if (ref.read(signalChatControllerProvider(widget.chatId)).replyingTo != null) {
-                                  controller.setReplyingTo(null);
-                                }
-                              },
-                            ),
-                            MentionOverlay(
-                              chatId: widget.chatId,
-                              textController: _textController,
-                            ),
-                          ],
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.only(bottom: keyboardInset),
+                    child: Column(
+                      children: [
+                        if (isGroup) PinnedMessagesBar(chatId: widget.chatId),
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              MessageListView(
+                                chatId: widget.chatId,
+                                myUid: myUid,
+                                otherUid: widget.otherUid,
+                                ageGroup: ageGroup,
+                                chat: chat,
+                                scrollController: _scrollController,
+                                onReply: (msg) => ref
+                                    .read(signalChatControllerProvider(
+                                            widget.chatId)
+                                        .notifier)
+                                    .setReplyingTo(msg),
+                                onLongPress: (pos, msg) =>
+                                    _showFocusedOverlay(pos, msg),
+                                onTap: () {
+                                  final controller = ref.read(
+                                      signalChatControllerProvider(
+                                              widget.chatId)
+                                          .notifier);
+                                  if (ref
+                                          .read(signalChatControllerProvider(
+                                              widget.chatId))
+                                          .replyingTo !=
+                                      null) {
+                                    controller.setReplyingTo(null);
+                                  }
+                                },
+                              ),
+                              MentionOverlay(
+                                chatId: widget.chatId,
+                                textController: _textController,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      ConversationReplyPreview(chatId: widget.chatId),
-                      TypingIndicator(chatId: widget.chatId, otherUid: widget.otherUid),
-                      ChatInputBar(
-                        chatId: widget.chatId,
-                        otherUid: widget.otherUid,
-                        ageGroup: ageGroup,
-                        isSpamMode: widget.isSpamMode,
-                        textController: _textController,
-                      ),
-                    ],
+                        ConversationReplyPreview(chatId: widget.chatId),
+                        TypingIndicator(
+                            chatId: widget.chatId, otherUid: widget.otherUid),
+                        ChatInputBar(
+                          chatId: widget.chatId,
+                          otherUid: widget.otherUid,
+                          ageGroup: ageGroup,
+                          isSpamMode: widget.isSpamMode,
+                          textController: _textController,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-            if (_focusedMessage != null && _focusedPosition != null && _focusedSize != null)
+            if (_focusedMessage != null &&
+                _focusedPosition != null &&
+                _focusedSize != null)
               FocusedMessageOverlay(
                 message: _focusedMessage!,
                 messageGlobalPosition: _focusedPosition!,
@@ -196,23 +236,28 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
                   chatId: widget.chatId,
                   callerAgeGroup: ageGroup,
                   otherUid: widget.otherUid,
-                  isPinned: chat?.pinnedMessages.contains(_focusedMessage!.messageId) ?? false,
+                  isPinned: chat?.pinnedMessages
+                          .contains(_focusedMessage!.messageId) ??
+                      false,
                 ),
                 onDismiss: () => setState(() {
                   _focusedMessage = null;
                   _focusedPosition = null;
                   _focusedSize = null;
                 }),
-                onReply: (msg) => ref.read(signalChatControllerProvider(widget.chatId).notifier).setReplyingTo(msg),
+                onReply: (msg) => ref
+                    .read(signalChatControllerProvider(widget.chatId).notifier)
+                    .setReplyingTo(msg),
                 onPin: (msg) => _handlePin(msg),
                 onDelete: (msg) => _handleDelete(msg),
                 onRecall: (msg) => _handleRecall(msg),
                 onEdit: (msg) => _handleEdit(msg),
-                onReaction: (code) => ref.read(chatRepositoryProvider).toggleMessageSpark(
-                  _focusedMessage!.messageId, 
-                  myUid,
-                  reaction: code,
-                ),
+                onReaction: (code) =>
+                    ref.read(chatRepositoryProvider).toggleMessageSpark(
+                          _focusedMessage!.messageId,
+                          myUid,
+                          reaction: code,
+                        ),
               ),
           ],
         ),
@@ -239,15 +284,20 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     } else {
       newPins.add(message.messageId);
     }
-    await ref.read(chatRepositoryProvider).updatePinnedMessages(widget.chatId, newPins);
+    await ref
+        .read(chatRepositoryProvider)
+        .updatePinnedMessages(widget.chatId, newPins);
   }
 
   Future<void> _handleDelete(MessageModel message) async {
-    await ref.read(chatRepositoryProvider).deleteMessageForMe(message.messageId);
+    await ref
+        .read(chatRepositoryProvider)
+        .deleteMessageForMe(message.messageId);
   }
 
   Future<void> _handleRecall(MessageModel message) async {
-    final notifier = ref.read(signalChatControllerProvider(widget.chatId).notifier);
+    final notifier =
+        ref.read(signalChatControllerProvider(widget.chatId).notifier);
     if (!notifier.canModifySignal(message)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -259,11 +309,14 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     }
 
     HapticFeedback.mediumImpact();
-    await ref.read(chatRepositoryProvider).deleteMessageForEveryone(message.messageId);
+    await ref
+        .read(chatRepositoryProvider)
+        .deleteMessageForEveryone(message.messageId);
   }
 
   void _handleEdit(MessageModel message) {
-    final notifier = ref.read(signalChatControllerProvider(widget.chatId).notifier);
+    final notifier =
+        ref.read(signalChatControllerProvider(widget.chatId).notifier);
     if (!notifier.canModifySignal(message)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -277,7 +330,7 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     HapticFeedback.lightImpact();
     notifier.setEditingMessage(message);
     _textController.text = message.decryptedContent ?? message.content;
-    
+
     // Focus the text field
     FocusScope.of(context).requestFocus();
   }
@@ -304,26 +357,31 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
     );
   }
 
-  Widget _buildVanishingOption(BuildContext context, String label, int? seconds, ChatModel? chat) {
+  Widget _buildVanishingOption(
+      BuildContext context, String label, int? seconds, ChatModel? chat) {
     final isSelected = chat?.vanishingDuration == seconds;
     return ListTile(
       title: Text(label),
-      trailing: isSelected ? const Icon(Icons.check, color: Color(0xFF4FC3F7)) : null,
+      trailing:
+          isSelected ? const Icon(Icons.check, color: Color(0xFF4FC3F7)) : null,
       onTap: () async {
         Navigator.pop(context);
         try {
           final myUid = ref.read(authRepositoryProvider).currentUser?.id ?? '';
-          final members = chat?.participants ?? (widget.otherUid == 'group' ? [myUid] : [myUid, widget.otherUid]);
+          final members = chat?.participants ??
+              (widget.otherUid == 'group' ? [myUid] : [myUid, widget.otherUid]);
           await ref.read(chatRepositoryProvider).updateVanishingDuration(
-            chatId: widget.chatId,
-            participants: members,
-            durationSeconds: seconds,
-          );
+                chatId: widget.chatId,
+                participants: members,
+                durationSeconds: seconds,
+              );
         } catch (e) {
           if (context.mounted) {
             final l10n = AppLocalizations.of(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n?.failedPrefix(e.toString()) ?? 'Failed: $e')),
+              SnackBar(
+                  content:
+                      Text(l10n?.failedPrefix(e.toString()) ?? 'Failed: $e')),
             );
           }
         }
@@ -383,10 +441,16 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Repair Discussion?'),
-        content: const Text('This will reset your secure encryption keys for this specific chat. Use this if you see "Decryption Failed" errors.'),
+        content: const Text(
+            'This will reset your secure encryption keys for this specific chat. Use this if you see "Decryption Failed" errors.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Repair', style: TextStyle(fontWeight: FontWeight.bold))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Repair',
+                  style: TextStyle(fontWeight: FontWeight.bold))),
         ],
       ),
     );
@@ -395,16 +459,20 @@ class _SignalChatScreenState extends ConsumerState<SignalChatScreen> with Widget
       // Invalidate the message cache so every message is re-attempted for decryption.
       ref.invalidate(messagesProvider(widget.chatId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Discussion repaired. Please send a new signal.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Discussion repaired. Please send a new signal.')));
       }
     }
   }
 
   void _handleGroupAction(BuildContext context, String action, ChatModel chat) {
     if (action == 'silence') {
-      showDialog(context: context, builder: (ctx) => SilenceClusterDialog(chatId: chat.chatId));
+      showDialog(
+          context: context,
+          builder: (ctx) => SilenceClusterDialog(chatId: chat.chatId));
     } else if (action == 'info') {
-      showDialog(context: context, builder: (ctx) => ClusterCorePopup(chat: chat));
+      showDialog(
+          context: context, builder: (ctx) => ClusterCorePopup(chat: chat));
     }
   }
 }

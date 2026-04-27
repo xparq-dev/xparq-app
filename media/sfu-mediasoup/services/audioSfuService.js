@@ -98,12 +98,19 @@ class AudioSfuService extends EventEmitter {
             candidate.peerId !== peerId,
         );
         if (duplicateLocalPeer) {
-          throw new Error(
-            `User ${userId} already has an active peer in room ${roomId}.`,
-          );
+          await this.#replacePeerForRejoin({
+            roomId,
+            userId,
+            stalePeerId: duplicateLocalPeer.peerId,
+            replacementPeerId: peerId,
+          });
         }
 
         let room = this.routerRegistry.getRoomIfExists(roomId);
+        if (room) {
+          this.#registerPeerLocal(room, { callId, peerId, userId, metadata });
+        }
+
         await this.stateService.claimRoomLease({
           callId,
           roomId,
@@ -113,6 +120,8 @@ class AudioSfuService extends EventEmitter {
 
         if (!room) {
           room = await this.routerRegistry.ensureRoom(roomId);
+          this.#registerPeerLocal(room, { callId, peerId, userId, metadata });
+          
           await this.stateService.claimRoomLease({
             callId,
             roomId,
@@ -129,26 +138,6 @@ class AudioSfuService extends EventEmitter {
           requestId: joinRequestId,
           metadata,
         });
-
-        if (!existingPeer) {
-          this.peers.set(peerId, {
-            callId,
-            peerId,
-            userId,
-            roomId,
-            metadata,
-            transports: new Set(),
-            producers: new Set(),
-            consumers: new Set(),
-          });
-        }
-
-        this.roomSessions.set(roomId, {
-          callId,
-          roomId,
-          workerId: room.workerId,
-        });
-        this.routerRegistry.addPeer(roomId, peerId);
 
         return {
           callId,
@@ -168,7 +157,12 @@ class AudioSfuService extends EventEmitter {
   async leaveRoom({ roomId, peerId, reason = null }) {
     this.#assertStarted();
 
-    const peer = this.#getPeer(peerId);
+    const peer = this.peers.get(peerId);
+    if (!peer) {
+      await this.stateService.markPeerLeft({ peerId, reason });
+      return;
+    }
+
     if (peer.roomId !== roomId) {
       throw new Error(`Peer ${peerId} is not part of room ${roomId}.`);
     }
@@ -308,8 +302,8 @@ class AudioSfuService extends EventEmitter {
     appData = {},
   }) {
     this.#assertStarted();
-    if (kind !== "audio") {
-      throw new Error("This SFU only accepts audio producers.");
+    if (!["audio", "video"].includes(kind)) {
+      throw new Error(`Unsupported producer kind: ${kind}.`);
     }
 
     const producerRequestId = requestId || `produce:${peerId}:${kind}`;
@@ -344,7 +338,7 @@ class AudioSfuService extends EventEmitter {
               ...appData,
               roomId,
               peerId,
-              mediaKind: "audio",
+              mediaKind: kind,
             },
           });
         } catch (error) {
@@ -458,7 +452,7 @@ class AudioSfuService extends EventEmitter {
         rtpCapabilities,
       })
     ) {
-      throw new Error("Router cannot consume the requested audio producer.");
+      throw new Error("Router cannot consume the requested producer.");
     }
 
     let consumer;
@@ -471,7 +465,7 @@ class AudioSfuService extends EventEmitter {
           roomId,
           peerId,
           remotePeerId: producerRecord.peerId,
-          mediaKind: "audio",
+          mediaKind: producerRecord.kind,
         },
       });
     } catch (error) {
@@ -564,6 +558,53 @@ class AudioSfuService extends EventEmitter {
     if (!peer.transports.has(transportId)) {
       throw new Error(`Transport ${transportId} is not owned by peer ${peerId}.`);
     }
+  }
+
+  async #replacePeerForRejoin({
+    roomId,
+    userId,
+    stalePeerId,
+    replacementPeerId,
+  }) {
+    const stalePeer = this.peers.get(stalePeerId);
+    if (!stalePeer) {
+      return;
+    }
+
+    if (stalePeer.roomId !== roomId || stalePeer.userId !== userId) {
+      throw new Error(
+        `User ${userId} already has an active peer in room ${roomId}.`,
+      );
+    }
+
+    await this.leaveRoom({
+      roomId,
+      peerId: stalePeerId,
+      reason: `peer_replaced:${replacementPeerId}`,
+    });
+  }
+
+  #registerPeerLocal(room, { callId, peerId, userId, metadata }) {
+    if (!this.peers.has(peerId)) {
+      this.peers.set(peerId, {
+        callId,
+        peerId,
+        userId,
+        roomId: room.roomId,
+        metadata,
+        transports: new Set(),
+        producers: new Set(),
+        consumers: new Set(),
+      });
+    }
+
+    this.roomSessions.set(room.roomId, {
+      callId,
+      roomId: room.roomId,
+      workerId: room.workerId,
+    });
+
+    this.routerRegistry.addPeer(room.roomId, peerId);
   }
 
   async #closePeerProducers(peerId) {

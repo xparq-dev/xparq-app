@@ -5,14 +5,14 @@ const { createAudioSfuService } = require('./index');
 async function runTest() {
   const sfu = await createAudioSfuService();
 
-  const callId = 'test-call-1';
-  const roomId = 'room-1';
+  const callId = 'a1b2c3d4-e5f6-4a5b-8c9d-0123456789ab';
+  const roomId = 'room_a1b2c3d4-e5f6-4a5b-8c9d-0123456789ab';
 
-  const userA = 'user-a';
-  const userB = 'user-b';
+  const userA = '00000000-0000-0000-0000-000000000001';
+  const userB = '00000000-0000-0000-0000-000000000002';
 
-  const peerA = 'peer-a';
-  const peerB = 'peer-b';
+  const peerA = 'peer-a-uuid';
+  const peerB = 'peer-b-uuid';
 
   console.log('\n=== JOIN ROOM ===');
 

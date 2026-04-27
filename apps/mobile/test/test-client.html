@@ -30,6 +30,7 @@ let pc = null;
 let localStream = null;
 let token = null;
 let socket = null;
+let hasJoined = false; // ← guard ป้องกัน join ซ้ำ
 
 // ✅ LOGIN
 async function login() {
@@ -58,8 +59,12 @@ async function login() {
 }
 
 // ✅ CONNECT SOCKET
-
 function connectSocket() {
+  if (socket) {
+    console.log("⚠️ Socket already connected");
+    return;
+  }
+
   socket = io("https://api.xparq.me", {
     path: "/socket.io",
     transports: ["websocket"],
@@ -115,6 +120,11 @@ function joinRoom() {
     return;
   }
 
+  if (hasJoined) {
+    console.log("⚠️ Already joined room");
+    return;
+  }
+
   console.log("JOIN ROOM CLICKED");
 
   socket.emit("joinRoom", {
@@ -122,11 +132,22 @@ function joinRoom() {
     roomId: "room_test123"
   }, (res) => {
     console.log("JOIN RESPONSE:", res);
+    if (res.ok) {
+      hasJoined = true;
+      console.log("✅ Join room success");
+    } else {
+      console.log("❌ Join room failed:", res.error);
+    }
   });
 }
 
 // ✅ MEDIA
 async function startMedia() {
+  if (localStream) {
+    console.log("⚠️ Media already started");
+    return;
+  }
+
   localStream = await navigator.mediaDevices.getUserMedia({
     video: true,
     audio: true
@@ -141,8 +162,21 @@ async function startMedia() {
   console.log("MEDIA READY");
 }
 
+// ✅ STOP MEDIA
+function stopMedia() {
+  if (!localStream) return;
+  localStream.getTracks().forEach(track => track.stop());
+  localStream = null;
+  console.log("MEDIA STOPPED");
+}
+
 // ✅ PEER
 function createPeer() {
+  if (pc) {
+    pc.close();
+    pc = null;
+  }
+
   pc = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   });
@@ -158,15 +192,30 @@ function createPeer() {
     video.srcObject = event.streams[0];
     video.autoplay = true;
     document.body.appendChild(video);
+    console.log("🎥 REMOTE TRACK RECEIVED");
   };
 
-  localStream.getTracks().forEach(track => {
-    pc.addTrack(track, localStream);
-  });
+  if (localStream) {
+    localStream.getTracks().forEach(track => {
+      pc.addTrack(track, localStream);
+    });
+  }
 }
 
-// ✅ CALL (Caller)
+// ✅ CALL INVITE (Caller)
 async function callInvite() {
+  if (!localStream) {
+    console.log("❌ Start media first");
+    alert("กรุณากด Start Media ก่อนครับ");
+    return;
+  }
+
+  if (!hasJoined) {
+    console.log("❌ Join room first");
+    alert("กรุณากด Join Room ก่อนครับ");
+    return;
+  }
+
   createPeer();
 
   const offer = await pc.createOffer();
@@ -177,9 +226,18 @@ async function callInvite() {
   console.log("OFFER SENT");
 }
 
-// 🔧 กัน error
-function callAccept() {}
-function callReject() {}
+// ✅ CALL ACCEPT (Callee) — จัดการผ่าน socket.on("offer") อัตโนมัติ
+function callAccept() {
+  console.log("⚠️ Call accept is handled automatically via socket offer event");
+}
+
+function callReject() {
+  if (pc) {
+    pc.close();
+    pc = null;
+    console.log("CALL REJECTED");
+  }
+}
 </script>
 
 </body>

@@ -2,6 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
+import 'package:xparq_app/features/chat/data/utils/chat_identity_metadata.dart';
+import 'package:xparq_app/features/chat/domain/models/chat_identity.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import '../../data/services/message_encryption_service.dart';
 import '../../data/services/signal/media_encryption_service.dart';
@@ -141,16 +143,32 @@ class ChatRepository {
         .maybeSingle();
 
     if (existing == null) {
+      final initialMetadata = await _buildDirectChatIdentityMetadata(
+        participantUids: [myUid, otherUid],
+      );
       final chatData = {
         'id': chatId,
         'participants': [myUid, otherUid],
         'created_at': DateTime.now().toIso8601String(),
         'is_spam': false,
+        if (initialMetadata.isNotEmpty) 'metadata': initialMetadata,
       };
       await _client.from('chats').insert(chatData);
       return ChatModel.fromMap(chatData);
     }
-    return ChatModel.fromMap(existing);
+
+    final existingChat = ChatModel.fromMap(existing);
+    final refreshedMetadata = await _refreshDirectChatIdentityMetadata(
+      chatId: chatId,
+      existingMetadata: existingChat.metadata,
+      participantUids: [myUid, otherUid],
+    );
+
+    if (refreshedMetadata != null) {
+      return existingChat.copyWith(metadata: refreshedMetadata);
+    }
+
+    return existingChat;
   }
 
   /// Create a new group chat.
@@ -172,6 +190,69 @@ class ChatRepository {
     };
     await _client.from('chats').insert(chatData);
     return ChatModel.fromMap(chatData);
+  }
+
+  Future<Map<String, dynamic>> _buildDirectChatIdentityMetadata({
+    required Iterable<String> participantUids,
+    Map<String, PlanetModel> knownProfiles = const {},
+    Map<String, dynamic>? seedMetadata,
+  }) async {
+    var metadata = Map<String, dynamic>.from(seedMetadata ?? const {});
+
+    for (final uid in participantUids.toSet()) {
+      if (chatMetadataHasParticipantName(metadata, uid)) continue;
+
+      final knownProfile = knownProfiles[uid];
+      if (knownProfile != null) {
+        metadata = mergeParticipantProfileIntoChatMetadata(metadata, knownProfile);
+        continue;
+      }
+
+      final profile = await getMinimalProfile(uid);
+      if (profile != null) {
+        metadata = mergeParticipantProfileIntoChatMetadata(metadata, profile);
+      }
+    }
+
+    return metadata;
+  }
+
+  Future<Map<String, dynamic>?> _refreshDirectChatIdentityMetadata({
+    required String chatId,
+    Map<String, dynamic>? existingMetadata,
+    required Iterable<String> participantUids,
+    Map<String, PlanetModel> knownProfiles = const {},
+  }) async {
+    try {
+      final currentMetadata = existingMetadata ?? await _fetchChatMetadata(chatId);
+      final merged = await _buildDirectChatIdentityMetadata(
+        participantUids: participantUids,
+        knownProfiles: knownProfiles,
+        seedMetadata: currentMetadata,
+      );
+
+      if (mapEquals(currentMetadata, merged)) {
+        return null;
+      }
+
+      await _client.from('chats').update({'metadata': merged}).eq('id', chatId);
+      return merged;
+    } catch (e) {
+      debugPrint(
+        'ChatRepository: _refreshDirectChatIdentityMetadata failed for $chatId: $e',
+      );
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> _fetchChatMetadata(String chatId) async {
+    final row = await _client
+        .from('chats')
+        .select('metadata')
+        .eq('id', chatId)
+        .maybeSingle();
+
+    return Map<String, dynamic>.from(row?['metadata'] as Map? ?? const {});
   }
 
   /// Stream of all chats (non-spam) the user is a participant in.
@@ -341,6 +422,11 @@ class ChatRepository {
     final senderUid = senderProfile.id;
     final isHighRisk = senderProfile.isHighRiskCreator;
     final isSpam = isHighRisk && recipientAgeGroup == AgeGroup.cadet;
+    await _refreshDirectChatIdentityMetadata(
+      chatId: chatId,
+      participantUids: [senderUid, otherUid],
+      knownProfiles: {senderUid: senderProfile},
+    );
 
     // 1. Encrypt message (Phase 2: passes otherUid for Signal Protocol)
     final encrypted = await MessageEncryptionService.encrypt(
@@ -359,7 +445,7 @@ class ChatRepository {
       isSpam: isSpam,
       plaintextPreview: 'Encrypted message',
       messageType: messageType,
-      metadata: {
+      metadata: mergeSenderIdentityMetadata({
         'client_pending_id': clientPendingId,
         if (clientPendingId != null)
           'client_sent_at': DateTime.now().toIso8601String(),
@@ -377,7 +463,7 @@ class ChatRepository {
         if (mentions != null && mentions.isNotEmpty) 'mentions': mentions,
         if (metadata != null)
           ...metadata, // Moved to end to allow overrides if ever needed, but specifically to NOT be overridden by defaults
-      },
+      }, senderProfile),
       expiresAt: expiresAt,
     );
   }
@@ -761,6 +847,12 @@ class ChatRepository {
     required PlanetModel senderProfile,
     required String targetUid,
   }) async {
+    await _refreshDirectChatIdentityMetadata(
+      chatId: chatId,
+      participantUids: [senderProfile.id, targetUid],
+      knownProfiles: {senderProfile.id: senderProfile},
+    );
+
     // 1. Upsert request record (idempotent — no duplicate pending requests)
     final requestRecord = {
       'requester_uid': senderProfile.id,
@@ -783,6 +875,7 @@ class ChatRepository {
       isOfflineRelay: false,
       isSpam: false,
       plaintextPreview: 'Request contact info',
+      metadata: mergeSenderIdentityMetadata(null, senderProfile),
     );
   }
 
@@ -806,6 +899,12 @@ class ChatRepository {
         .eq('id', requestId);
 
     if (approved) {
+      await _refreshDirectChatIdentityMetadata(
+        chatId: chatId,
+        participantUids: [ownerProfile.id, requesterUid],
+        knownProfiles: {ownerProfile.id: ownerProfile},
+      );
+
       // Send contact card back to requester
       await _sendChatMessageRpc(
         chatId: chatId,
@@ -815,6 +914,7 @@ class ChatRepository {
         isOfflineRelay: false,
         isSpam: false,
         plaintextPreview: 'Shared contact info',
+        metadata: mergeSenderIdentityMetadata(null, ownerProfile),
       );
     }
   }
@@ -901,6 +1001,69 @@ class ChatRepository {
       return PlanetModel.fromMap(doc, uid);
     } catch (e) {
       debugPrint('ChatRepository: getMinimalProfile error: $e');
+      return null;
+    }
+  }
+
+  Future<ChatFallbackIdentity?> fetchLatestIncomingMessageIdentity({
+    required String chatId,
+    required String currentUid,
+  }) async {
+    try {
+      final row = await _client
+          .from('messages')
+          .select('sender_id, metadata')
+          .eq('chat_id', chatId)
+          .neq('sender_id', currentUid)
+          .order('timestamp', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (row == null) return null;
+
+      final senderUid = row['sender_id']?.toString();
+      final metadata = Map<String, dynamic>.from(row['metadata'] as Map? ?? {});
+      final senderName = metadata['sender_name']?.toString().trim();
+      final senderHandle = metadata['sender_handle']?.toString().trim();
+      final senderAvatar = metadata['sender_avatar']?.toString().trim();
+
+      if (senderName == null || senderName.isEmpty) return null;
+
+      if (senderUid != null && senderUid.isNotEmpty) {
+        try {
+          final currentMetadata = await _fetchChatMetadata(chatId);
+          final mergedMetadata = mergeParticipantIdentityMetadata(
+            currentMetadata,
+            uid: senderUid,
+            displayName: senderName,
+            handle: senderHandle,
+            avatarUrl: senderAvatar,
+          );
+          if (!mapEquals(currentMetadata, mergedMetadata)) {
+            await _client
+                .from('chats')
+                .update({'metadata': mergedMetadata})
+                .eq('id', chatId);
+          }
+        } catch (e) {
+          debugPrint(
+            'ChatRepository: unable to persist latest incoming identity for $chatId: $e',
+          );
+        }
+      }
+
+      final displayName = senderHandle != null && senderHandle.isNotEmpty
+          ? '$senderName (@$senderHandle)'
+          : senderName;
+
+      return ChatFallbackIdentity(
+        displayName: displayName,
+        avatarUrl: senderAvatar != null && senderAvatar.isNotEmpty
+            ? senderAvatar
+            : null,
+      );
+    } catch (e) {
+      debugPrint('ChatRepository: fetchLatestIncomingMessageIdentity error: $e');
       return null;
     }
   }

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert' as dart_convert;
 import 'dart:io' as dart_io;
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as dart_path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:xparq_app/shared/enums/age_group.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
+import 'package:xparq_app/features/chat/data/utils/chat_identity_metadata.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/data/repositories/chat_base_repository.dart';
 import 'package:xparq_app/features/chat/data/repositories/message_repository.dart';
@@ -31,6 +33,61 @@ class ChatService {
        _messageRepo = messageRepo,
        _contactRepo = contactRepo,
        _client = client ?? Supabase.instance.client;
+
+  Future<Map<String, dynamic>> _fetchChatMetadata(String chatId) async {
+    final row = await _client
+        .from('chats')
+        .select('metadata')
+        .eq('id', chatId)
+        .maybeSingle();
+
+    return Map<String, dynamic>.from(row?['metadata'] as Map? ?? const {});
+  }
+
+  Future<PlanetModel?> _fetchMinimalProfile(String uid) async {
+    try {
+      final profile = await _client
+          .from('profiles')
+          .select()
+          .eq('id', uid)
+          .maybeSingle();
+      if (profile == null) return null;
+      return PlanetModel.fromMap(profile, uid);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _ensureDirectChatIdentityMetadata({
+    required String chatId,
+    required Iterable<String> participantUids,
+    Map<String, PlanetModel> knownProfiles = const {},
+  }) async {
+    try {
+      var metadata = await _fetchChatMetadata(chatId);
+      final originalMetadata = Map<String, dynamic>.from(metadata);
+
+      for (final uid in participantUids.toSet()) {
+        if (chatMetadataHasParticipantName(metadata, uid)) continue;
+
+        final knownProfile = knownProfiles[uid] ?? await _fetchMinimalProfile(uid);
+        if (knownProfile != null) {
+          metadata = mergeParticipantProfileIntoChatMetadata(
+            metadata,
+            knownProfile,
+          );
+        }
+      }
+
+      if (mapEquals(metadata, originalMetadata)) return;
+
+      await _client.from('chats').update({'metadata': metadata}).eq('id', chatId);
+    } catch (e) {
+      debugPrint(
+        'ChatService: _ensureDirectChatIdentityMetadata failed for $chatId: $e',
+      );
+    }
+  }
 
   Future<void> sendMessage({
     required String chatId,
@@ -100,6 +157,12 @@ class ChatService {
       final isHighRisk = senderProfile.isHighRiskCreator;
       final isSpam = isHighRisk && recipientAgeGroup == AgeGroup.cadet;
 
+      await _ensureDirectChatIdentityMetadata(
+        chatId: chatId,
+        participantUids: [senderUid, otherUid],
+        knownProfiles: {senderUid: senderProfile},
+      );
+
       final encrypted = await MessageEncryptionService.encrypt(
         plaintext,
         chatId,
@@ -115,7 +178,7 @@ class ChatService {
         isSpam: isSpam,
         plaintextPreview: 'Encrypted message',
         messageType: messageType,
-        metadata: {
+        metadata: mergeSenderIdentityMetadata({
           if (metadata != null) ...metadata,
           'client_pending_id': clientPendingId,
           if (clientPendingId != null)
@@ -127,7 +190,7 @@ class ChatService {
                 replyTo.decryptedContent ?? replyTo.content.substring(0, 50),
           },
           if (mentions != null && mentions.isNotEmpty) 'mentions': mentions,
-        },
+        }, senderProfile),
         expiresAt: expiresAt,
       );
     } catch (e) {
@@ -195,6 +258,12 @@ class ChatService {
     required PlanetModel senderProfile,
     required String targetUid,
   }) async {
+    await _ensureDirectChatIdentityMetadata(
+      chatId: chatId,
+      participantUids: [senderProfile.id, targetUid],
+      knownProfiles: {senderProfile.id: senderProfile},
+    );
+
     await _contactRepo.sendContactRequest(
       requesterUid: senderProfile.id,
       targetUid: targetUid,
@@ -210,6 +279,7 @@ class ChatService {
       isOfflineRelay: false,
       isSpam: false,
       plaintextPreview: 'Request contact info',
+      metadata: mergeSenderIdentityMetadata(null, senderProfile),
     );
   }
 
@@ -226,6 +296,12 @@ class ChatService {
     );
 
     if (approved) {
+      await _ensureDirectChatIdentityMetadata(
+        chatId: chatId,
+        participantUids: [ownerProfile.id, requesterUid],
+        knownProfiles: {ownerProfile.id: ownerProfile},
+      );
+
       await _messageRepo.insertMessageRpc(
         chatId: chatId,
         senderId: ownerProfile.id,
@@ -234,6 +310,7 @@ class ChatService {
         isOfflineRelay: false,
         isSpam: false,
         plaintextPreview: 'Shared contact info',
+        metadata: mergeSenderIdentityMetadata(null, ownerProfile),
       );
     }
   }

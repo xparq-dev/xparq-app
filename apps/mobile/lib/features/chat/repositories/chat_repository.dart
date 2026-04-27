@@ -6,7 +6,7 @@ import 'package:xparq_app/features/chat/models/message_model.dart';
 
 class ChatRepository {
   ChatRepository({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+      : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
@@ -22,7 +22,7 @@ class ChatRepository {
 
       final response = await _client
           .from('messages')
-          .select('id, content, sender_id, timestamp')
+          .select('id, content, sender_id, timestamp, message_type, metadata')
           .eq('chat_id', chatId)
           .order('timestamp', ascending: true);
 
@@ -61,9 +61,10 @@ class ChatRepository {
         .eq('chat_id', chatId)
         .order('timestamp', ascending: true)
         .map((rows) {
-          final messages =
-              rows.map((row) => MessageModel.fromJson(row)).toList()
-                ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+          final messages = rows
+              .map((row) => MessageModel.fromJson(row))
+              .toList()
+            ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
           return messages;
         })
         .handleError((Object error) {
@@ -104,7 +105,7 @@ class ChatRepository {
 
       final latestMessage = await _client
           .from('messages')
-          .select('id, content, sender_id, timestamp')
+          .select('id, content, sender_id, timestamp, message_type, metadata')
           .eq('chat_id', chatId)
           .eq('sender_id', senderId)
           .order('timestamp', ascending: false)
@@ -147,11 +148,8 @@ class ChatRepository {
       otherUserId: normalizedOtherUserId,
     );
 
-    final existingChat = await _client
-        .from('chats')
-        .select('id')
-        .eq('id', chatId)
-        .maybeSingle();
+    final existingChat =
+        await _client.from('chats').select('id').eq('id', chatId).maybeSingle();
 
     if (existingChat == null) {
       await _client.from('chats').insert(<String, dynamic>{

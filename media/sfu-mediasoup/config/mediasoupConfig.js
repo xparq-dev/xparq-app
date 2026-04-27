@@ -81,6 +81,15 @@ const mediasoupConfig = Object.freeze({
           minptime: 10,
         },
       },
+      {
+        kind: "video",
+        mimeType: "video/VP8",
+        preferredPayloadType: 96,
+        clockRate: 90000,
+        parameters: {
+          "x-google-start-bitrate": 1000,
+        },
+      },
     ],
     audioLevelObserver: {
       maxEntries: 1,

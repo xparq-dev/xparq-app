@@ -8,5 +8,6 @@
         "analysis": true,
         "docs": true,
         "scripts": true
-    }
+    },
+    "cmake.sourceDirectory": "C:/XPARQ/xparq_mobile/apps/mobile/linux"
 }

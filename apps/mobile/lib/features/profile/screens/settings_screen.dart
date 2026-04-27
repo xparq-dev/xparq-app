@@ -162,7 +162,6 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
         ],
-
         _SettingsTile(
           icon: Icons.manage_accounts_outlined,
           iconColor: const Color(0xFF1D9BF0),
@@ -236,17 +235,23 @@ class SettingsScreen extends ConsumerWidget {
         _SettingsTile(
           icon: Icons.bug_report_outlined,
           iconColor: Colors.orange,
-          title: "Diagnostics",
+          title: "Call Diagnostics",
+          subtitle: "Verify Supabase, call API, ICE, and voice socket",
+          onTap: () => context.push(AppRoutes.callDiagnostics),
+        ),
+        _SettingsTile(
+          icon: Icons.receipt_long_outlined,
+          iconColor: Colors.amber,
+          title: "Background Logs",
           subtitle: "View background isolate logs",
           onTap: () => _showDiagnosticsDialog(context),
         ),
-
         const SizedBox(height: 12),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: OutlinedButton.icon(
-          onPressed: isLoading ? null : () => _showSignOutDialog(context, notifier),
+            onPressed:
+                isLoading ? null : () => _showSignOutDialog(context, notifier),
             icon: const Icon(Icons.logout, size: 18),
             label: Text(AppLocalizations.of(context)!.signOutButton),
             style: OutlinedButton.styleFrom(
@@ -304,7 +309,10 @@ class SettingsScreen extends ConsumerWidget {
                   l10n.signOutConfirmMessage,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
                     fontSize: 14,
                   ),
                 ),
@@ -440,9 +448,9 @@ class SettingsScreen extends ConsumerWidget {
                                 final success = await SignalBackupService
                                     .instance
                                     .restoreBackup(
-                                      passController.text,
-                                      lastCid,
-                                    );
+                                  passController.text,
+                                  lastCid,
+                                );
                                 if (context.mounted) {
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -493,12 +501,15 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     const Text(
                       "Background Logs",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.bug_report, size: 20, color: Colors.amber),
+                      icon: const Icon(Icons.bug_report,
+                          size: 20, color: Colors.amber),
                       onPressed: () async {
-                        await IsolateLogger.log("Manual test log from UI isolate.");
+                        await IsolateLogger.log(
+                            "Manual test log from UI isolate.");
                         if (context.mounted) {
                           // Close and reopen is easiest for a quick debug UI
                           Navigator.pop(context);
@@ -548,7 +559,8 @@ class SettingsScreen extends ConsumerWidget {
                           await IsolateLogger.clearLogs();
                           if (context.mounted) Navigator.pop(context);
                         },
-                        child: const Text("Clear Logs", style: TextStyle(color: Colors.red)),
+                        child: const Text("Clear Logs",
+                            style: TextStyle(color: Colors.red)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -626,4 +638,3 @@ class _SettingsTile extends StatelessWidget {
     );
   }
 }
-

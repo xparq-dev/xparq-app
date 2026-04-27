@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
+import 'package:xparq_app/features/call/data/services/call_feedback_service.dart';
 import 'package:xparq_app/features/call/data/services/call_message_service.dart';
 import 'package:xparq_app/features/call/data/services/call_signaling_service.dart';
 import 'package:xparq_app/features/call/data/services/call_socket_service.dart';
@@ -22,11 +23,13 @@ class CallController extends StateNotifier<CallUiState> {
     required CallMessageService callMessageService,
     required CallSocketService callSocketService,
     required MediasoupCallService mediaService,
+    required CallFeedbackService feedbackService,
     required Ref ref,
   })  : _signalingService = signalingService,
         _callMessageService = callMessageService,
         _callSocketService = callSocketService,
         _mediaService = mediaService,
+        _feedbackService = feedbackService,
         _ref = ref,
         super(const CallUiState.initial());
 
@@ -34,6 +37,7 @@ class CallController extends StateNotifier<CallUiState> {
   final CallMessageService _callMessageService;
   final CallSocketService _callSocketService;
   final MediasoupCallService _mediaService;
+  final CallFeedbackService _feedbackService;
   final Ref _ref;
 
   final Set<String> _consumedProducerIds = <String>{};
@@ -52,6 +56,7 @@ class CallController extends StateNotifier<CallUiState> {
     required String peerUid,
     required String peerName,
     required String peerAvatarUrl,
+    bool startWithCamera = false,
   }) async {
     if (state.hasActiveCall) {
       return;
@@ -76,9 +81,29 @@ class CallController extends StateNotifier<CallUiState> {
         peerAvatarUrl: peerAvatarUrl,
         isIncoming: false,
       ),
+      isCameraOn: startWithCamera,
+      hasCameraPreview: false,
       isOverlayVisible: true,
       isSpeakerOn: false,
     );
+
+    if (startWithCamera) {
+      final permission = await Permission.camera.request();
+      if (permission.isGranted) {
+        final actualCameraOn = await _mediaService.setCameraEnabled(true);
+        state = state.copyWith(
+          isCameraOn: actualCameraOn,
+          hasCameraPermission: actualCameraOn,
+          hasCameraPreview: _mediaService.hasLocalCameraPreview,
+        );
+      } else {
+        state = state.copyWith(
+          isCameraOn: false,
+          hasCameraPermission: false,
+          hasCameraPreview: false,
+        );
+      }
+    }
 
     try {
       final response = await _signalingService.invite(
@@ -109,6 +134,8 @@ class CallController extends StateNotifier<CallUiState> {
         callId: session.callId,
         roomId: session.roomId,
       );
+
+      unawaited(_feedbackService.startWaitingTone());
     } catch (error, stackTrace) {
       debugPrint('CALL: startOutgoing failed: $error\n$stackTrace');
       await _failAndAutoDismiss(error.toString());
@@ -146,6 +173,8 @@ class CallController extends StateNotifier<CallUiState> {
         callId: session.callId,
         roomId: session.roomId,
       );
+
+      unawaited(_feedbackService.stopAll());
       await _connectMedia();
     } catch (error, stackTrace) {
       debugPrint('CALL: acceptIncoming failed: $error\n$stackTrace');
@@ -193,6 +222,7 @@ class CallController extends StateNotifier<CallUiState> {
           session: CallSession.fromInviteEvent(event, currentUserId: me),
           isOverlayVisible: true,
         );
+        unawaited(_feedbackService.startRingtone());
         return;
 
       case CallControlEventType.accept:
@@ -205,6 +235,7 @@ class CallController extends StateNotifier<CallUiState> {
           clearError: true,
           isOverlayVisible: true,
         );
+        unawaited(_feedbackService.stopAll());
         await _connectMedia();
         return;
 
@@ -229,6 +260,14 @@ class CallController extends StateNotifier<CallUiState> {
         }
         state = state.copyWith(remoteMediaReady: true);
         _remoteMediaReadyCompleter?.complete();
+        return;
+
+      case CallControlEventType.cameraToggled:
+        if (state.callId != event.callId) {
+          return;
+        }
+        // UI logic: we will soon have a check in producers to see if peer video is available,
+        // but this event allows us to show an immediate "Peer is starting video..." state if we want.
         return;
     }
   }
@@ -284,6 +323,47 @@ class CallController extends StateNotifier<CallUiState> {
     state = state.copyWith(isSpeakerOn: nextSpeakerOn);
   }
 
+  Future<void> toggleCamera() async {
+    final nextCameraOn = !state.isCameraOn;
+
+    if (nextCameraOn) {
+      final permission = await Permission.camera.request();
+      if (!permission.isGranted) {
+        state = state.copyWith(hasCameraPermission: false);
+        return;
+      }
+    }
+
+    final actualCameraOn = await _mediaService.setCameraEnabled(nextCameraOn);
+    state = state.copyWith(
+      isCameraOn: actualCameraOn,
+      hasCameraPermission: state.hasCameraPermission || actualCameraOn,
+      hasCameraPreview: _mediaService.hasLocalCameraPreview,
+    );
+
+    // If connected, start/stop producing video and signal to peer
+    if (state.status == CallStatus.connected) {
+      if (actualCameraOn) {
+        await _mediaService.startProducingVideo();
+      } else {
+        await _mediaService.stopProducingVideo();
+      }
+
+      final session = state.session;
+      final profile = _currentProfile;
+      if (session != null && profile != null) {
+        await _callMessageService.sendCameraToggled(
+          senderProfile: profile,
+          chatId: session.chatId,
+          otherUid: session.peerUserId,
+          callId: session.callId,
+          roomId: session.roomId,
+          isCameraOn: actualCameraOn,
+        );
+      }
+    }
+  }
+
   void dismiss() {
     _dismissTimer?.cancel();
     _stopElapsedTimer();
@@ -317,6 +397,26 @@ class CallController extends StateNotifier<CallUiState> {
     _dismissTimer?.cancel();
 
     try {
+      var shouldEnableCamera = state.isCameraOn;
+      if (shouldEnableCamera) {
+        final cameraPermission = await Permission.camera.request();
+        if (cameraPermission.isGranted) {
+          state = state.copyWith(hasCameraPermission: true);
+        } else {
+          shouldEnableCamera = false;
+          state = state.copyWith(
+            isCameraOn: false,
+            hasCameraPermission: false,
+          );
+        }
+      }
+      final actualCameraOn =
+          await _mediaService.setCameraEnabled(shouldEnableCamera);
+      state = state.copyWith(
+        isCameraOn: actualCameraOn,
+        hasCameraPreview: _mediaService.hasLocalCameraPreview,
+      );
+
       if (!state.joinedLifecycle) {
         await _signalingService.joinLifecycle(
           callId: session.callId,
@@ -342,6 +442,12 @@ class CallController extends StateNotifier<CallUiState> {
         callId: session.callId,
         policyToken: _policyToken,
       );
+
+      // Verify connection stability before proceeding to media setup
+      if (!_callSocketService.isConnected) {
+        throw Exception('Signaling socket disconnected during room join');
+      }
+
       await _initializeJoinedMedia(
         session: session,
         myProfile: myProfile,
@@ -425,6 +531,7 @@ class CallController extends StateNotifier<CallUiState> {
       } catch (_) {}
       _callSocketService.disconnect();
       await _mediaService.dispose();
+      unawaited(_feedbackService.stopAll());
       await WakelockPlus.disable();
     } finally {
       _isShuttingDownMedia = false;
@@ -450,11 +557,26 @@ class CallController extends StateNotifier<CallUiState> {
   }
 
   Future<void> _endAndAutoDismiss(String message) async {
+    final wasConnected = state.status == CallStatus.connected;
+    final prevElapsed = state.elapsedSeconds;
+
     state = state.copyWith(
       status: CallStatus.ended,
       errorMessage: message,
       isOverlayVisible: true,
     );
+
+    // Record the log to chat
+    if (wasConnected) {
+      await _recordCallLog('Voice call ended', durationSeconds: prevElapsed);
+    } else if (state.session?.isIncoming == false) {
+      // Outgoing call that was canceled or not answered
+      await _recordCallLog('Canceled call');
+    } else {
+      // Incoming call that was missed
+      await _recordCallLog('Missed call');
+    }
+
     _dismissTimer?.cancel();
     _dismissTimer = Timer(const Duration(seconds: 2), dismiss);
   }
@@ -465,8 +587,83 @@ class CallController extends StateNotifier<CallUiState> {
       errorMessage: message,
       isOverlayVisible: true,
     );
+
+    await _recordCallLog('Call failed');
+
     _dismissTimer?.cancel();
     _dismissTimer = Timer(const Duration(seconds: 3), dismiss);
+  }
+
+  Future<void> _recordCallLog(String status, {int? durationSeconds}) async {
+    final session = state.session;
+    final profile = _currentProfile;
+    if (session == null || profile == null) return;
+
+    final duration =
+        (durationSeconds ?? 0) > 0 ? _formatDuration(durationSeconds!) : null;
+
+    try {
+      await _callMessageService.sendCallLog(
+        senderProfile: profile,
+        chatId: session.chatId,
+        otherUid: session.peerUserId,
+        callId: session.callId,
+        roomId: session.roomId,
+        status: status,
+        duration: duration,
+      );
+    } catch (e) {
+      debugPrint('CALL: Failed to record call log: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _createTransportWithRetry({
+    required CallSession session,
+    required String direction,
+  }) async {
+    try {
+      return await _callSocketService.createTransport(
+        direction,
+        policyToken: _policyToken,
+      );
+    } on CallSocketException catch (e) {
+      if (_isNoSessionError(e)) {
+        debugPrint(
+            'CALL: NO_SESSION detected during createTransport($direction), re-joining room...');
+        final accessToken =
+            _ref.read(authRepositoryProvider).currentSession?.accessToken;
+        if (accessToken == null || accessToken.isEmpty) {
+          rethrow;
+        }
+
+        // Force a reconnect and joinRoom.
+        await _callSocketService.connect(
+          accessToken: accessToken,
+          forceReconnect: true,
+        );
+        await _callSocketService.joinRoom(
+          roomId: session.roomId,
+          callId: session.callId,
+          policyToken: _policyToken,
+        );
+        // Retry createTransport
+        return await _callSocketService.createTransport(
+          direction,
+          policyToken: _policyToken,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  bool _isNoSessionError(CallSocketException error) {
+    return error.code == 'NO_SESSION' || error.message == 'NO_SESSION';
+  }
+
+  String _formatDuration(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
@@ -527,9 +724,9 @@ class CallController extends StateNotifier<CallUiState> {
     await _mediaService.prepareDevice(routerCapabilities);
     await _mediaService.configureAudioOutput(speakerOn: state.isSpeakerOn);
 
-    final recvOptions = await _callSocketService.createTransport(
-      'recv',
-      policyToken: _policyToken,
+    final recvOptions = await _createTransportWithRetry(
+      session: session,
+      direction: 'recv',
     );
     await _mediaService.createRecvTransport(
       transportOptions: recvOptions,
@@ -569,9 +766,9 @@ class CallController extends StateNotifier<CallUiState> {
 
     await _mediaService.openMicrophone();
 
-    final sendOptions = await _callSocketService.createTransport(
-      'send',
-      policyToken: _policyToken,
+    final sendOptions = await _createTransportWithRetry(
+      session: session,
+      direction: 'send',
     );
     await _mediaService.createSendTransport(
       transportOptions: sendOptions,
@@ -592,6 +789,9 @@ class CallController extends StateNotifier<CallUiState> {
       },
     );
     await _mediaService.startProducingAudio();
+    if (state.isCameraOn) {
+      await _mediaService.startProducingVideo();
+    }
     await WakelockPlus.enable();
   }
 

@@ -9,6 +9,7 @@ import 'package:xparq_app/features/social/providers/orbit_providers.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/chat_tile.dart';
 import 'package:xparq_app/features/chat/presentation/screens/signal_chat_screen.dart';
 import 'package:xparq_app/features/chat/presentation/screens/spam_list_screen.dart';
+import 'package:xparq_app/features/chat/presentation/utils/chat_identity_resolver.dart';
 import 'package:xparq_app/shared/widgets/common/xparq_image.dart';
 
 class ChatListView extends ConsumerWidget {
@@ -259,18 +260,34 @@ class RequestTile extends ConsumerWidget {
     );
     final profileAsync = ref.watch(chatProfileProvider(otherUid));
     final profile = profileAsync.valueOrNull;
-    final displayName = profile != null
-        ? (profile.handle != null && profile.handle!.isNotEmpty
-            ? '${profile.xparqName} (@${profile.handle})'
-            : profile.xparqName)
-        : 'Explorer';
-    final hasAvatar = profile?.photoUrl.isNotEmpty ?? false;
     final l10n = AppLocalizations.of(context)!;
+    final fallbackIdentity = ref
+        .watch(
+          chatPeerFallbackIdentityProvider(
+            ChatPeerIdentityParams(chatId: chat.chatId, currentUid: myUid),
+          ),
+        )
+        .valueOrNull;
+    final displayName = resolveDirectChatDisplayName(
+      chat: chat,
+      myUid: myUid,
+      otherUid: otherUid,
+      savedMeLabel: l10n.chatListSavedMe.toUpperCase(),
+      profile: profile,
+      fallbackIdentity: fallbackIdentity,
+    );
+    final avatarUrl = resolveDirectChatAvatarUrl(
+      chat: chat,
+      otherUid: otherUid,
+      profile: profile,
+      fallbackIdentity: fallbackIdentity,
+    );
+    final hasAvatar = avatarUrl?.isNotEmpty ?? false;
 
     return ListTile(
       leading: CircleAvatar(
         backgroundImage: hasAvatar
-            ? XparqImage.getImageProvider(profile!.photoUrl)
+            ? XparqImage.getImageProvider(avatarUrl!)
             : null,
         child: !hasAvatar ? const Icon(Icons.person) : null,
       ),

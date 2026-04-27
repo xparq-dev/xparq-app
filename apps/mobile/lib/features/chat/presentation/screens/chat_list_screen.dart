@@ -16,6 +16,7 @@ import 'package:xparq_app/features/offline/providers/connectivity_provider.dart'
 import 'package:xparq_app/features/social/widgets/supernova_bar.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/block_report/providers/block_report_providers.dart';
+import 'package:xparq_app/features/chat/presentation/utils/chat_identity_resolver.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
@@ -602,19 +603,32 @@ class _ChatTile extends ConsumerWidget {
     final profileAsync = ref.watch(chatProfileProvider(otherUid));
     final profile =
         profileAsync.valueOrNull ?? ref.watch(profileCacheProvider)[otherUid];
+    final fallbackIdentity = !chat.isGroup && !isSelfChat
+        ? ref
+            .watch(
+              chatPeerFallbackIdentityProvider(
+                ChatPeerIdentityParams(
+                  chatId: chat.chatId,
+                  currentUid: myUid,
+                ),
+              ),
+            )
+            .valueOrNull
+        : null;
 
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     final displayName = chat.isGroup
         ? (chat.name ?? l10n.chatListGroupDefaultName)
-        : (isSelfChat
-              ? l10n.chatListSavedMe.toUpperCase()
-              : (profile != null
-                    ? (profile.handle != null && profile.handle!.isNotEmpty
-                        ? '${profile.xparqName} (@${profile.handle})'
-                        : profile.xparqName)
-                    : 'Explorer'));
+        : resolveDirectChatDisplayName(
+            chat: chat,
+            myUid: myUid,
+            otherUid: otherUid,
+            savedMeLabel: l10n.chatListSavedMe.toUpperCase(),
+            profile: profile,
+            fallbackIdentity: fallbackIdentity,
+          );
 
     final avatarInitials = chat.isGroup
         ? (chat.name?.isNotEmpty == true
@@ -622,15 +636,21 @@ class _ChatTile extends ConsumerWidget {
               : 'G')
         : (isSelfChat
               ? 'ME'
-              : (profile?.xparqName.isNotEmpty == true
-                    ? profile!.xparqName.substring(0, 1).toUpperCase()
+              : (displayName.isNotEmpty
+                    ? displayName.substring(0, 1).toUpperCase()
                     : '?'));
 
+    final directAvatarUrl = resolveDirectChatAvatarUrl(
+      chat: chat,
+      otherUid: otherUid,
+      profile: profile,
+      fallbackIdentity: fallbackIdentity,
+    );
     final hasAvatar = chat.isGroup
         ? (chat.groupAvatar?.isNotEmpty ?? false)
-        : (!isSelfChat && (profile?.photoUrl.isNotEmpty ?? false));
+        : (!isSelfChat && (directAvatarUrl?.isNotEmpty ?? false));
 
-    final avatarUrl = chat.isGroup ? chat.groupAvatar : profile?.photoUrl;
+    final avatarUrl = chat.isGroup ? chat.groupAvatar : directAvatarUrl;
     final isOnline =
         !chat.isGroup && !isSelfChat && (profile?.isActuallyOnline ?? false);
 
@@ -1179,18 +1199,34 @@ class _RequestTile extends ConsumerWidget {
     );
     final profileAsync = ref.watch(chatProfileProvider(otherUid));
     final profile = profileAsync.valueOrNull;
-    final displayName = profile != null
-        ? (profile.handle != null && profile.handle!.isNotEmpty
-            ? '${profile.xparqName} (@${profile.handle})'
-            : profile.xparqName)
-        : 'Explorer';
-    final hasAvatar = profile?.photoUrl.isNotEmpty ?? false;
     final l10n = AppLocalizations.of(context)!;
+    final fallbackIdentity = ref
+        .watch(
+          chatPeerFallbackIdentityProvider(
+            ChatPeerIdentityParams(chatId: chat.chatId, currentUid: myUid),
+          ),
+        )
+        .valueOrNull;
+    final displayName = resolveDirectChatDisplayName(
+      chat: chat,
+      myUid: myUid,
+      otherUid: otherUid,
+      savedMeLabel: l10n.chatListSavedMe.toUpperCase(),
+      profile: profile,
+      fallbackIdentity: fallbackIdentity,
+    );
+    final avatarUrl = resolveDirectChatAvatarUrl(
+      chat: chat,
+      otherUid: otherUid,
+      profile: profile,
+      fallbackIdentity: fallbackIdentity,
+    );
+    final hasAvatar = avatarUrl?.isNotEmpty ?? false;
 
     return ListTile(
       leading: CircleAvatar(
         backgroundImage: hasAvatar
-            ? XparqImage.getImageProvider(profile!.photoUrl)
+            ? XparqImage.getImageProvider(avatarUrl!)
             : null,
         child: !hasAvatar ? const Icon(Icons.person) : null,
       ),

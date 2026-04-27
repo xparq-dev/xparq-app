@@ -27,6 +27,7 @@ class SupabaseAuthRepository {
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
   User? get currentUser => _client.auth.currentUser;
+  Session? get currentSession => _client.auth.currentSession;
 
   // ── Auth Operations ───────────────────────────────────────────────────────
 

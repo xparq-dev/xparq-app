@@ -2,6 +2,10 @@ import { SfuClient } from '../services/sfuClient.js';
 import { SessionRegistry } from '../services/sessionRegistry.js';
 import { ok, fail } from '../utils/ack.js';
 
+function errorCode(error, fallback) {
+  return error.code || (error.message === 'NO_SESSION' ? 'NO_SESSION' : fallback);
+}
+
 export function registerConsume(socket) {
   socket.on('consume', async ({ transportId, producerId, rtpCapabilities } = {}, ack) => {
     try {
@@ -20,7 +24,7 @@ export function registerConsume(socket) {
 
       ok(ack, res);
     } catch (error) {
-      fail(ack, { code: error.code || 'CONSUME_FAILED', message: error.message });
+      fail(ack, { code: errorCode(error, 'CONSUME_FAILED'), message: error.message });
     }
   });
 }

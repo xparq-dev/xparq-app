@@ -6,8 +6,10 @@ import FlutterMacOS
 import Foundation
 
 import app_links
+import audioplayers_darwin
 import connectivity_plus
 import dargon2_flutter_desktop
+import device_info_plus
 import ffmpeg_kit_flutter_new_min
 import file_selector_macos
 import firebase_core
@@ -32,8 +34,10 @@ import wakelock_plus
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AppLinksMacosPlugin.register(with: registry.registrar(forPlugin: "AppLinksMacosPlugin"))
+  AudioplayersDarwinPlugin.register(with: registry.registrar(forPlugin: "AudioplayersDarwinPlugin"))
   ConnectivityPlusPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlusPlugin"))
   Dargon2FlutterDesktopPlugin.register(with: registry.registrar(forPlugin: "Dargon2FlutterDesktopPlugin"))
+  DeviceInfoPlusMacosPlugin.register(with: registry.registrar(forPlugin: "DeviceInfoPlusMacosPlugin"))
   FFmpegKitFlutterPlugin.register(with: registry.registrar(forPlugin: "FFmpegKitFlutterPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   FLTFirebaseCorePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseCorePlugin"))

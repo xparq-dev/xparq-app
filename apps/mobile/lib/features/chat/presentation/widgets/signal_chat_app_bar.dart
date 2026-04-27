@@ -7,6 +7,7 @@ import 'package:xparq_app/features/chat/presentation/providers/chat_providers.da
 import 'package:xparq_app/features/chat/presentation/widgets/member_search_popup.dart';
 import 'package:xparq_app/features/block_report/widgets/report_bottom_sheet.dart';
 import 'package:xparq_app/features/call/presentation/providers/call_providers.dart';
+import 'package:xparq_app/features/call/presentation/widgets/call_type_picker_sheet.dart';
 import 'package:xparq_app/l10n/app_localizations.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/chat/presentation/widgets/mini_profile_popup.dart';
@@ -43,9 +44,19 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final myUid = ref.watch(authRepositoryProvider).currentUser?.id ?? '';
     final otherProfile = !isGroup
         ? (ref.watch(chatProfileProvider(otherUid)).valueOrNull ??
             ref.watch(profileCacheProvider)[otherUid])
+        : null;
+    final fallbackIdentity = !isGroup
+        ? ref
+            .watch(
+              chatPeerFallbackIdentityProvider(
+                ChatPeerIdentityParams(chatId: chatId, currentUid: myUid),
+              ),
+            )
+            .valueOrNull
         : null;
     final otherPresence =
         !isGroup ? ref.watch(userPresenceProvider(otherUid)) : null;
@@ -76,6 +87,9 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
           child: ChatAppBarTitle(
             isGroup: isGroup,
             chat: chat,
+            myUid: myUid,
+            otherUid: otherUid,
+            fallbackIdentity: fallbackIdentity,
             otherProfile: otherProfile,
             otherPresence: otherPresence,
             theme: theme,
@@ -114,24 +128,12 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
               Icons.call_outlined,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
-            onPressed: () {
-              unawaited(
-                ref
-                    .read(callControllerProvider.notifier)
-                    .startOutgoing(
-                      chatId: chatId,
-                      peerUid: otherUid,
-                      peerName: otherProfile?.xparqName ?? 'Voice Call',
-                      peerAvatarUrl: otherProfile?.photoUrl ?? '',
-                    )
-                    .catchError((error) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Call failed: $error')),
-                  );
-                }),
-              );
-            },
+            onPressed: () => _showCallTypePicker(
+              context,
+              ref,
+              peerName: otherProfile?.xparqName ?? 'Voice Call',
+              peerAvatarUrl: otherProfile?.photoUrl ?? '',
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -140,6 +142,34 @@ class SignalChatAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ],
       ],
     );
+  }
+
+  Future<void> _showCallTypePicker(
+    BuildContext context,
+    WidgetRef ref, {
+    required String peerName,
+    required String peerAvatarUrl,
+  }) async {
+    final callType = await showCallTypePickerSheet(context);
+    if (callType == null || !context.mounted) {
+      return;
+    }
+
+    ref
+        .read(callControllerProvider.notifier)
+        .startOutgoing(
+          chatId: chatId,
+          peerUid: otherUid,
+          peerName: peerName,
+          peerAvatarUrl: peerAvatarUrl,
+          startWithCamera: callType == OutgoingCallType.video,
+        )
+        .catchError((error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Call failed: $error')),
+      );
+    });
   }
 
   Future<void> _showBlockDialog(BuildContext context, WidgetRef ref) async {

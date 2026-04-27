@@ -10,6 +10,7 @@ class AudioRouterRegistry extends EventEmitter {
     this.workerPool = workerPool;
     this.config = config;
     this.rooms = new Map();
+    this.pendingRooms = new Map();
   }
 
   async ensureRoom(roomId) {
@@ -22,41 +23,56 @@ class AudioRouterRegistry extends EventEmitter {
       return existingRoom;
     }
 
-    const worker = this.workerPool.getNextWorker();
-    const router = await worker.createRouter({
-      mediaCodecs: this.config.mediaCodecs,
-    });
+    const pending = this.pendingRooms.get(roomId);
+    if (pending) {
+      return pending;
+    }
 
-    const audioLevelObserver = await router.createAudioLevelObserver(
-      this.config.audioLevelObserver,
-    );
+    const promise = (async () => {
+      try {
+        const worker = this.workerPool.getNextWorker();
+        const router = await worker.createRouter({
+          mediaCodecs: this.config.mediaCodecs,
+        });
 
-    const room = {
-      roomId,
-      router,
-      workerId: worker.appData.workerId,
-      audioLevelObserver,
-      peers: new Set(),
-      producers: new Set(),
-    };
+        const audioLevelObserver = await router.createAudioLevelObserver(
+          this.config.audioLevelObserver,
+        );
 
-    audioLevelObserver.on("volumes", (volumes) => {
-      this.emit("activeSpeaker", {
-        roomId,
-        volumes: volumes.map((entry) => ({
-          producerId: entry.producer.id,
-          peerId: entry.producer.appData.peerId || null,
-          volume: entry.volume,
-        })),
-      });
-    });
+        const room = {
+          roomId,
+          router,
+          workerId: worker.appData.workerId,
+          audioLevelObserver,
+          peers: new Set(),
+          producers: new Set(),
+          audioObserverProducerIds: new Set(),
+        };
 
-    audioLevelObserver.on("silence", () => {
-      this.emit("silence", { roomId });
-    });
+        audioLevelObserver.on("volumes", (volumes) => {
+          this.emit("activeSpeaker", {
+            roomId,
+            volumes: volumes.map((entry) => ({
+              producerId: entry.producer.id,
+              peerId: entry.producer.appData.peerId || null,
+              volume: entry.volume,
+            })),
+          });
+        });
 
-    this.rooms.set(roomId, room);
-    return room;
+        audioLevelObserver.on("silence", () => {
+          this.emit("silence", { roomId });
+        });
+
+        this.rooms.set(roomId, room);
+        return room;
+      } finally {
+        this.pendingRooms.delete(roomId);
+      }
+    })();
+
+    this.pendingRooms.set(roomId, promise);
+    return promise;
   }
 
   getRoomIfExists(roomId) {
@@ -89,7 +105,10 @@ class AudioRouterRegistry extends EventEmitter {
   async attachProducer(roomId, producer) {
     const room = this.getRoom(roomId);
     room.producers.add(producer.id);
-    await room.audioLevelObserver.addProducer({ producerId: producer.id });
+    if (producer.kind === "audio") {
+      await room.audioLevelObserver.addProducer({ producerId: producer.id });
+      room.audioObserverProducerIds.add(producer.id);
+    }
   }
 
   async detachProducer(roomId, producerId) {
@@ -100,9 +119,13 @@ class AudioRouterRegistry extends EventEmitter {
 
     room.producers.delete(producerId);
 
-    if (typeof room.audioLevelObserver.removeProducer === "function") {
+    if (
+      room.audioObserverProducerIds.has(producerId) &&
+      typeof room.audioLevelObserver.removeProducer === "function"
+    ) {
       try {
         await room.audioLevelObserver.removeProducer({ producerId });
+        room.audioObserverProducerIds.delete(producerId);
       } catch (error) {
         this.emit("observerDetachFailed", {
           roomId,

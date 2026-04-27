@@ -8,7 +8,16 @@ import 'geohash_service.dart';
 class LocationService {
   /// Request location permission. Returns true if granted.
   static Future<bool> requestPermission() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return false;
+    }
+
     LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      return false;
+    }
+
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }

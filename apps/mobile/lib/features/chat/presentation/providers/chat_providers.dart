@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
+import 'package:xparq_app/features/chat/domain/models/chat_identity.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/chat/data/repositories/chat_repository.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
@@ -64,12 +65,40 @@ final contactRequestRepositoryProvider = chatRepositoryProvider;
 final chatProfileProvider =
     StreamProvider.autoDispose.family<PlanetModel?, String>((ref, uid) {
   if (uid.isEmpty) return Stream.value(null);
+  // Keep the live stream so placeholder identities can be replaced by the
+  // real peer profile as soon as Supabase/cache data lands.
   // ignore: deprecated_member_use
-  // .stream will be removed in 3.0.0
-  return ref.watch(planetProfileByUidProvider(uid).future).asStream();
+  return ref.watch(planetProfileByUidProvider(uid).stream);
 });
 
 // ── My Chats List ─────────────────────────────────────────────────────────────
+
+class ChatPeerIdentityParams {
+  final String chatId;
+  final String currentUid;
+
+  const ChatPeerIdentityParams({
+    required this.chatId,
+    required this.currentUid,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is ChatPeerIdentityParams &&
+      other.chatId == chatId &&
+      other.currentUid == currentUid;
+
+  @override
+  int get hashCode => Object.hash(chatId, currentUid);
+}
+
+final chatPeerFallbackIdentityProvider = FutureProvider.autoDispose
+    .family<ChatFallbackIdentity?, ChatPeerIdentityParams>((ref, params) {
+  return ref.watch(chatRepositoryProvider).fetchLatestIncomingMessageIdentity(
+        chatId: params.chatId,
+        currentUid: params.currentUid,
+      );
+});
 
 final rawChatsProvider = StreamProvider<List<ChatModel>>((ref) {
   final uid = ref.watch(authRepositoryProvider).currentUser?.id;

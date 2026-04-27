@@ -3,6 +3,10 @@ import { recordTransportHeartbeatSample } from '../services/observabilityService
 import { SessionRegistry } from '../services/sessionRegistry.js';
 import { ok, fail } from '../utils/ack.js';
 
+function errorCode(error, fallback) {
+  return error.code || (error.message === 'NO_SESSION' ? 'NO_SESSION' : fallback);
+}
+
 export function registerTransportHeartbeat(socket) {
   socket.on('transportHeartbeat', async ({ transportId, metrics } = {}, ack) => {
     try {
@@ -37,7 +41,7 @@ export function registerTransportHeartbeat(socket) {
       ok(ack, { policy });
     } catch (error) {
       fail(ack, {
-        code: error.code || 'TRANSPORT_HEARTBEAT_FAILED',
+        code: errorCode(error, 'TRANSPORT_HEARTBEAT_FAILED'),
         message: error.message,
       });
     }

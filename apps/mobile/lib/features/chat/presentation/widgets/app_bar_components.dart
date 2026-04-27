@@ -3,11 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
+import 'package:xparq_app/features/chat/domain/models/chat_identity.dart';
 import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
+import 'package:xparq_app/features/chat/presentation/utils/chat_identity_resolver.dart';
 
 class ChatAppBarTitle extends StatelessWidget {
   final bool isGroup;
   final ChatModel? chat;
+  final String myUid;
+  final String otherUid;
+  final ChatFallbackIdentity? fallbackIdentity;
   final PlanetModel? otherProfile;
   final PlanetModel? otherPresence;
   final ThemeData theme;
@@ -16,6 +21,9 @@ class ChatAppBarTitle extends StatelessWidget {
     super.key,
     required this.isGroup,
     this.chat,
+    required this.myUid,
+    required this.otherUid,
+    this.fallbackIdentity,
     this.otherProfile,
     this.otherPresence,
     required this.theme,
@@ -28,11 +36,14 @@ class ChatAppBarTitle extends StatelessWidget {
     final isOnline = presence?.isOnline ?? false;
     final displayName = isGroup
         ? (chat?.groupName ?? 'Cluster')
-        : (profile != null
-              ? (profile.handle != null && profile.handle!.isNotEmpty
-                  ? '${profile.xparqName} (@${profile.handle})'
-                  : profile.xparqName)
-              : 'Explorer');
+        : resolveDirectChatDisplayName(
+            chat: chat,
+            myUid: myUid,
+            otherUid: otherUid,
+            savedMeLabel: 'SAVED (ME)',
+            profile: profile,
+            fallbackIdentity: fallbackIdentity,
+          );
 
     return Row(
       children: [
@@ -80,7 +91,14 @@ class ChatAppBarTitle extends StatelessWidget {
   }
 
   Widget _buildAvatar(bool isOnline) {
-    final avatarUrl = isGroup ? chat?.groupIcon : otherProfile?.photoUrl;
+    final avatarUrl = isGroup
+        ? chat?.groupIcon
+        : resolveDirectChatAvatarUrl(
+            chat: chat,
+            otherUid: otherUid,
+            profile: otherProfile,
+            fallbackIdentity: fallbackIdentity,
+          );
     return Stack(
       children: [
         CircleAvatar(

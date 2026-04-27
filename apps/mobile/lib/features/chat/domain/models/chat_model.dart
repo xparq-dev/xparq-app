@@ -84,25 +84,25 @@ class ChatModel {
   }
 
   Map<String, dynamic> toMap() => {
-    'participants': participants,
-    'last_message': lastMessage,
-    'last_sender': lastSenderId,
-    'last_at': lastAt?.toIso8601String(),
-    'created_at': createdAt.toIso8601String(),
-    'is_sensitive': isSensitive,
-    'is_spam': isSpam,
-    'is_group': isGroup,
-    'name': name,
-    'group_avatar': groupAvatar,
-    'unread_count': unreadCount,
-    'vanishing_duration': vanishingDuration,
-    'is_pinned': isPinned,
-    'is_archived': isArchived,
-    'silenced_until': silencedUntil?.toIso8601String(),
-    'admins': admins,
-    'pinned_messages': pinnedMessages,
-    'metadata': metadata,
-  };
+        'participants': participants,
+        'last_message': lastMessage,
+        'last_sender': lastSenderId,
+        'last_at': lastAt?.toIso8601String(),
+        'created_at': createdAt.toIso8601String(),
+        'is_sensitive': isSensitive,
+        'is_spam': isSpam,
+        'is_group': isGroup,
+        'name': name,
+        'group_avatar': groupAvatar,
+        'unread_count': unreadCount,
+        'vanishing_duration': vanishingDuration,
+        'is_pinned': isPinned,
+        'is_archived': isArchived,
+        'silenced_until': silencedUntil?.toIso8601String(),
+        'admins': admins,
+        'pinned_messages': pinnedMessages,
+        'metadata': metadata,
+      };
 
   /// Compatibility getters for UI layers that expect these names.
   String get groupName => name ?? 'Cluster';
@@ -154,7 +154,17 @@ class ChatModel {
 }
 
 /// Type of message — enables special card rendering in the chat UI.
-enum MessageType { text, contactRequest, contactCard, image, video, sticker, deleted }
+enum MessageType {
+  text,
+  contactRequest,
+  contactCard,
+  image,
+  video,
+  sticker,
+  location,
+  call,
+  deleted,
+}
 
 class MessageModel {
   final String messageId;
@@ -171,7 +181,7 @@ class MessageModel {
   final DateTime? expiresAt; // For vanishing messages
   final List<String> deletedUids;
   final String?
-  decryptedContent; // Populated by provider after batch decryption
+      decryptedContent; // Populated by provider after batch decryption
 
   const MessageModel({
     required this.messageId,
@@ -195,7 +205,8 @@ class MessageModel {
   String? get replyToSenderId => metadata['reply_to_sender_id']?.toString();
   String? get replyToName => metadata['reply_to_name']?.toString();
   String? get replyToPreview => metadata['reply_to_preview']?.toString();
-  Map<String, String> get reactions => Map<String, String>.from(metadata['reactions'] ?? {});
+  Map<String, String> get reactions =>
+      Map<String, String>.from(metadata['reactions'] ?? {});
   List<String> get mentions => List<String>.from(metadata['mentions'] ?? []);
 
   factory MessageModel.fromMap(Map<String, dynamic> data) {
@@ -264,6 +275,10 @@ class MessageModel {
         return MessageType.video;
       case 'sticker':
         return MessageType.sticker;
+      case 'location':
+        return MessageType.location;
+      case 'call':
+        return MessageType.call;
       case 'deleted':
         return MessageType.deleted;
       default:
@@ -272,17 +287,17 @@ class MessageModel {
   }
 
   Map<String, dynamic> toMap() => {
-    'sender_id': senderUid,
-    'content': content,
-    'timestamp': timestamp.toIso8601String(),
-    'is_sensitive': isSensitive,
-    'delivered': delivered,
-    'read': read,
-    'is_offline_relay': isOfflineRelay,
-    'is_spam': isSpam,
-    'message_type': messageType.name,
-    'metadata': metadata,
-    'expires_at': expiresAt?.toIso8601String(),
-    'deleted_uids': deletedUids,
-  };
+        'sender_id': senderUid,
+        'content': content,
+        'timestamp': timestamp.toIso8601String(),
+        'is_sensitive': isSensitive,
+        'delivered': delivered,
+        'read': read,
+        'is_offline_relay': isOfflineRelay,
+        'is_spam': isSpam,
+        'message_type': messageType.name,
+        'metadata': metadata,
+        'expires_at': expiresAt?.toIso8601String(),
+        'deleted_uids': deletedUids,
+      };
 }

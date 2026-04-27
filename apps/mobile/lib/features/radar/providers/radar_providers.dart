@@ -2,13 +2,17 @@
 //
 // Riverpod providers for the Radar module.
 
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/features/radar/models/radar_xparq_model.dart';
 import 'package:xparq_app/features/radar/repositories/radar_repository.dart';
 import 'package:xparq_app/features/radar/services/location_service.dart';
+import 'package:xparq_app/shared/enums/age_group.dart';
 
 // ── Repository ────────────────────────────────────────────────────────────────
 
@@ -27,7 +31,7 @@ class RadarState {
   final double radiusKm;
   final List<RadarXparq> onlineXparqs;
   final List<dynamic>
-  offlineXparqs; // Kept for backwards compatibility but unused
+      offlineXparqs; // Kept for backwards compatibility but unused
   final List<RadarXparq> searchResults;
   final Position? currentPosition;
   final bool isLoading;
@@ -83,6 +87,21 @@ class RadarNotifier extends StateNotifier<RadarState> {
 
   RadarNotifier(this._repo, this._ref) : super(const RadarState());
 
+  Future<PlanetModel?> _readCurrentProfile() async {
+    final current = _ref.read(planetProfileProvider).valueOrNull;
+    if (current != null) return current;
+
+    try {
+      return await _ref
+          .read(planetProfileProvider.future)
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      return _ref.read(planetProfileProvider).valueOrNull;
+    } catch (_) {
+      return _ref.read(planetProfileProvider).valueOrNull;
+    }
+  }
+
   // ── Global Search ─────────────────────────────────────────────────────────
 
   Future<void> searchUsers(String query) async {
@@ -122,8 +141,8 @@ class RadarNotifier extends StateNotifier<RadarState> {
       // Update own location — pass ghostMode so updateLocation() won't flip
       // is_online to true while the user wants to stay hidden.
       final uid = _ref.read(authRepositoryProvider).currentUser?.id;
-      final isGhost =
-          _ref.read(planetProfileProvider).valueOrNull?.ghostMode ?? false;
+      final profile = await _readCurrentProfile();
+      final isGhost = profile?.ghostMode ?? false;
 
       if (uid != null) {
         await _repo.updateLocation(
@@ -136,7 +155,7 @@ class RadarNotifier extends StateNotifier<RadarState> {
 
       // If ghost mode is on, this user should not appear in others' radar.
       // We still run the query so the ghost user can SEE others.
-      final ageGroup = _ref.read(currentAgeGroupProvider);
+      final AgeGroup ageGroup = profile?.ageGroup ?? AgeGroup.cadet;
 
       // Try Cloud Function first, fallback to local query
       List<RadarXparq> xparqs;
@@ -207,8 +226,8 @@ class RadarNotifier extends StateNotifier<RadarState> {
       final uid = _ref.read(authRepositoryProvider).currentUser?.id;
       if (uid == null) return;
 
-      final isGhost =
-          _ref.read(planetProfileProvider).valueOrNull?.ghostMode ?? false;
+      final profile = await _readCurrentProfile();
+      final isGhost = profile?.ghostMode ?? false;
 
       // Update location coords but respect ghost mode (won't flip is_online)
       await _repo.updateLocation(
@@ -239,8 +258,8 @@ class RadarNotifier extends StateNotifier<RadarState> {
     final next = state.radiusKm < 50
         ? 50.0
         : state.radiusKm < 500
-        ? 500.0
-        : 20000.0;
+            ? 500.0
+            : 20000.0;
     state = state.copyWith(radiusKm: next);
     scanOnline();
   }

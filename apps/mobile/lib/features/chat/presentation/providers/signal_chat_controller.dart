@@ -7,9 +7,11 @@ import 'package:xparq_app/features/chat/domain/models/chat_model.dart';
 import 'package:xparq_app/features/auth/models/planet_model.dart';
 import 'package:xparq_app/features/chat/data/services/message_encryption_service.dart';
 import 'package:xparq_app/features/auth/providers/auth_providers.dart';
+import 'package:xparq_app/features/radar/services/location_service.dart';
 import 'chat_providers.dart';
 
 import 'package:xparq_app/features/offline/services/offline_chat_database.dart';
+import 'package:xparq_app/shared/utils/thailand_location_utils.dart';
 
 part 'signal_chat_controller.g.dart';
 
@@ -60,7 +62,8 @@ class SignalChatState {
       isKeyboardWarped: isKeyboardWarped ?? this.isKeyboardWarped,
       keyboardHeight: keyboardHeight ?? this.keyboardHeight,
       isUploadingMedia: isUploadingMedia ?? this.isUploadingMedia,
-      editingMessage: clearEditing ? null : (editingMessage ?? this.editingMessage),
+      editingMessage:
+          clearEditing ? null : (editingMessage ?? this.editingMessage),
       mentions: mentions ?? this.mentions,
       mentionSuggestions: mentionSuggestions ?? this.mentionSuggestions,
     );
@@ -102,14 +105,16 @@ class SignalChatController extends _$SignalChatController {
     final optimisticMessage = MessageModel(
       messageId: fakeId,
       senderUid: myUid ?? '',
-      content: '', 
+      content: '',
       decryptedContent: stickerText,
       timestamp: DateTime.now(),
       isSensitive: state.isSensitive,
       messageType: MessageType.sticker,
     );
 
-    ref.read(pendingMessagesProvider.notifier).addPendingMessage(chatId, optimisticMessage);
+    ref
+        .read(pendingMessagesProvider.notifier)
+        .addPendingMessage(chatId, optimisticMessage);
     MessageEncryptionService.rememberPendingPlaintext(fakeId, stickerText);
 
     try {
@@ -127,33 +132,42 @@ class SignalChatController extends _$SignalChatController {
       );
 
       final otherParticipant = chat.participants.firstWhere(
-        (id) => id != myProfile.id, 
+        (id) => id != myProfile.id,
         orElse: () => '',
       );
 
       unawaited(
-        ref.read(chatRepositoryProvider).sendMessage(
-          chatId: chatId,
-          senderProfile: myProfile,
-          plaintext: stickerText,
-          isSensitive: state.isSensitive,
-          otherUid: otherParticipant,
-          messageType: 'sticker',
-          clientPendingId: fakeId,
-          expiresAt: chat.vanishingDuration != null
-              ? DateTime.now().add(Duration(seconds: chat.vanishingDuration!))
-              : null,
-        ).catchError((e) {
-          ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+        ref
+            .read(chatRepositoryProvider)
+            .sendMessage(
+              chatId: chatId,
+              senderProfile: myProfile,
+              plaintext: stickerText,
+              isSensitive: state.isSensitive,
+              otherUid: otherParticipant,
+              messageType: 'sticker',
+              clientPendingId: fakeId,
+              expiresAt: chat.vanishingDuration != null
+                  ? DateTime.now()
+                      .add(Duration(seconds: chat.vanishingDuration!))
+                  : null,
+            )
+            .catchError((e) {
+          ref
+              .read(pendingMessagesProvider.notifier)
+              .removePendingMessage(chatId, fakeId);
         }),
       );
     } catch (e) {
       debugPrint('Error in sendSticker (Repository): $e');
-      ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+      ref
+          .read(pendingMessagesProvider.notifier)
+          .removePendingMessage(chatId, fakeId);
     }
   }
 
-  Future<void> sendMessage(String text, String otherUid, TextEditingController textController) async {
+  Future<void> sendMessage(String text, String otherUid,
+      TextEditingController textController) async {
     final trimmedText = text.trim();
     if (trimmedText.isEmpty) return;
 
@@ -184,20 +198,28 @@ class SignalChatController extends _$SignalChatController {
         if (replyMsg != null) ...{
           'reply_to_id': replyMsg.messageId,
           'reply_to_sender_id': replyMsg.senderUid,
-          'reply_to_preview': replyMsg.decryptedContent ?? (replyMsg.content.length > 50 ? replyMsg.content.substring(0, 50) : replyMsg.content),
+          'reply_to_preview': replyMsg.decryptedContent ??
+              (replyMsg.content.length > 50
+                  ? replyMsg.content.substring(0, 50)
+                  : replyMsg.content),
         },
         if (mentionUids.isNotEmpty) 'mentions': mentionUids,
       },
     );
 
-    ref.read(pendingMessagesProvider.notifier).addPendingMessage(chatId, optimisticMessage);
+    ref
+        .read(pendingMessagesProvider.notifier)
+        .addPendingMessage(chatId, optimisticMessage);
     MessageEncryptionService.rememberPendingPlaintext(fakeId, trimmedText);
 
     try {
       final myProfile = ref.read(planetProfileProvider).value;
       if (myProfile == null) {
-        debugPrint('sendMessage: ABORTED — myProfile is null. Auth may not be ready.');
-        ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+        debugPrint(
+            'sendMessage: ABORTED — myProfile is null. Auth may not be ready.');
+        ref
+            .read(pendingMessagesProvider.notifier)
+            .removePendingMessage(chatId, fakeId);
         textController.text = trimmedText;
         return;
       }
@@ -211,28 +233,34 @@ class SignalChatController extends _$SignalChatController {
           createdAt: DateTime.now(),
         ),
       );
-      
+
       unawaited(
-        ref.read(chatRepositoryProvider).sendMessage(
-          chatId: chatId,
-          senderProfile: myProfile,
-          plaintext: trimmedText,
-          isSensitive: state.isSensitive,
-          otherUid: otherUid,
-          clientPendingId: fakeId,
-          metadata: {if (state.isSilentSend) 'silent': true},
-          expiresAt: chat.vanishingDuration != null
-              ? DateTime.now().add(Duration(seconds: chat.vanishingDuration!))
-              : null,
-          replyTo: replyMsg,
-          mentions: mentionUids,
-        ).then((_) {
+        ref
+            .read(chatRepositoryProvider)
+            .sendMessage(
+              chatId: chatId,
+              senderProfile: myProfile,
+              plaintext: trimmedText,
+              isSensitive: state.isSensitive,
+              otherUid: otherUid,
+              clientPendingId: fakeId,
+              metadata: {if (state.isSilentSend) 'silent': true},
+              expiresAt: chat.vanishingDuration != null
+                  ? DateTime.now()
+                      .add(Duration(seconds: chat.vanishingDuration!))
+                  : null,
+              replyTo: replyMsg,
+              mentions: mentionUids,
+            )
+            .then((_) {
           if (state.isSilentSend) {
             state = state.copyWith(isSilentSend: false);
           }
         }).catchError((e) {
           debugPrint('sendMessage: Repository/RPC Error — $e');
-          ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+          ref
+              .read(pendingMessagesProvider.notifier)
+              .removePendingMessage(chatId, fakeId);
           if (textController.text.isEmpty) {
             textController.text = trimmedText;
           }
@@ -240,7 +268,9 @@ class SignalChatController extends _$SignalChatController {
       );
     } catch (e) {
       debugPrint('Error in sendMessage (Repository): $e');
-      ref.read(pendingMessagesProvider.notifier).removePendingMessage(chatId, fakeId);
+      ref
+          .read(pendingMessagesProvider.notifier)
+          .removePendingMessage(chatId, fakeId);
       if (textController.text.isEmpty) {
         textController.text = trimmedText;
       }
@@ -254,7 +284,9 @@ class SignalChatController extends _$SignalChatController {
     final myUid = ref.read(authRepositoryProvider).currentUser?.id;
     try {
       final lastMsg = messages.lastWhere((m) => m.senderUid != myUid);
-      ref.read(chatRepositoryProvider).toggleMessageSpark(lastMsg.messageId, myUid ?? '');
+      ref
+          .read(chatRepositoryProvider)
+          .toggleMessageSpark(lastMsg.messageId, myUid ?? '');
       HapticFeedback.mediumImpact();
     } catch (_) {}
   }
@@ -305,23 +337,27 @@ class SignalChatController extends _$SignalChatController {
     return age.inSeconds < 300; // 5 minutes = 300 seconds
   }
 
-  Future<void> _saveEditedMessage(String newText, String otherUid, TextEditingController textController) async {
+  Future<void> _saveEditedMessage(String newText, String otherUid,
+      TextEditingController textController) async {
     final msg = state.editingMessage;
     if (msg == null) return;
 
     // Resolve the real ID – prioritize metadata['server_id'] if the current ID is a pending alias.
     // If it's still pending, it means we MIGHT be editing a message that was JUST sent.
-    String? realId = msg.messageId.startsWith('pending_') 
-        ? msg.metadata['server_id']?.toString() 
+    String? realId = msg.messageId.startsWith('pending_')
+        ? msg.metadata['server_id']?.toString()
         : msg.messageId;
 
     // REAL-TIME RESOLUTION PHASE: Direct Database Lookup for Pending messages
     if (realId == null || realId.startsWith('pending_')) {
-      debugPrint('EDIT: ID pending. Checking Database for CID: ${msg.messageId}');
-      
+      debugPrint(
+          'EDIT: ID pending. Checking Database for CID: ${msg.messageId}');
+
       // 1. Direct fetch from Supabase (much faster than waiting for provider reconciliation)
-      final resolved = await ref.read(chatRepositoryProvider).resolveMessageIdFromPending(msg.messageId);
-      
+      final resolved = await ref
+          .read(chatRepositoryProvider)
+          .resolveMessageIdFromPending(msg.messageId);
+
       if (resolved != null) {
         realId = resolved;
         debugPrint('EDIT: Resolved real ID via direct lookup: $realId');
@@ -330,16 +366,20 @@ class SignalChatController extends _$SignalChatController {
         debugPrint('EDIT: Direct lookup failed. Falling back to poll...');
         for (int i = 0; i < 5; i++) {
           await Future.delayed(const Duration(milliseconds: 200));
-          final latestMessages = ref.read(displayMessagesProvider(chatId)).valueOrNull ?? [];
+          final latestMessages =
+              ref.read(displayMessagesProvider(chatId)).valueOrNull ?? [];
           final latestMsg = latestMessages.firstWhere(
-            (m) => m.messageId == msg.messageId || m.metadata['client_pending_id'] == msg.messageId,
+            (m) =>
+                m.messageId == msg.messageId ||
+                m.metadata['client_pending_id'] == msg.messageId,
             orElse: () => msg,
           );
-          
+
           final resolvedLocal = latestMsg.metadata['server_id']?.toString();
           if (resolvedLocal != null && !resolvedLocal.startsWith('pending_')) {
             realId = resolvedLocal;
-            debugPrint('EDIT: Resolved real ID: $realId after ${i + 1} retries.');
+            debugPrint(
+                'EDIT: Resolved real ID: $realId after ${i + 1} retries.');
             break;
           }
         }
@@ -361,33 +401,35 @@ class SignalChatController extends _$SignalChatController {
     }
 
     HapticFeedback.mediumImpact();
-    // Keep a backup of the text in case it fails? 
+    // Keep a backup of the text in case it fails?
     // For now, let's just not clear immediately if we're worried about errors,
     // but the request asks for a fix where it currently doesn't work.
-    
+
     try {
       // 1. Perform the edit in the repository
-      debugPrint('EDIT: Starting update for $realId (original alias: ${msg.messageId})');
+      debugPrint(
+          'EDIT: Starting update for $realId (original alias: ${msg.messageId})');
       await ref.read(chatRepositoryProvider).editMessage(
-        realId, 
-        newText, 
-        otherUid, 
-        chatId,
-      );
-      
-      // 2. IMPORTANT: Invalidate local DB cache AND memory cache for this message 
+            realId,
+            newText,
+            otherUid,
+            chatId,
+          );
+
+      // 2. IMPORTANT: Invalidate local DB cache AND memory cache for this message
       // so the UI is forced to re-decrypt the new ciphertext.
       MessageEncryptionService.forgetMetadata(
         pendingId: msg.messageId.startsWith('pending_') ? msg.messageId : null,
         ciphertext: msg.content,
       );
-      await OfflineChatDatabase.instance.removeSignalMessageCache(msg.messageId);
+      await OfflineChatDatabase.instance
+          .removeSignalMessageCache(msg.messageId);
       await OfflineChatDatabase.instance.removeSignalMessageCache(realId);
 
       // 3. Clear state/UI only after success
       state = state.copyWith(clearEditing: true);
       textController.clear();
-      
+
       debugPrint('EDIT: Success for ${msg.messageId}');
     } catch (e) {
       debugPrint('EDIT: Error saving edit: $e');
@@ -402,7 +444,10 @@ class SignalChatController extends _$SignalChatController {
     if (myProfile == null) return;
 
     final picker = ImagePicker();
-    final chat = ref.read(myChatsProvider).valueOrNull?.firstWhere((c) => c.chatId == chatId);
+    final chat = ref
+        .read(myChatsProvider)
+        .valueOrNull
+        ?.firstWhere((c) => c.chatId == chatId);
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile == null) return;
 
@@ -417,11 +462,97 @@ class SignalChatController extends _$SignalChatController {
             messageType: 'image',
             isSensitive: state.isSensitive,
             expiresAt: chat?.vanishingDuration != null
-                ? DateTime.now().add(Duration(seconds: chat!.vanishingDuration!))
+                ? DateTime.now()
+                    .add(Duration(seconds: chat!.vanishingDuration!))
                 : null,
           );
     } finally {
       state = state.copyWith(isUploadingMedia: false);
+    }
+  }
+
+  Future<String?> sendLocation(String otherUid) async {
+    final myProfile = ref.read(planetProfileProvider).value;
+    if (myProfile == null) {
+      return 'Profile is not ready yet.';
+    }
+
+    final position = await LocationService.getCurrentPosition().catchError((e) {
+      debugPrint('sendLocation: unable to read location: $e');
+      return null;
+    });
+    if (position == null) {
+      return 'Location permission is required to share your location.';
+    }
+
+    final lat = position.latitude;
+    final lng = position.longitude;
+    final province = findNearestProvince(lat, lng);
+    final label =
+        province != null ? 'Shared location in $province' : 'Shared location';
+    final subtitle = '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
+    final mapUrl = 'geo:${lat.toStringAsFixed(5)},${lng.toStringAsFixed(5)}';
+    final locationPayload = <String, dynamic>{
+      'latitude': lat,
+      'longitude': lng,
+      'label': label,
+      'subtitle': subtitle,
+      if (province != null) 'province': province,
+      'map_url': mapUrl,
+      'apple_maps_url':
+          'https://maps.apple.com/?ll=${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}&q=${Uri.encodeComponent(label)}',
+      'google_maps_url':
+          'https://www.google.com/maps/search/?api=1&query=${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}',
+      'shared_at': DateTime.now().toUtc().toIso8601String(),
+    };
+
+    final fakeId = 'pending_location_${DateTime.now().microsecondsSinceEpoch}';
+    final myUid = ref.read(authRepositoryProvider).currentUser?.id;
+    final optimisticMessage = MessageModel(
+      messageId: fakeId,
+      senderUid: myUid ?? '',
+      content: label,
+      decryptedContent: label,
+      timestamp: DateTime.now(),
+      messageType: MessageType.location,
+      metadata: {
+        'location_share': locationPayload,
+      },
+    );
+
+    ref
+        .read(pendingMessagesProvider.notifier)
+        .addPendingMessage(chatId, optimisticMessage);
+    MessageEncryptionService.rememberPendingPlaintext(fakeId, label);
+
+    try {
+      final chat = ref
+          .read(myChatsProvider)
+          .valueOrNull
+          ?.firstWhere((c) => c.chatId == chatId);
+      await ref.read(chatRepositoryProvider).sendMessage(
+            chatId: chatId,
+            senderProfile: myProfile,
+            plaintext: label,
+            isSensitive: false,
+            otherUid: otherUid,
+            clientPendingId: fakeId,
+            messageType: 'location',
+            metadata: {
+              'location_share': locationPayload,
+            },
+            expiresAt: chat?.vanishingDuration != null
+                ? DateTime.now()
+                    .add(Duration(seconds: chat!.vanishingDuration!))
+                : null,
+          );
+      HapticFeedback.mediumImpact();
+      return null;
+    } catch (error) {
+      ref
+          .read(pendingMessagesProvider.notifier)
+          .removePendingMessage(chatId, fakeId);
+      return 'Unable to share location right now.';
     }
   }
 

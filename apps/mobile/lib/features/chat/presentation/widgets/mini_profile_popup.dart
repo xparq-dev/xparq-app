@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:xparq_app/features/call/presentation/providers/call_providers.dart';
+import 'package:xparq_app/features/call/presentation/widgets/call_type_picker_sheet.dart';
 import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:xparq_app/shared/widgets/ui/cards/glass_card.dart';
 import 'package:xparq_app/shared/widgets/common/expandable_text.dart';
@@ -188,7 +189,12 @@ class MiniProfilePopup extends ConsumerWidget {
     );
   }
 
-  void _startAppCall(BuildContext context, WidgetRef ref) {
+  Future<void> _startAppCall(BuildContext context, WidgetRef ref) async {
+    final callType = await showCallTypePickerSheet(context);
+    if (callType == null || !context.mounted) {
+      return;
+    }
+
     Navigator.of(context).pop();
     ref
         .read(callControllerProvider.notifier)
@@ -197,6 +203,7 @@ class MiniProfilePopup extends ConsumerWidget {
           peerUid: profile.id,
           peerName: profile.xparqName,
           peerAvatarUrl: profile.photoUrl,
+          startWithCamera: callType == OutgoingCallType.video,
         )
         .catchError((error) {
       if (!context.mounted) return;

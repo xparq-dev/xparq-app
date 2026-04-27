@@ -203,6 +203,63 @@ class CallMessageService {
     );
   }
 
+  Future<void> sendCameraToggled({
+    required PlanetModel senderProfile,
+    required String chatId,
+    required String otherUid,
+    required String callId,
+    required String roomId,
+    required bool isCameraOn,
+  }) {
+    return _send(
+      senderProfile: senderProfile,
+      chatId: chatId,
+      otherUid: otherUid,
+      plaintext: isCameraOn ? 'Camera on' : 'Camera off',
+      event: CallControlEvent(
+        type: CallControlEventType.cameraToggled,
+        callId: callId,
+        roomId: roomId,
+        chatId: chatId,
+        actorId: senderProfile.id,
+        targetId: otherUid,
+        peerName: senderProfile.xparqName,
+        peerAvatarUrl: senderProfile.photoUrl,
+        sentAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<void> sendCallLog({
+    required PlanetModel senderProfile,
+    required String chatId,
+    required String otherUid,
+    required String callId,
+    required String roomId,
+    required String status,
+    required String? duration,
+  }) {
+    return _chatRepository.sendMessage(
+      chatId: chatId,
+      senderProfile: senderProfile,
+      plaintext: status,
+      isSensitive: false,
+      otherUid: otherUid,
+      messageType: 'call', // This triggers special rendering in MessageBubble
+      clientPendingId:
+          'call_log_${callId}_${DateTime.now().microsecondsSinceEpoch}',
+      metadata: {
+        'xparq_call_log': {
+          'call_id': callId,
+          'room_id': roomId,
+          'status': status,
+          'duration': duration,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      },
+    );
+  }
+
   Future<void> _send({
     required PlanetModel senderProfile,
     required String chatId,

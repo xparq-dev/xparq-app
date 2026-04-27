@@ -4,6 +4,7 @@ enum CallControlEventType {
   reject,
   end,
   mediaReady,
+  cameraToggled,
 }
 
 class CallControlEvent {

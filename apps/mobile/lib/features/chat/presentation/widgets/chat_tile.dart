@@ -12,6 +12,7 @@ import 'package:xparq_app/features/auth/providers/auth_providers.dart';
 import 'package:xparq_app/shared/router/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xparq_app/features/block_report/providers/block_report_providers.dart';
+import 'package:xparq_app/features/chat/presentation/utils/chat_identity_resolver.dart';
 import 'chat_tile_components.dart';
 
 class ChatTile extends ConsumerWidget {
@@ -31,19 +32,32 @@ class ChatTile extends ConsumerWidget {
     final profileAsync = ref.watch(chatProfileProvider(otherUid));
     final profile =
         profileAsync.valueOrNull ?? ref.watch(profileCacheProvider)[otherUid];
+    final fallbackIdentity = !chat.isGroup && !isSelfChat
+        ? ref
+            .watch(
+              chatPeerFallbackIdentityProvider(
+                ChatPeerIdentityParams(
+                  chatId: chat.chatId,
+                  currentUid: myUid,
+                ),
+              ),
+            )
+            .valueOrNull
+        : null;
 
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     final displayName = chat.isGroup
         ? (chat.name ?? l10n.chatListGroupDefaultName)
-        : (isSelfChat
-              ? l10n.chatListSavedMe.toUpperCase()
-              : (profile != null
-                    ? (profile.handle != null && profile.handle!.isNotEmpty
-                        ? '${profile.xparqName} (@${profile.handle})'
-                        : profile.xparqName)
-                    : 'Explorer'));
+        : resolveDirectChatDisplayName(
+            chat: chat,
+            myUid: myUid,
+            otherUid: otherUid,
+            savedMeLabel: l10n.chatListSavedMe.toUpperCase(),
+            profile: profile,
+            fallbackIdentity: fallbackIdentity,
+          );
 
     final avatarInitials = chat.isGroup
         ? (chat.name?.isNotEmpty == true
@@ -51,17 +65,23 @@ class ChatTile extends ConsumerWidget {
               : 'G')
         : (isSelfChat
               ? 'ME'
-              : (profile?.xparqName.isNotEmpty == true
-                    ? profile!.xparqName.substring(0, 1).toUpperCase()
+              : (displayName.isNotEmpty
+                    ? displayName.substring(0, 1).toUpperCase()
                     : (otherUid.length > 2
                           ? otherUid.substring(0, 2).toUpperCase()
                           : otherUid.toUpperCase())));
 
+    final directAvatarUrl = resolveDirectChatAvatarUrl(
+      chat: chat,
+      otherUid: otherUid,
+      profile: profile,
+      fallbackIdentity: fallbackIdentity,
+    );
     final hasAvatar = chat.isGroup
         ? (chat.groupAvatar?.isNotEmpty ?? false)
-        : (!isSelfChat && (profile?.photoUrl.isNotEmpty ?? false));
+        : (!isSelfChat && (directAvatarUrl?.isNotEmpty ?? false));
 
-    final avatarUrl = chat.isGroup ? chat.groupAvatar : profile?.photoUrl;
+    final avatarUrl = chat.isGroup ? chat.groupAvatar : directAvatarUrl;
     final isOnline =
         !chat.isGroup && !isSelfChat && (profile?.isActuallyOnline ?? false);
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:socket_io_client/socket_io_client.dart' as io;
@@ -289,21 +290,25 @@ class CallSocketService {
             return;
           }
 
-          final map = Map<String, dynamic>.from(response as Map);
+          final map = _asStringKeyedMap(response);
           if (map['ok'] == true) {
             completer.complete(
-              Map<String, dynamic>.from(map['data'] as Map? ?? const {}),
+              _asOptionalStringKeyedMap(map['data']) ??
+                  const <String, dynamic>{},
             );
             return;
           }
 
-          final error = Map<String, dynamic>.from(
-            map['error'] as Map? ?? const {},
-          );
+          final error = _asOptionalStringKeyedMap(map['error']) ??
+              const <String, dynamic>{};
+          final message = error['message']?.toString() ?? '$event failed';
+          final code = message == 'NO_SESSION'
+              ? 'NO_SESSION'
+              : error['code']?.toString() ?? '${event.toUpperCase()}_FAILED';
           completer.completeError(
             CallSocketException(
-              error['code']?.toString() ?? '${event.toUpperCase()}_FAILED',
-              error['message']?.toString() ?? '$event failed',
+              code,
+              message,
               details: Map<String, dynamic>.from(
                 error['details'] as Map? ?? const {},
               ),
@@ -318,6 +323,53 @@ class CallSocketService {
     );
 
     return completer.future.timeout(const Duration(seconds: 12));
+  }
+
+  Map<String, dynamic> _asStringKeyedMap(dynamic value) {
+    final normalized = _unwrapSocketPayload(value);
+    if (normalized is Map) {
+      return Map<String, dynamic>.from(normalized);
+    }
+
+    throw Exception(
+      'Expected a map payload but received ${normalized.runtimeType}.',
+    );
+  }
+
+  Map<String, dynamic>? _asOptionalStringKeyedMap(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    final normalized = _unwrapSocketPayload(value);
+    if (normalized is Map) {
+      return Map<String, dynamic>.from(normalized);
+    }
+
+    return null;
+  }
+
+  dynamic _unwrapSocketPayload(dynamic value) {
+    if (value is List && value.length == 1) {
+      return _unwrapSocketPayload(value.first);
+    }
+
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return value;
+      }
+
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          return _unwrapSocketPayload(jsonDecode(trimmed));
+        } catch (_) {
+          return value;
+        }
+      }
+    }
+
+    return value;
   }
 
   String? _extractRedirectEndpoint(Map<String, dynamic> details) {

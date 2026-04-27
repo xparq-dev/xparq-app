@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:mediasoup_client_flutter/mediasoup_client_flutter.dart';
 import 'package:mediasoup_client_flutter/src/handlers/handler_interface.dart';
 
@@ -9,18 +10,30 @@ class MediasoupCallService {
   Device? _device;
   Transport? _sendTransport;
   Transport? _recvTransport;
-  Producer? _producer;
-  Consumer? _consumer;
+  final Map<String, Producer> _producers = {};
+  final Map<String, Consumer> _consumers = {};
   MediaStream? _localStream;
+  MediaStream? _cameraPreviewStream;
+  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
+  bool _cameraEnabled = false;
   List<RTCIceServer> _iceServers = const <RTCIceServer>[];
   RTCIceTransportPolicy? _iceTransportPolicy;
   String? _policyToken;
 
+  bool _localRendererReady = false;
   bool _rendererReady = false;
 
   Transport? get recvTransport => _recvTransport;
   String? get preferredTransportId => _sendTransport?.id ?? _recvTransport?.id;
+
+  RTCVideoRenderer? get localRenderer =>
+      _localRendererReady ? _localRenderer : null;
+
+  RTCVideoRenderer? get remoteRenderer =>
+      _rendererReady ? _remoteRenderer : null;
+  bool get hasLocalCameraPreview =>
+      _localRendererReady && _localRenderer.srcObject != null;
 
   Map<String, dynamic> get rtpCapabilitiesMap =>
       _device?.rtpCapabilities.toMap() ?? const <String, dynamic>{};
@@ -49,8 +62,96 @@ class MediasoupCallService {
   Future<void> openMicrophone() async {
     _localStream = await navigator.mediaDevices.getUserMedia({
       'audio': true,
-      'video': false,
+      // Future-safe: we track the user's camera intent now so video transport
+      // can be wired later without changing the controller/UI contract.
+      'video': _cameraEnabled,
     });
+
+    if (_cameraEnabled && _localStream!.getVideoTracks().isNotEmpty) {
+      await _attachLocalPreview(_localStream!);
+      await _disposeCameraPreviewStream();
+    } else if (!_cameraEnabled) {
+      await _clearLocalPreview();
+    }
+  }
+
+  Future<bool> setCameraEnabled(bool enabled) async {
+    _cameraEnabled = enabled;
+
+    for (final track
+        in _localStream?.getVideoTracks() ?? const <MediaStreamTrack>[]) {
+      track.enabled = enabled;
+    }
+
+    if (!enabled) {
+      await _clearLocalPreview();
+      await _disposeCameraPreviewStream();
+      return false;
+    }
+
+    final localStream = _localStream;
+    if (localStream != null && localStream.getVideoTracks().isNotEmpty) {
+      await _attachLocalPreview(localStream);
+      return true;
+    }
+
+    try {
+      await _ensureStandaloneCameraPreview();
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('CALL: Failed to start local camera preview: $error');
+      debugPrint('$stackTrace');
+      _cameraEnabled = false;
+      await _clearLocalPreview();
+      await _disposeCameraPreviewStream();
+      return false;
+    }
+  }
+
+  Future<void> _ensureLocalRenderer() async {
+    if (_localRendererReady) {
+      return;
+    }
+
+    await _localRenderer.initialize();
+    _localRendererReady = true;
+  }
+
+  Future<void> _attachLocalPreview(MediaStream stream) async {
+    await _ensureLocalRenderer();
+    _localRenderer.srcObject = stream;
+  }
+
+  Future<void> _ensureStandaloneCameraPreview() async {
+    final previewStream = _cameraPreviewStream;
+    if (previewStream != null && previewStream.getVideoTracks().isNotEmpty) {
+      await _attachLocalPreview(previewStream);
+      return;
+    }
+
+    await _disposeCameraPreviewStream();
+    _cameraPreviewStream = await navigator.mediaDevices.getUserMedia({
+      'audio': false,
+      'video': {
+        'facingMode': 'user',
+      },
+    });
+    await _attachLocalPreview(_cameraPreviewStream!);
+  }
+
+  Future<void> _clearLocalPreview() async {
+    if (_localRendererReady) {
+      _localRenderer.srcObject = null;
+    }
+  }
+
+  Future<void> _disposeCameraPreviewStream() async {
+    for (final track
+        in _cameraPreviewStream?.getTracks() ?? const <MediaStreamTrack>[]) {
+      track.stop();
+    }
+    await _cameraPreviewStream?.dispose();
+    _cameraPreviewStream = null;
   }
 
   Future<void> createRecvTransport({
@@ -199,9 +300,8 @@ class MediasoupCallService {
     final track = audioTracks.first;
 
     final completer = Completer<void>();
-    _sendTransport = sendTransport;
     sendTransport.producerCallback = (Producer producer) {
-      _producer = producer;
+      _producers['audio'] = producer;
       if (!completer.isCompleted) {
         completer.complete();
       }
@@ -213,6 +313,47 @@ class MediasoupCallService {
       stopTracks: false,
     );
     await completer.future.timeout(const Duration(seconds: 12));
+  }
+
+  Future<void> startProducingVideo() async {
+    final sendTransport = _sendTransport;
+    if (sendTransport == null) {
+      throw Exception('Send transport is not ready');
+    }
+
+    // Ensure we have a camera track
+    if (_localStream == null || _localStream!.getVideoTracks().isEmpty) {
+      await openMicrophone(); // This will refresh stream with camera if _cameraEnabled is true
+    }
+
+    final videoTracks = _localStream?.getVideoTracks() ?? const [];
+    if (videoTracks.isEmpty) {
+      throw Exception('No local video track available');
+    }
+    final track = videoTracks.first;
+
+    final completer = Completer<void>();
+    sendTransport.producerCallback = (Producer producer) {
+      _producers['video'] = producer;
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+    };
+    sendTransport.produce(
+      track: track,
+      stream: _localStream!,
+      source: 'camera',
+      stopTracks: false,
+    );
+    await completer.future.timeout(const Duration(seconds: 12));
+  }
+
+  Future<void> stopProducingVideo() async {
+    final producer = _producers['video'];
+    if (producer != null) {
+      producer.close();
+      _producers.remove('video');
+    }
   }
 
   Future<void> consumeRemoteProducer({
@@ -228,23 +369,26 @@ class MediasoupCallService {
       _rendererReady = true;
     }
 
+    final kind = consumerOptions['kind']?.toString() ?? 'audio';
     final completer = Completer<void>();
+
     recvTransport.consumerCallback = (Consumer consumer, Function? _) async {
-      _consumer = consumer;
-      _remoteRenderer.srcObject = consumer.stream;
+      _consumers[kind] = consumer;
+      consumer.resume();
+      consumer.track.enabled = true;
+      await _attachRemoteStream(consumer.stream);
       if (!completer.isCompleted) {
         completer.complete();
       }
     };
+
     recvTransport.consume(
       id: consumerOptions['id']?.toString() ?? '',
       producerId: consumerOptions['producerId']?.toString() ?? '',
       peerId: consumerOptions['peerId']?.toString() ??
           consumerOptions['producerId']?.toString() ??
           'remote-peer',
-      kind: RTCRtpMediaTypeExtension.fromString(
-        consumerOptions['kind']?.toString() ?? 'audio',
-      ),
+      kind: RTCRtpMediaTypeExtension.fromString(kind),
       rtpParameters: RtpParameters.fromMap(
         Map<String, dynamic>.from(
           consumerOptions['rtpParameters'] as Map? ?? const {},
@@ -252,6 +396,15 @@ class MediasoupCallService {
       ),
     );
     await completer.future.timeout(const Duration(seconds: 12));
+  }
+
+  Future<void> _attachRemoteStream(MediaStream stream) async {
+    if (!_rendererReady) {
+      await _remoteRenderer.initialize();
+      _rendererReady = true;
+    }
+
+    _remoteRenderer.srcObject = stream;
   }
 
   Future<void> setMuted(bool muted) async {
@@ -353,8 +506,16 @@ class MediasoupCallService {
   }
 
   Future<void> dispose() async {
-    await _consumer?.close();
-    _producer?.close();
+    for (final consumer in _consumers.values) {
+      await consumer.close();
+    }
+    _consumers.clear();
+
+    for (final producer in _producers.values) {
+      producer.close();
+    }
+    _producers.clear();
+
     _sendTransport?.close();
     _recvTransport?.close();
 
@@ -362,20 +523,26 @@ class MediasoupCallService {
         in _localStream?.getTracks() ?? const <MediaStreamTrack>[]) {
       track.stop();
     }
-    _localStream?.dispose();
+    await _localStream?.dispose();
+    await _disposeCameraPreviewStream();
+    await _clearLocalPreview();
+
+    if (_localRendererReady) {
+      await _localRenderer.dispose();
+      _localRendererReady = false;
+    }
 
     if (_rendererReady) {
       _remoteRenderer.srcObject = null;
-      _remoteRenderer.dispose();
+      await _remoteRenderer.dispose();
       _rendererReady = false;
     }
 
     _device = null;
     _sendTransport = null;
     _recvTransport = null;
-    _producer = null;
-    _consumer = null;
     _localStream = null;
+    _cameraPreviewStream = null;
     _iceServers = const <RTCIceServer>[];
     _iceTransportPolicy = null;
     _policyToken = null;
